@@ -8,5 +8,9 @@ namespace Domain.Entities
 {
     public class Club
     {
+        public int ClubId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string? Descripcion { get; set; } 
+        public string Abreviatura { get; set; } = string.Empty;
     }
 }
