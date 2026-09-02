@@ -9,6 +9,10 @@ namespace Data.Interfaces
 {
     public interface IEventoRepository
     {
-        Task<Evento> ObtenerEventoPorIdAsync(int eventoId);
+        Task<Evento?> GetOneById(int eventoId);
+        Task AddAsync(Evento evento);
+        Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<Evento>> GetAllAsync();
+        Task<bool> UpdateAsync(Evento evento);
     }
 }

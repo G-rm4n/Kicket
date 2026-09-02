@@ -9,7 +9,12 @@ namespace Data.Interfaces
 {
     public interface ICompraRepository
     {
-        Task AgregarCompraAsync(Compra compra);
+        Task AddAsync(Compra compra);
         Task<int> ObtenerCantidadEntradasVendidasAsync(int eventoId, int sectorId);
+        Task<Compra?> GetByIdAsync(int id);
+
+        Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<Compra>> GetAllAsync();
+
     }
 }

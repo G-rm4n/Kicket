@@ -30,7 +30,7 @@ namespace Core.Services
                 throw new ArgumentException("La cantidad de entradas debe ser mayor a cero.");
             }
             var evento = await _eventoRepository.ObtenerEventoPorIdAsync(eventoId);
-            if (evento == null || !evento.Activo)
+            if (evento == null || !evento.EstaCancelado)
             {
                 throw new ArgumentException("El evento no existe o ya caduco");
             }
@@ -52,8 +52,8 @@ namespace Core.Services
             var nuevaCompra = new Compra
             {
                 UsuarioId = usuarioId,
-                EventoId = eventoId,
-                SectorId = sectorId,
+                //EventoId = eventoId,
+                //SectorId = sectorId,
                 Cantidad = cantidad,
                 MontoTotal = montoCalculado,
                 FechaCompra = DateTime.Now,

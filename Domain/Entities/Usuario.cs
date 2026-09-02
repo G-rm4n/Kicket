@@ -14,6 +14,7 @@ namespace Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty; //La password en un futuro debe estar hasheada
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
+        public string Rol { get; set; } = string.Empty;
 
     }
 }

@@ -12,6 +12,6 @@ namespace Domain.Entities
         public int EstadioId { get; set; }
         public string Nombre { get; set; } = string.Empty; 
         public int CapacidadMaxima { get; set; }
-        public int PrecioBase { get; set; }
+        public decimal PrecioBase { get; set; }
     }
 }
