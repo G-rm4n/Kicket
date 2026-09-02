@@ -3,6 +3,8 @@
 using Data;
 using Microsoft.EntityFrameworkCore;
 using WebApi.EndPoints;
+using Core.Interfaces;
+using Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Services.AddDbContext<TPIContext>((options) =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Local"));
 });
+builder.Services.AddScoped<ICompraService, CompraService>();
 
 var app = builder.Build();
 var conectionString = builder.Configuration.GetConnectionString("Local");
