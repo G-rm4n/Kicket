@@ -10,5 +10,6 @@ namespace Domain.Entities
     {
         public int EventoId { get; set; }
         public int SectorId { get; set; }
+        public int EntradaId { get; set; }
     }
 }
