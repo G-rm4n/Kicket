@@ -7,7 +7,7 @@ using Domain.Entities;
 
 namespace Data.Interfaces
 {
-    internal interface IUsuarioRepository
+    public interface IUsuarioRepository
     {
         Task AddAsync(Usuario usuario);
         Task<bool> DeleteAsync(int id);
