@@ -12,7 +12,7 @@ namespace Data.Interfaces
         Task AddAsync(Estadio estadio);
         Task<bool> DeleteAsync(int id);
         Task<bool> UpdateAsync(Estadio estadio);
-        Task<Estadio> GetByIdAsync(int id);
-        Task<IEnumerable<Estadio>> GetAllAsync(int id);
+        Task<Estadio?> GetByIdAsync(int id);
+        Task<IEnumerable<Estadio>> GetAllAsync();
     }
 }
