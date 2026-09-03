@@ -9,19 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Implementaciones
 {
-    public class UsuarioRepository:IUsuarioRepository
+    public class UsuarioRepository : IUsuarioRepository
     {
         private readonly TPIContext context;
 
         public UsuarioRepository(TPIContext context)
         {
-            this.context=context;
+            this.context = context;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
             var usuarioFound = await context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == id);
-            if(usuarioFound is not null)
+            if (usuarioFound is not null)
             {
                 context.Remove(usuarioFound);
                 await context.SaveChangesAsync();
@@ -35,10 +35,10 @@ namespace Data.Implementaciones
             var usuarioFound = await context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == usuario.IdUsuario);
             if (usuarioFound is not null)
             {
-                usuarioFound.Nombre=usuario.Nombre;
-                usuarioFound.Apellido=usuario.Apellido;
-                usuarioFound.Email=usuario.Email;
-                usuarioFound.Password=usuario.Password;
+                usuarioFound.Nombre = usuario.Nombre;
+                usuarioFound.Apellido = usuario.Apellido;
+                usuarioFound.Email = usuario.Email;
+                usuarioFound.Password = usuario.Password;
                 await context.SaveChangesAsync();
                 return true;
             }
@@ -63,9 +63,12 @@ namespace Data.Implementaciones
 
         public async Task<bool> ExistsEmail(string email)
         {
-            var usuarioFound = await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
-            if (usuarioFound is null) return false;
-            return true;
+            return await context.Usuarios.AnyAsync(u => u.Email == email);
+        }
+
+        public async Task<Usuario?> GetByEmailAsync(string email)
+        {
+            return await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

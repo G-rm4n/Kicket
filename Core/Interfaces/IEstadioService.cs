@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Domain.Entities;
 
 namespace Core.Interfaces
 {
-    internal interface Interface1
+    public interface IEstadioService
     {
+        Task<Estadio> CrearEstadioAsync(Estadio estadio);
+        Task<Estadio?> ObtenerPorIdAsync(int id);
+        Task<IEnumerable<Estadio>> ObtenerTodosAsync();
+        Task<bool> ActualizarEstadioAsync(Estadio estadio);
+        Task<bool> EliminarEstadioAsync(int id);
     }
 }

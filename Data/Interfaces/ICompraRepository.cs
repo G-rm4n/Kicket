@@ -12,7 +12,6 @@ namespace Data.Interfaces
         Task AddAsync(Compra compra);
         Task<int> ObtenerCantidadEntradasVendidasAsync(int eventoId, int sectorId);
         Task<Compra?> GetByIdAsync(int id);
-
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<Compra>> GetAllAsync();
 

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Domain.Entities;
 
 namespace Core.Interfaces
 {
-    internal interface Interface1
+    public interface IClubService
     {
+        Task<Club> CrearClubAsync(Club club);
+        Task<Club?> ObtenerPorIdAsync(int id);
+        Task<IEnumerable<Club>> ObtenerTodosAsync();
+        Task<bool> ActualizarClubAsync(Club club);
+        Task<bool> EliminarClubAsync(int id);
     }
 }
