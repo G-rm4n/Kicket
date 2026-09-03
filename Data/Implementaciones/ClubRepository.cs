@@ -9,13 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Implementaciones
 {
-    public class ClubRepository : IClubRepository
+    public class ClubRepository:IClubRepository
     {
         private readonly TPIContext context;
 
         public ClubRepository(TPIContext context)
         {
             this.context = context;
+        }
+
+        public async Task AddAsync(Club club)
+        {
+            context.Clubs.Add(club);
+            await context.SaveChangesAsync();
         }
 
         public async Task<Club?> GetByIdAsync(int id)
@@ -28,16 +34,10 @@ namespace Data.Implementaciones
             return await context.Clubs.ToListAsync();
         }
 
-        public async Task AddAsync(Club club)
-        {
-            context.Clubs.Add(club);
-            await context.SaveChangesAsync();
-        }
-
         public async Task<bool> DeleteAsync(int id)
         {
             var clubFound = await context.Clubs.FirstOrDefaultAsync(c => c.ClubId == id);
-            if (clubFound is not null)
+            if(clubFound is not null)
             {
                 context.Clubs.Remove(clubFound);
                 await context.SaveChangesAsync();
@@ -48,7 +48,7 @@ namespace Data.Implementaciones
 
         public async Task<bool> UpdateAsync(Club club)
         {
-            var clubFound = await context.Clubs.FirstOrDefaultAsync(c => c.ClubId == club.ClubId);
+            var clubFound = await context.Clubs.FirstOrDefaultAsync(c => c.ClubId == id);
             if (clubFound is not null)
             {
                 clubFound.Nombre = club.Nombre;
@@ -57,6 +57,8 @@ namespace Data.Implementaciones
 
                 await context.SaveChangesAsync();
                 return true;
+
+                
             }
             return false;
         }
