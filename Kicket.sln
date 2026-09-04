@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{54A0F071-7B9C-4344-BEB2-BEF55E4FED15}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.WinForms", "Kicket.WinForms\Kicket.WinForms.csproj", "{20006F04-83DD-415A-A371-4A5B75F85772}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{54A0F071-7B9C-4344-BEB2-BEF55E4FED15}.Release|x64.Build.0 = Release|Any CPU
 		{54A0F071-7B9C-4344-BEB2-BEF55E4FED15}.Release|x86.ActiveCfg = Release|Any CPU
 		{54A0F071-7B9C-4344-BEB2-BEF55E4FED15}.Release|x86.Build.0 = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|x64.Build.0 = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Debug|x86.Build.0 = Debug|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x64.ActiveCfg = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x64.Build.0 = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x86.ActiveCfg = Release|Any CPU
+		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
