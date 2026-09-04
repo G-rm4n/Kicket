@@ -3,6 +3,8 @@
 using Core.Interfaces;
 using Core.Services;
 using Data;
+using Data.Implementaciones;
+using Data.Interfaces;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using WebApi.EndPoints;
@@ -14,9 +16,28 @@ builder.Services.AddDbContext<TPIContext>((options) =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Local"));
 });
-//builder.Services.AddScoped<ICompraService, CompraService>();
+
+//Mapeo de Repository
+
+builder.Services.AddScoped<IClubRepository, ClubRepository>();
+builder.Services.AddScoped<ICompraRepository, CompraRepository>();
+builder.Services.AddScoped<IEstadioRepository, EstadioRepository>();
+builder.Services.AddScoped<IEventoRepository, EventoRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+//Mapeo de Services
+
+builder.Services.AddScoped<IClubService, ClubService>();
+builder.Services.AddScoped<IEstadioService, EstadioService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -40,11 +61,11 @@ app.MapGet("/", () => conectionString);
 //Mapeo de los EndPoints base, comentado hasta que se 
 //Implementen los services.
 app.MapClubEndPoints();
-app.MapCompraEndPoints();
-app.MapEntradaEndPoints();
-app.MapEventoEndPoints();
+//app.MapCompraEndPoints();
+//app.MapEntradaEndPoints();
+//app.MapEventoEndPoints();
 app.MapUsuarioEndPoints();
-app.MapSectorEndPoints();
+//app.MapSectorEndPoints();
 app.MapEstadioEndPoints();
 
 app.Run();

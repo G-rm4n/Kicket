@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Implementaciones
 {
-    internal class EventoRepository:IEventoRepository
+    public class EventoRepository:IEventoRepository
     {
         private readonly TPIContext context;
 

@@ -48,7 +48,7 @@ namespace Data.Implementaciones
 
         public async Task<bool> UpdateAsync(Club club)
         {
-            var clubFound = await context.Clubs.FirstOrDefaultAsync(c => c.ClubId == id);
+            var clubFound = await context.Clubs.FirstOrDefaultAsync(c => c.ClubId == club.ClubId);
             if (clubFound is not null)
             {
                 clubFound.Nombre = club.Nombre;

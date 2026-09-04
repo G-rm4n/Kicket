@@ -12,10 +12,6 @@ namespace Kicket.Contracts.Usuarios
         [Range(1, int.MaxValue, ErrorMessage = "El id del usuario es obligatorio.")]
         public int IdUsuario { get; set; }
 
-        [Required(ErrorMessage = "El DNI es obligatorio.")]
-        [RegularExpression(@"^\d{7,9}$", ErrorMessage = "El DNI debe tener entre 7 y 9 digitos.")]
-        public string DNI { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         [StringLength(60, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 60 caracteres.")]
         public string Nombre { get; set; } = string.Empty;
@@ -31,9 +27,6 @@ namespace Kicket.Contracts.Usuarios
 
         [StringLength(100, MinimumLength = 6, ErrorMessage = "La contrasena debe tener al menos 6 caracteres.")]
         public string? Pass { get; set; }
-
-        [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
-        public DateTime FechaNacimiento { get; set; }
 
         [Required(ErrorMessage = "El rol es obligatorio.")]
         public string Rol { get; set; } = Roles.Usuario;

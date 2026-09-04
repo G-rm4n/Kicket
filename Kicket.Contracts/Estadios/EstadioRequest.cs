@@ -9,12 +9,9 @@ namespace Kicket.Contracts.Estadios
         [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")]
         public string Nombre { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La calle es obligatoria.")]
-        [StringLength(100, ErrorMessage = "La calle no puede superar los 100 caracteres.")]
-        public string Calle { get; set; } = string.Empty;
-
-        [Range(1, 99999, ErrorMessage = "El numero debe estar entre 1 y 99999.")]
-        public int Nro { get; set; }
+        [Required(ErrorMessage = "La direccion es obligatoria.")]
+        [StringLength(100, ErrorMessage = "La direccion no puede superar los 100 caracteres.")]
+        public string Direccion { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La ciudad es obligatoria.")]
         [StringLength(100, ErrorMessage = "La ciudad no puede superar los 100 caracteres.")]

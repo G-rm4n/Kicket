@@ -14,7 +14,10 @@ namespace Kicket.Contracts.Clubes
         public string Nombre { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La URL del logo es obligatoria.")]
-        [StringLength(300, ErrorMessage = "La URL del logo no puede superar los 300 caracteres.")]
-        public string LogoUrl { get; set; } = string.Empty;
+        [StringLength(300, ErrorMessage = "La Descripccion no puede superar los 300 caracteres.")]
+        public string Descripcion { get; set; } = string.Empty;
+
+        [StringLength(300, ErrorMessage = "La Abreviatura no puede superar los 300 caracteres.")]
+        public string Abreviatura { get; set; } = string.Empty;
     }
 }

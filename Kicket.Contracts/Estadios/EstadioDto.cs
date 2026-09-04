@@ -5,11 +5,10 @@ namespace Kicket.Contracts.Estadios
     {
         public int IdEstadio { get; set; }
         public string Nombre { get; set; } = string.Empty;
-        public string Calle { get; set; } = string.Empty;
-        public int Nro { get; set; }
+        public string Direccion { get; set; }=string.Empty;
         public string Ciudad { get; set; } = string.Empty;
 
         /// <summary>Direccion armada, para mostrar directo en una grilla.</summary>
-        public string Direccion => $"{Calle} {Nro}, {Ciudad}";
+        public string DireccionCompleta => $"{Direccion} {Ciudad}";
     }
 }

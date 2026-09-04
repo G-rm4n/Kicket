@@ -29,7 +29,7 @@ namespace Core.Services
             {
                 throw new ArgumentException("La cantidad de entradas debe ser mayor a cero.");
             }
-            var evento = await _eventoRepository.ObtenerEventoPorIdAsync(eventoId);
+            var evento = await _eventoRepository.GetOneById(eventoId);
             if (evento == null || !evento.EstaCancelado)
             {
                 throw new ArgumentException("El evento no existe o ya caduco");
@@ -69,13 +69,9 @@ namespace Core.Services
                 };
                 nuevaCompra.Entradas.Add(nuevaEntrada);
             }
-            await _compraRepository.AgregarCompraAsync(nuevaCompra);
+            await _compraRepository.AddAsync(nuevaCompra);
             // Aquí programaremos la validación de stock y cálculo de precios
             return true;
-        }
-        public CompraService(ICompraRepository compraRepository)
-        {
-            _compraRepository = compraRepository;
         }
     }
 }
