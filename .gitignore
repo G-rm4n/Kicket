@@ -1,6 +1,3 @@
-﻿################################################################################
-# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
-################################################################################
-
-/.vs/Kiketpropio/CopilotIndices/17.14.1661.41761
-/.vs/Kiketpropio/FileContentIndex
+bin/
+obj/
+.vs
