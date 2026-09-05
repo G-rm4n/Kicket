@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.30" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Kicket.ApiClient\Kicket.ApiClient.csproj" />
     <ProjectReference Include="..\Kicket.Contracts\Kicket.Contracts.csproj" />
   </ItemGroup>
