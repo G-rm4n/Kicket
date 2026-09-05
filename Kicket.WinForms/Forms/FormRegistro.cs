@@ -21,24 +21,48 @@ namespace Kicket.WinForms.Forms
             this._usuarioApiClient = usuarioApiClient;
         }
 
-        private async void btnAccion_click(object sender, EventArgs args)
+        private async void btnRegistrar_Click(object sender, EventArgs args)
         {
-            btnRegistro.Enabled = false;
-
-            var requestRegistro = new UsuarioRequest()
+            if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
+                string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                string.IsNullOrWhiteSpace(txtPassword.Text))
             {
-                Apellido = txtApellido.Text,
-                Nombre = txtNombre.Text,
-                Email = txtEmail.Text,
-                Pass = txtPassword.Text,/*Posteriormente encriptar*/
-                Rol = "Usuario"
-            };
-
-            var newUsuario = await _usuarioApiClient.CreateAsync(requestRegistro);
-            if (newUsuario is not null)
-            {
-                this.DialogResult = DialogResult.OK;
+                MessageBox.Show("Nombre, Email y Contraseña son campos obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
+            btnRegistro.Enabled = false;
+            try
+            {
+                var requestRegistro = new UsuarioRequest()
+                {
+                    Apellido = txtApellido.Text,
+                    Nombre = txtNombre.Text,
+                    Email = txtEmail.Text,
+                    Pass = txtPassword.Text,/*Posteriormente encriptar*/
+                    Rol = "Usuario"
+                };
+
+
+                var newUsuario = await _usuarioApiClient.CreateAsync(requestRegistro);
+                if (newUsuario is not null)
+                {
+                    this.DialogResult = DialogResult.OK;
+                }
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al registrar el usuario: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnRegistro.Enabled = true;
+            }
+        }
+
+        private void btnCancelar_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
