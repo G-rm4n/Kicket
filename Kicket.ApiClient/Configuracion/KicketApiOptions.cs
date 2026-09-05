@@ -7,7 +7,7 @@ namespace Kicket.ApiClient.Configuracion
         public const string SeccionConfig = "KicketApi";
 
         /// <summary>URL base de la API. Debe terminar en "/".</summary>
-        public string BaseUrl { get; set; } = "https://localhost:7000/";
+        public string BaseUrl { get; set; } = "http://localhost:5268/";
 
         /// <summary>Segundos de espera antes de cortar una request.</summary>
         public int TimeoutSegundos { get; set; } = 30;

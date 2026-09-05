@@ -15,10 +15,11 @@ namespace Kicket.WinForms
 
             services.AddKicketApiClient(options =>
             {
-                options.BaseUrl = "https://localhost:7255/";
+                options.BaseUrl = "http://localhost:5268/";
                 options.TimeoutSegundos = 30;
             });
 
+            services.AddTransient<FormRegistro>();
             services.AddTransient<FormLogin>();
             services.AddTransient<FormPrincipal>();
 

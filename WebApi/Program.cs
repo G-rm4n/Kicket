@@ -56,8 +56,6 @@ using (var scope = app.Services.CreateScope())
 
 var conectionString = builder.Configuration.GetConnectionString("Local");
 
-app.MapGet("/", () => conectionString);
-
 //Mapeo de los EndPoints base, comentado hasta que se 
 //Implementen los services.
 app.MapClubEndPoints();
