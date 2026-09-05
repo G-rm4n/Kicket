@@ -2,6 +2,7 @@
 using Data.Implementaciones;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Usuarios;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace Core.Services
             usuario.FechaRegistro = DateTime.Now;
             if (string.IsNullOrWhiteSpace(usuario.Rol))
             {
-                usuario.Rol = "Cliente";
+                usuario.Rol = Roles.Usuario;
             }
 
             // TODO: la entidad Usuario deja explícito que la password debe

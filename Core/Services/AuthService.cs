@@ -13,7 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         IConfiguration _configuracion;
         IUsuarioRepository _usuarios;
@@ -24,20 +24,20 @@ namespace Core.Services
             this._usuarios = usuarios;
         }
 
-        public async Task<(string,DateTime)?> Login(string mail, string pass)
+        public async Task<(string, DateTime, Usuario)?> Login(string mail, string pass)
         {
             var user = await _usuarios.GetByEmailAsync(mail);
 
             //Incorporar Hash en la pass al momento de registrar el usuario
             //despues acordarnos de incorporar la comparacion con Bcrypt.net
-            if (user is null||user.Password!=pass) return null;
+            if (user is null || user.Password != pass) return null;
 
 
-            var result = GenerarToken(user);
-            return result;
+            var (token, expiraEn) = GenerarToken(user);
+            return (token, expiraEn, user);
         }
 
-        private (string,DateTime) GenerarToken(Usuario usuario)
+        private (string, DateTime) GenerarToken(Usuario usuario)
         {
             var payloadInfo = new[]
             {

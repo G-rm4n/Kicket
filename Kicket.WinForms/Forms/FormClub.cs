@@ -59,8 +59,9 @@ namespace Kicket.WinForms.Forms
             if (e.RowIndex >= 0) // Aseguramos que no sea el encabezado
             {
                 var fila = dataGridClubes.Rows[e.RowIndex];
-                textBoxNombreClub.Text = fila.Cells["Nombre"].Value?.ToString();
-                textBoxAbreviatura.Text = fila.Cells["Abreviatura"].Value?.ToString();
+                _clubIdSeleccionado = Convert.ToInt32(fila.Cells["ColumnID"].Value);
+                textBoxNombreClub.Text = fila.Cells["ColumnNombre"].Value?.ToString();
+                textBoxAbreviatura.Text = fila.Cells["ColumnAbreviatura"].Value?.ToString();
             }
         }
 

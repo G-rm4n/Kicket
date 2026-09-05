@@ -54,12 +54,12 @@
             dataGridClubes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridClubes.Size = new Size(343, 323);
             dataGridClubes.TabIndex = 0;
-            dataGridClubes.CellClick += dataGridClubes_CellClick_1;
+            dataGridClubes.CellClick += dataGridClubes_CellClick;
             dataGridClubes.CellContentClick += dataGridClubes_CellContentClick;
             // 
             // ColumnID
             // 
-            ColumnID.DataPropertyName = "Id";
+            ColumnID.DataPropertyName = "ClubId";
             ColumnID.HeaderText = "ID";
             ColumnID.Name = "ColumnID";
             // 
