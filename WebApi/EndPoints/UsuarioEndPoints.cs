@@ -10,7 +10,7 @@ namespace WebApi.EndPoints
         {
             app.MapGet("/usuarios", async (IUsuarioService usuarioService) =>
             {
-                
+
                 var usuarios = await usuarioService.ObtenerTodosAsync();
 
                 IEnumerable<UsuarioDto> dtos = usuarios.Select(u => new UsuarioDto()
@@ -23,17 +23,18 @@ namespace WebApi.EndPoints
                 }).ToList();
 
                 return Results.Ok(dtos);
-                 
+
             })
             .WithName("GetAllUsuarios")
             .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK);
 
             app.MapGet("/usuarios/{id}", async (int id, IUsuarioService usuarioService) =>
             {
-                
+
                 Usuario? usuario = await usuarioService.ObtenerPorIdAsync(id);
-                  
-                if(usuario == null){
+
+                if (usuario == null)
+                {
                     return Results.NotFound();
                 }
 
@@ -47,7 +48,7 @@ namespace WebApi.EndPoints
                 };
 
                 return Results.Ok(dto);
-                 
+
             })
             .WithName("GetUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status200OK)
@@ -69,12 +70,12 @@ namespace WebApi.EndPoints
                 {
                     Email = newUsuario.Email,
                     Apellido = newUsuario.Apellido,
-                    Nombre =newUsuario.Nombre,
+                    Nombre = newUsuario.Nombre,
                     IdUsuario = newUsuario.IdUsuario,
                     Rol = newUsuario.Rol
                 };
                 return Results.Created($"/usuarios/{dto.IdUsuario}", dto);
-                
+
             })
             .WithName("AddUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status201Created)
@@ -82,15 +83,22 @@ namespace WebApi.EndPoints
 
             app.MapPut("/usuarios", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
             {
+                // Pass es opcional en la modificación: si viene vacío, hay que
+                // conservar la contraseña actual en vez de pisarla con "".
+                var existente = await usuarioService.ObtenerPorIdAsync(usuarioReq.IdUsuario);
+                if (existente is null)
+                {
+                    return Results.NotFound();
+                }
 
                 Usuario usuario = new()
                 {
                     Apellido = usuarioReq.Apellido,
                     Email = usuarioReq.Email,
                     Nombre = usuarioReq.Nombre,
-                    IdUsuario=usuarioReq.IdUsuario,
-                    Password=usuarioReq.Pass,
-                    Rol=usuarioReq.Rol
+                    IdUsuario = usuarioReq.IdUsuario,
+                    Password = string.IsNullOrWhiteSpace(usuarioReq.Pass) ? existente.Password : usuarioReq.Pass,
+                    Rol = usuarioReq.Rol
 
                 };
 
@@ -107,16 +115,16 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapDelete("/usuarios/{id}",async (int id, IUsuarioService usuarioService) =>
+            app.MapDelete("/usuarios/{id}", async (int id, IUsuarioService usuarioService) =>
             {
-                
-               var deleted = await usuarioService.EliminarUsuarioAsync(id);
-               if (!deleted)
-               {
-                   return Results.NotFound();
-               }
-               return Results.NoContent();
-               
+
+                var deleted = await usuarioService.EliminarUsuarioAsync(id);
+                if (!deleted)
+                {
+                    return Results.NotFound();
+                }
+                return Results.NoContent();
+
             })
             .WithName("DeleteUsuario")
             .Produces(StatusCodes.Status204NoContent)

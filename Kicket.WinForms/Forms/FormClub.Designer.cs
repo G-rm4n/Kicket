@@ -55,7 +55,6 @@
             dataGridClubes.Size = new Size(343, 323);
             dataGridClubes.TabIndex = 0;
             dataGridClubes.CellClick += dataGridClubes_CellClick;
-            dataGridClubes.CellContentClick += dataGridClubes_CellContentClick;
             // 
             // ColumnID
             // 
@@ -84,7 +83,6 @@
             labelDatos.Size = new Size(156, 30);
             labelDatos.TabIndex = 1;
             labelDatos.Text = "Datos del Club";
-            labelDatos.Click += label1_Click;
             // 
             // labelNombre
             // 
@@ -182,7 +180,7 @@
             Controls.Add(dataGridClubes);
             Name = "FormClub";
             Text = "Gestion de Clubes";
-            Load += FormClub_Load_1;
+            Shown += FormClub_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridClubes).EndInit();
             ResumeLayout(false);
             PerformLayout();

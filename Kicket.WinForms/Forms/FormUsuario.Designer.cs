@@ -32,9 +32,11 @@
             label2 = new Label();
             label4 = new Label();
             label5 = new Label();
+            label6 = new Label();
             textBoxNombre = new TextBox();
             textBoxApellido = new TextBox();
             textBoxEmail = new TextBox();
+            textBoxPassword = new TextBox();
             dataGridViewUsuarios = new DataGridView();
             ColumnId = new DataGridViewTextBoxColumn();
             ColumnNombre = new DataGridViewTextBoxColumn();
@@ -50,9 +52,10 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 9);
+            label1.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Location = new Point(116, 9);
             label1.Name = "label1";
-            label1.Size = new Size(111, 15);
+            label1.Size = new Size(242, 32);
             label1.TabIndex = 0;
             label1.Text = "Gestion de Usuarios";
             // 
@@ -83,6 +86,15 @@
             label5.TabIndex = 4;
             label5.Text = "Apellido";
             // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(16, 154);
+            label6.Name = "label6";
+            label6.Size = new Size(67, 15);
+            label6.TabIndex = 13;
+            label6.Text = "Contraseña";
+            // 
             // textBoxNombre
             // 
             textBoxNombre.Location = new Point(139, 47);
@@ -104,11 +116,19 @@
             textBoxEmail.Size = new Size(100, 23);
             textBoxEmail.TabIndex = 7;
             // 
+            // textBoxPassword
+            // 
+            textBoxPassword.Location = new Point(139, 151);
+            textBoxPassword.Name = "textBoxPassword";
+            textBoxPassword.Size = new Size(100, 23);
+            textBoxPassword.TabIndex = 14;
+            textBoxPassword.UseSystemPasswordChar = true;
+            // 
             // dataGridViewUsuarios
             // 
             dataGridViewUsuarios.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewUsuarios.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnNombre, ColumnApellido, ColumnEmail });
-            dataGridViewUsuarios.Location = new Point(12, 168);
+            dataGridViewUsuarios.Location = new Point(12, 203);
             dataGridViewUsuarios.Name = "dataGridViewUsuarios";
             dataGridViewUsuarios.Size = new Size(443, 150);
             dataGridViewUsuarios.TabIndex = 8;
@@ -116,7 +136,7 @@
             // 
             // ColumnId
             // 
-            ColumnId.DataPropertyName = "Id";
+            ColumnId.DataPropertyName = "IdUsuario";
             ColumnId.HeaderText = "Id";
             ColumnId.Name = "ColumnId";
             // 
@@ -140,7 +160,7 @@
             // 
             // buttonGuardar
             // 
-            buttonGuardar.Location = new Point(12, 354);
+            buttonGuardar.Location = new Point(12, 389);
             buttonGuardar.Name = "buttonGuardar";
             buttonGuardar.Size = new Size(75, 23);
             buttonGuardar.TabIndex = 9;
@@ -150,7 +170,7 @@
             // 
             // buttonModificar
             // 
-            buttonModificar.Location = new Point(192, 354);
+            buttonModificar.Location = new Point(192, 389);
             buttonModificar.Name = "buttonModificar";
             buttonModificar.Size = new Size(75, 23);
             buttonModificar.TabIndex = 10;
@@ -160,7 +180,7 @@
             // 
             // buttonEliminar
             // 
-            buttonEliminar.Location = new Point(380, 354);
+            buttonEliminar.Location = new Point(380, 389);
             buttonEliminar.Name = "buttonEliminar";
             buttonEliminar.Size = new Size(75, 23);
             buttonEliminar.TabIndex = 11;
@@ -182,12 +202,15 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(477, 594);
+            BackColor = SystemColors.Control;
+            ClientSize = new Size(477, 629);
             Controls.Add(buttonLimpiar);
             Controls.Add(buttonEliminar);
             Controls.Add(buttonModificar);
             Controls.Add(buttonGuardar);
             Controls.Add(dataGridViewUsuarios);
+            Controls.Add(textBoxPassword);
+            Controls.Add(label6);
             Controls.Add(textBoxEmail);
             Controls.Add(textBoxApellido);
             Controls.Add(textBoxNombre);
@@ -197,7 +220,7 @@
             Controls.Add(label1);
             Name = "FormUsuario";
             Text = "Administración de Usuarios";
-            Load += FormUsuario_Load;
+            Shown += FormUsuario_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsuarios).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -209,9 +232,11 @@
         private Label label2;
         private Label label4;
         private Label label5;
+        private Label label6;
         private TextBox textBoxNombre;
         private TextBox textBoxApellido;
         private TextBox textBoxEmail;
+        private TextBox textBoxPassword;
         private DataGridView dataGridViewUsuarios;
         private DataGridViewTextBoxColumn ColumnId;
         private DataGridViewTextBoxColumn ColumnNombre;

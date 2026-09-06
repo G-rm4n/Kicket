@@ -114,29 +114,5 @@ namespace Kicket.WinForms.Forms
                 await CargarClubes();
             }
         }
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void FormClub_Load_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridClubes_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-
-        private void buttonGuardar_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridClubes_CellClick_1(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
     }
 }

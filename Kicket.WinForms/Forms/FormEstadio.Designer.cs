@@ -116,7 +116,7 @@
             // 
             // ColumnId
             // 
-            ColumnId.DataPropertyName = "Id";
+            ColumnId.DataPropertyName = "IdEstadio";
             ColumnId.HeaderText = "Id";
             ColumnId.Name = "ColumnId";
             // 
@@ -197,7 +197,7 @@
             Controls.Add(label1);
             Name = "FormEstadio";
             Text = "Gestion de Estadios";
-            Load += FormEstadio_Load;
+            Shown += FormEstadio_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewEstadios).EndInit();
             ResumeLayout(false);
             PerformLayout();

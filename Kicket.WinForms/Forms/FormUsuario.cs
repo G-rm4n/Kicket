@@ -49,6 +49,7 @@ namespace Kicket.WinForms.Forms
                 textBoxNombre.Text = fila.Cells[1].Value?.ToString();
                 textBoxApellido.Text = fila.Cells[2].Value?.ToString();
                 textBoxEmail.Text = fila.Cells[3].Value?.ToString();
+                textBoxPassword.Clear(); // La API nunca devuelve la contraseña; se completa solo si se quiere cambiar
             }
         }
 
@@ -63,7 +64,7 @@ namespace Kicket.WinForms.Forms
             textBoxNombre.Clear();
             textBoxApellido.Clear();
             textBoxEmail.Clear();
-            // textBoxPassword.Clear(); // Descomentar si usas campo de contraseña
+            textBoxPassword.Clear();
             _usuarioIdSeleccionado = null;
         }
 
@@ -76,12 +77,18 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(textBoxPassword.Text))
+            {
+                MessageBox.Show("La contraseña es obligatoria para crear un usuario.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var nuevoUsuario = new UsuarioRequest
             {
                 Nombre = textBoxNombre.Text.Trim(),
                 Apellido = textBoxApellido.Text.Trim(),
-                Email = textBoxEmail.Text.Trim()
-                // Password = textBoxPassword.Text // Descomentar si UsuarioRequest exige Password
+                Email = textBoxEmail.Text.Trim(),
+                Pass = textBoxPassword.Text
             };
 
             try
@@ -110,7 +117,9 @@ namespace Kicket.WinForms.Forms
                 IdUsuario = _usuarioIdSeleccionado.Value,
                 Nombre = textBoxNombre.Text.Trim(),
                 Apellido = textBoxApellido.Text.Trim(),
-                Email = textBoxEmail.Text.Trim()
+                Email = textBoxEmail.Text.Trim(),
+                // Si se deja en blanco, la API conserva la contraseña actual.
+                Pass = string.IsNullOrWhiteSpace(textBoxPassword.Text) ? null : textBoxPassword.Text
             };
 
             try
