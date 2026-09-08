@@ -44,73 +44,80 @@
             buttonGuardar = new Button();
             buttonEliminar = new Button();
             buttonModificar = new Button();
+            label5 = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridViewEstadios).BeginInit();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(12, 9);
+            label1.Location = new Point(14, 12);
             label1.Name = "label1";
-            label1.Size = new Size(97, 15);
+            label1.Size = new Size(126, 20);
             label1.TabIndex = 0;
             label1.Text = "Datos del Estadio";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(12, 42);
+            label2.Location = new Point(14, 56);
             label2.Name = "label2";
-            label2.Size = new Size(51, 15);
+            label2.Size = new Size(64, 20);
             label2.TabIndex = 1;
             label2.Text = "Nombre";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(12, 74);
+            label3.Location = new Point(14, 99);
             label3.Name = "label3";
-            label3.Size = new Size(57, 15);
+            label3.Size = new Size(72, 20);
             label3.TabIndex = 2;
             label3.Text = "Direccion";
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(12, 114);
+            label4.Location = new Point(14, 152);
             label4.Name = "label4";
-            label4.Size = new Size(45, 15);
+            label4.Size = new Size(56, 20);
             label4.TabIndex = 3;
             label4.Text = "Ciudad";
             // 
             // textBoxNombre
             // 
-            textBoxNombre.Location = new Point(111, 34);
+            textBoxNombre.Location = new Point(127, 45);
+            textBoxNombre.Margin = new Padding(3, 4, 3, 4);
             textBoxNombre.Name = "textBoxNombre";
-            textBoxNombre.Size = new Size(100, 23);
+            textBoxNombre.Size = new Size(114, 27);
             textBoxNombre.TabIndex = 4;
             // 
             // textBoxDireccion
             // 
-            textBoxDireccion.Location = new Point(111, 71);
+            textBoxDireccion.Location = new Point(127, 95);
+            textBoxDireccion.Margin = new Padding(3, 4, 3, 4);
             textBoxDireccion.Name = "textBoxDireccion";
-            textBoxDireccion.Size = new Size(100, 23);
+            textBoxDireccion.Size = new Size(114, 27);
             textBoxDireccion.TabIndex = 5;
             // 
             // textBoxCiudad
             // 
-            textBoxCiudad.Location = new Point(111, 111);
+            textBoxCiudad.Location = new Point(127, 148);
+            textBoxCiudad.Margin = new Padding(3, 4, 3, 4);
             textBoxCiudad.Name = "textBoxCiudad";
-            textBoxCiudad.Size = new Size(100, 23);
+            textBoxCiudad.Size = new Size(114, 27);
             textBoxCiudad.TabIndex = 6;
             // 
             // dataGridViewEstadios
             // 
+            dataGridViewEstadios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewEstadios.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewEstadios.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnNombre, ColumnDireccion, ColumnCiudad });
-            dataGridViewEstadios.Location = new Point(12, 153);
+            dataGridViewEstadios.Location = new Point(12, 251);
+            dataGridViewEstadios.Margin = new Padding(3, 4, 3, 4);
             dataGridViewEstadios.Name = "dataGridViewEstadios";
-            dataGridViewEstadios.Size = new Size(443, 150);
+            dataGridViewEstadios.RowHeadersWidth = 51;
+            dataGridViewEstadios.Size = new Size(506, 200);
             dataGridViewEstadios.TabIndex = 7;
             dataGridViewEstadios.CellClick += dataGridEstadios_CellClick;
             // 
@@ -118,31 +125,36 @@
             // 
             ColumnId.DataPropertyName = "IdEstadio";
             ColumnId.HeaderText = "Id";
+            ColumnId.MinimumWidth = 6;
             ColumnId.Name = "ColumnId";
             // 
             // ColumnNombre
             // 
             ColumnNombre.DataPropertyName = "Nombre";
             ColumnNombre.HeaderText = "Nombre";
+            ColumnNombre.MinimumWidth = 6;
             ColumnNombre.Name = "ColumnNombre";
             // 
             // ColumnDireccion
             // 
             ColumnDireccion.DataPropertyName = "Direccion";
             ColumnDireccion.HeaderText = "Direccion";
+            ColumnDireccion.MinimumWidth = 6;
             ColumnDireccion.Name = "ColumnDireccion";
             // 
             // ColumnCiudad
             // 
             ColumnCiudad.DataPropertyName = "Ciudad";
             ColumnCiudad.HeaderText = "Ciudad";
+            ColumnCiudad.MinimumWidth = 6;
             ColumnCiudad.Name = "ColumnCiudad";
             // 
             // buttonLimpiar
             // 
-            buttonLimpiar.Location = new Point(260, 111);
+            buttonLimpiar.Location = new Point(492, 604);
+            buttonLimpiar.Margin = new Padding(3, 4, 3, 4);
             buttonLimpiar.Name = "buttonLimpiar";
-            buttonLimpiar.Size = new Size(75, 23);
+            buttonLimpiar.Size = new Size(86, 31);
             buttonLimpiar.TabIndex = 8;
             buttonLimpiar.Text = "Limpiar";
             buttonLimpiar.UseVisualStyleBackColor = true;
@@ -150,9 +162,10 @@
             // 
             // buttonGuardar
             // 
-            buttonGuardar.Location = new Point(16, 331);
+            buttonGuardar.Location = new Point(216, 604);
+            buttonGuardar.Margin = new Padding(3, 4, 3, 4);
             buttonGuardar.Name = "buttonGuardar";
-            buttonGuardar.Size = new Size(75, 23);
+            buttonGuardar.Size = new Size(86, 31);
             buttonGuardar.TabIndex = 9;
             buttonGuardar.Text = "Guardar";
             buttonGuardar.UseVisualStyleBackColor = true;
@@ -160,9 +173,10 @@
             // 
             // buttonEliminar
             // 
-            buttonEliminar.Location = new Point(241, 331);
+            buttonEliminar.Location = new Point(400, 604);
+            buttonEliminar.Margin = new Padding(3, 4, 3, 4);
             buttonEliminar.Name = "buttonEliminar";
-            buttonEliminar.Size = new Size(75, 23);
+            buttonEliminar.Size = new Size(86, 31);
             buttonEliminar.TabIndex = 11;
             buttonEliminar.Text = "Eliminar";
             buttonEliminar.UseVisualStyleBackColor = true;
@@ -170,19 +184,31 @@
             // 
             // buttonModificar
             // 
-            buttonModificar.Location = new Point(135, 331);
+            buttonModificar.Location = new Point(308, 604);
+            buttonModificar.Margin = new Padding(3, 4, 3, 4);
             buttonModificar.Name = "buttonModificar";
-            buttonModificar.Size = new Size(75, 23);
+            buttonModificar.Size = new Size(86, 31);
             buttonModificar.TabIndex = 12;
             buttonModificar.Text = "Modificar";
             buttonModificar.UseVisualStyleBackColor = true;
             buttonModificar.Click += btnModificar_Click;
             // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(12, 221);
+            label5.Name = "label5";
+            label5.Size = new Size(219, 20);
+            label5.TabIndex = 13;
+            label5.Text = "Listado de Estadios Registrados";
+            // 
             // FormEstadio
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(516, 486);
+            AutoSize = true;
+            ClientSize = new Size(590, 648);
+            Controls.Add(label5);
             Controls.Add(buttonModificar);
             Controls.Add(buttonEliminar);
             Controls.Add(buttonGuardar);
@@ -195,7 +221,12 @@
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            Margin = new Padding(3, 4, 3, 4);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "FormEstadio";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Gestion de Estadios";
             Shown += FormEstadio_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewEstadios).EndInit();
@@ -221,5 +252,6 @@
         private Button buttonGuardar;
         private Button buttonEliminar;
         private Button buttonModificar;
+        private Label label5;
     }
 }

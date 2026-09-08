@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "WebApi\\WebApi.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Kicket.WinForms\\Kicket.WinForms.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

@@ -46,6 +46,7 @@
             buttonModificar = new Button();
             buttonEliminar = new Button();
             buttonLimpiar = new Button();
+            label3 = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsuarios).BeginInit();
             SuspendLayout();
             // 
@@ -53,84 +54,91 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(116, 9);
+            label1.Location = new Point(133, 12);
             label1.Name = "label1";
-            label1.Size = new Size(242, 32);
+            label1.Size = new Size(297, 41);
             label1.TabIndex = 0;
             label1.Text = "Gestion de Usuarios";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(16, 49);
+            label2.Location = new Point(18, 65);
             label2.Name = "label2";
-            label2.Size = new Size(51, 15);
+            label2.Size = new Size(64, 20);
             label2.TabIndex = 1;
             label2.Text = "Nombre";
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(16, 119);
+            label4.Location = new Point(18, 159);
             label4.Name = "label4";
-            label4.Size = new Size(36, 15);
+            label4.Size = new Size(46, 20);
             label4.TabIndex = 3;
             label4.Text = "Email";
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(16, 84);
+            label5.Location = new Point(18, 112);
             label5.Name = "label5";
-            label5.Size = new Size(51, 15);
+            label5.Size = new Size(66, 20);
             label5.TabIndex = 4;
             label5.Text = "Apellido";
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(16, 154);
+            label6.Location = new Point(18, 205);
             label6.Name = "label6";
-            label6.Size = new Size(67, 15);
+            label6.Size = new Size(83, 20);
             label6.TabIndex = 13;
             label6.Text = "Contraseña";
             // 
             // textBoxNombre
             // 
-            textBoxNombre.Location = new Point(139, 47);
+            textBoxNombre.Location = new Point(159, 63);
+            textBoxNombre.Margin = new Padding(3, 4, 3, 4);
             textBoxNombre.Name = "textBoxNombre";
-            textBoxNombre.Size = new Size(100, 23);
+            textBoxNombre.Size = new Size(114, 27);
             textBoxNombre.TabIndex = 5;
             // 
             // textBoxApellido
             // 
-            textBoxApellido.Location = new Point(139, 81);
+            textBoxApellido.Location = new Point(159, 108);
+            textBoxApellido.Margin = new Padding(3, 4, 3, 4);
             textBoxApellido.Name = "textBoxApellido";
-            textBoxApellido.Size = new Size(100, 23);
+            textBoxApellido.Size = new Size(114, 27);
             textBoxApellido.TabIndex = 6;
             // 
             // textBoxEmail
             // 
-            textBoxEmail.Location = new Point(139, 116);
+            textBoxEmail.Location = new Point(159, 155);
+            textBoxEmail.Margin = new Padding(3, 4, 3, 4);
             textBoxEmail.Name = "textBoxEmail";
-            textBoxEmail.Size = new Size(100, 23);
+            textBoxEmail.Size = new Size(114, 27);
             textBoxEmail.TabIndex = 7;
             // 
             // textBoxPassword
             // 
-            textBoxPassword.Location = new Point(139, 151);
+            textBoxPassword.Location = new Point(159, 201);
+            textBoxPassword.Margin = new Padding(3, 4, 3, 4);
             textBoxPassword.Name = "textBoxPassword";
-            textBoxPassword.Size = new Size(100, 23);
+            textBoxPassword.Size = new Size(114, 27);
             textBoxPassword.TabIndex = 14;
             textBoxPassword.UseSystemPasswordChar = true;
             // 
             // dataGridViewUsuarios
             // 
+            dataGridViewUsuarios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewUsuarios.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewUsuarios.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnNombre, ColumnApellido, ColumnEmail });
-            dataGridViewUsuarios.Location = new Point(12, 203);
+            dataGridViewUsuarios.Location = new Point(14, 271);
+            dataGridViewUsuarios.Margin = new Padding(3, 4, 3, 4);
             dataGridViewUsuarios.Name = "dataGridViewUsuarios";
-            dataGridViewUsuarios.Size = new Size(443, 150);
+            dataGridViewUsuarios.RowHeadersWidth = 51;
+            dataGridViewUsuarios.Size = new Size(506, 200);
             dataGridViewUsuarios.TabIndex = 8;
             dataGridViewUsuarios.CellClick += dataGridUsuarios_CellClick;
             // 
@@ -138,31 +146,36 @@
             // 
             ColumnId.DataPropertyName = "IdUsuario";
             ColumnId.HeaderText = "Id";
+            ColumnId.MinimumWidth = 6;
             ColumnId.Name = "ColumnId";
             // 
             // ColumnNombre
             // 
             ColumnNombre.DataPropertyName = "Nombre";
             ColumnNombre.HeaderText = "Nombre";
+            ColumnNombre.MinimumWidth = 6;
             ColumnNombre.Name = "ColumnNombre";
             // 
             // ColumnApellido
             // 
             ColumnApellido.DataPropertyName = "Apellido";
             ColumnApellido.HeaderText = "Apellido";
+            ColumnApellido.MinimumWidth = 6;
             ColumnApellido.Name = "ColumnApellido";
             // 
             // ColumnEmail
             // 
             ColumnEmail.DataPropertyName = "Email";
             ColumnEmail.HeaderText = "Email";
+            ColumnEmail.MinimumWidth = 6;
             ColumnEmail.Name = "ColumnEmail";
             // 
             // buttonGuardar
             // 
-            buttonGuardar.Location = new Point(12, 389);
+            buttonGuardar.Location = new Point(216, 536);
+            buttonGuardar.Margin = new Padding(3, 4, 3, 4);
             buttonGuardar.Name = "buttonGuardar";
-            buttonGuardar.Size = new Size(75, 23);
+            buttonGuardar.Size = new Size(86, 31);
             buttonGuardar.TabIndex = 9;
             buttonGuardar.Text = "Guardar";
             buttonGuardar.UseVisualStyleBackColor = true;
@@ -170,9 +183,10 @@
             // 
             // buttonModificar
             // 
-            buttonModificar.Location = new Point(192, 389);
+            buttonModificar.Location = new Point(308, 536);
+            buttonModificar.Margin = new Padding(3, 4, 3, 4);
             buttonModificar.Name = "buttonModificar";
-            buttonModificar.Size = new Size(75, 23);
+            buttonModificar.Size = new Size(86, 31);
             buttonModificar.TabIndex = 10;
             buttonModificar.Text = "Modificar";
             buttonModificar.UseVisualStyleBackColor = true;
@@ -180,9 +194,10 @@
             // 
             // buttonEliminar
             // 
-            buttonEliminar.Location = new Point(380, 389);
+            buttonEliminar.Location = new Point(400, 536);
+            buttonEliminar.Margin = new Padding(3, 4, 3, 4);
             buttonEliminar.Name = "buttonEliminar";
-            buttonEliminar.Size = new Size(75, 23);
+            buttonEliminar.Size = new Size(86, 31);
             buttonEliminar.TabIndex = 11;
             buttonEliminar.Text = "Eliminar";
             buttonEliminar.UseVisualStyleBackColor = true;
@@ -190,20 +205,32 @@
             // 
             // buttonLimpiar
             // 
-            buttonLimpiar.Location = new Point(283, 81);
+            buttonLimpiar.Location = new Point(492, 536);
+            buttonLimpiar.Margin = new Padding(3, 4, 3, 4);
             buttonLimpiar.Name = "buttonLimpiar";
-            buttonLimpiar.Size = new Size(75, 23);
+            buttonLimpiar.Size = new Size(86, 31);
             buttonLimpiar.TabIndex = 12;
             buttonLimpiar.Text = "Limpiar";
             buttonLimpiar.UseVisualStyleBackColor = true;
             buttonLimpiar.Click += buttonLimpiar_Click;
             // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(14, 245);
+            label3.Name = "label3";
+            label3.Size = new Size(220, 20);
+            label3.TabIndex = 15;
+            label3.Text = "Listado de Usuarios Registrados";
+            // 
             // FormUsuario
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSize = true;
             BackColor = SystemColors.Control;
-            ClientSize = new Size(477, 629);
+            ClientSize = new Size(590, 648);
+            Controls.Add(label3);
             Controls.Add(buttonLimpiar);
             Controls.Add(buttonEliminar);
             Controls.Add(buttonModificar);
@@ -218,7 +245,12 @@
             Controls.Add(label4);
             Controls.Add(label2);
             Controls.Add(label1);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            Margin = new Padding(3, 4, 3, 4);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "FormUsuario";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Administración de Usuarios";
             Shown += FormUsuario_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsuarios).EndInit();
@@ -246,5 +278,6 @@
         private Button buttonModificar;
         private Button buttonEliminar;
         private Button buttonLimpiar;
+        private Label label3;
     }
 }

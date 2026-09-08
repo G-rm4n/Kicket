@@ -49,10 +49,12 @@
             // 
             dataGridClubes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridClubes.Columns.AddRange(new DataGridViewColumn[] { ColumnID, ColumnNombre, ColumnAbreviatura });
-            dataGridClubes.Location = new Point(12, 140);
+            dataGridClubes.Location = new Point(14, 187);
+            dataGridClubes.Margin = new Padding(3, 4, 3, 4);
             dataGridClubes.Name = "dataGridClubes";
+            dataGridClubes.RowHeadersWidth = 51;
             dataGridClubes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridClubes.Size = new Size(343, 323);
+            dataGridClubes.Size = new Size(392, 315);
             dataGridClubes.TabIndex = 0;
             dataGridClubes.CellClick += dataGridClubes_CellClick;
             // 
@@ -60,67 +62,76 @@
             // 
             ColumnID.DataPropertyName = "ClubId";
             ColumnID.HeaderText = "ID";
+            ColumnID.MinimumWidth = 6;
             ColumnID.Name = "ColumnID";
+            ColumnID.Width = 125;
             // 
             // ColumnNombre
             // 
             ColumnNombre.DataPropertyName = "Nombre";
             ColumnNombre.HeaderText = "Nombre";
+            ColumnNombre.MinimumWidth = 6;
             ColumnNombre.Name = "ColumnNombre";
+            ColumnNombre.Width = 125;
             // 
             // ColumnAbreviatura
             // 
             ColumnAbreviatura.DataPropertyName = "Abreviatura";
             ColumnAbreviatura.HeaderText = "Abreviatura";
+            ColumnAbreviatura.MinimumWidth = 6;
             ColumnAbreviatura.Name = "ColumnAbreviatura";
+            ColumnAbreviatura.Width = 125;
             // 
             // labelDatos
             // 
             labelDatos.AutoSize = true;
             labelDatos.Font = new Font("Segoe UI", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            labelDatos.Location = new Point(98, 9);
+            labelDatos.Location = new Point(112, 12);
             labelDatos.Name = "labelDatos";
-            labelDatos.Size = new Size(156, 30);
+            labelDatos.Size = new Size(204, 37);
             labelDatos.TabIndex = 1;
             labelDatos.Text = "Datos del Club";
             // 
             // labelNombre
             // 
             labelNombre.AutoSize = true;
-            labelNombre.Location = new Point(21, 54);
+            labelNombre.Location = new Point(24, 72);
             labelNombre.Name = "labelNombre";
-            labelNombre.Size = new Size(57, 15);
+            labelNombre.Size = new Size(71, 20);
             labelNombre.TabIndex = 2;
             labelNombre.Text = "Nombre: ";
             // 
             // labelAbreviatura
             // 
             labelAbreviatura.AutoSize = true;
-            labelAbreviatura.Location = new Point(21, 83);
+            labelAbreviatura.Location = new Point(24, 111);
             labelAbreviatura.Name = "labelAbreviatura";
-            labelAbreviatura.Size = new Size(71, 15);
+            labelAbreviatura.Size = new Size(89, 20);
             labelAbreviatura.TabIndex = 3;
             labelAbreviatura.Text = "Abreviatura:";
             // 
             // textBoxNombreClub
             // 
-            textBoxNombreClub.Location = new Point(98, 46);
+            textBoxNombreClub.Location = new Point(112, 61);
+            textBoxNombreClub.Margin = new Padding(3, 4, 3, 4);
             textBoxNombreClub.Name = "textBoxNombreClub";
-            textBoxNombreClub.Size = new Size(100, 23);
+            textBoxNombreClub.Size = new Size(114, 27);
             textBoxNombreClub.TabIndex = 4;
             // 
             // textBoxAbreviatura
             // 
-            textBoxAbreviatura.Location = new Point(98, 75);
+            textBoxAbreviatura.Location = new Point(112, 100);
+            textBoxAbreviatura.Margin = new Padding(3, 4, 3, 4);
             textBoxAbreviatura.Name = "textBoxAbreviatura";
-            textBoxAbreviatura.Size = new Size(100, 23);
+            textBoxAbreviatura.Size = new Size(114, 27);
             textBoxAbreviatura.TabIndex = 5;
             // 
             // buttonGuardar
             // 
-            buttonGuardar.Location = new Point(12, 488);
+            buttonGuardar.Location = new Point(216, 604);
+            buttonGuardar.Margin = new Padding(3, 4, 3, 4);
             buttonGuardar.Name = "buttonGuardar";
-            buttonGuardar.Size = new Size(75, 23);
+            buttonGuardar.Size = new Size(86, 31);
             buttonGuardar.TabIndex = 6;
             buttonGuardar.Text = "Guardar";
             buttonGuardar.UseVisualStyleBackColor = true;
@@ -128,45 +139,51 @@
             // 
             // buttonModificar
             // 
-            buttonModificar.Location = new Point(113, 488);
+            buttonModificar.Location = new Point(308, 604);
+            buttonModificar.Margin = new Padding(3, 4, 3, 4);
             buttonModificar.Name = "buttonModificar";
-            buttonModificar.Size = new Size(75, 23);
+            buttonModificar.Size = new Size(86, 31);
             buttonModificar.TabIndex = 7;
             buttonModificar.Text = "Modificar";
             buttonModificar.UseVisualStyleBackColor = true;
+            buttonModificar.Click += buttonModificar_Click;
             // 
             // buttonEliminar
             // 
-            buttonEliminar.Location = new Point(230, 488);
+            buttonEliminar.Location = new Point(400, 604);
+            buttonEliminar.Margin = new Padding(3, 4, 3, 4);
             buttonEliminar.Name = "buttonEliminar";
-            buttonEliminar.Size = new Size(75, 23);
+            buttonEliminar.Size = new Size(86, 31);
             buttonEliminar.TabIndex = 8;
             buttonEliminar.Text = "Eliminar";
             buttonEliminar.UseVisualStyleBackColor = true;
+            buttonEliminar.Click += buttonEliminar_Click;
             // 
             // buttonLimpiar
             // 
-            buttonLimpiar.Location = new Point(230, 66);
+            buttonLimpiar.Location = new Point(492, 604);
+            buttonLimpiar.Margin = new Padding(3, 4, 3, 4);
             buttonLimpiar.Name = "buttonLimpiar";
-            buttonLimpiar.Size = new Size(75, 23);
+            buttonLimpiar.Size = new Size(86, 31);
             buttonLimpiar.TabIndex = 9;
             buttonLimpiar.Text = "Limpiar";
             buttonLimpiar.UseVisualStyleBackColor = true;
+            buttonLimpiar.Click += btnLimpiar_Click;
             // 
             // labelListado
             // 
             labelListado.AutoSize = true;
-            labelListado.Location = new Point(12, 111);
+            labelListado.Location = new Point(14, 148);
             labelListado.Name = "labelListado";
-            labelListado.Size = new Size(164, 15);
+            labelListado.Size = new Size(208, 20);
             labelListado.TabIndex = 10;
             labelListado.Text = "Listado de Clubes Registrados";
             // 
             // FormClub
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(377, 637);
+            ClientSize = new Size(590, 648);
             Controls.Add(labelListado);
             Controls.Add(buttonLimpiar);
             Controls.Add(buttonEliminar);
@@ -178,6 +195,10 @@
             Controls.Add(labelNombre);
             Controls.Add(labelDatos);
             Controls.Add(dataGridClubes);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            Margin = new Padding(3, 4, 3, 4);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "FormClub";
             Text = "Gestion de Clubes";
             Shown += FormClub_Load;

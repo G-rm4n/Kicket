@@ -79,7 +79,7 @@ namespace Kicket.WinForms.Forms
             await CargarClubes(); // Refresca la grilla
         }
 
-        private async void btnModificar_Click(object sender, EventArgs e)
+        private async void buttonModificar_Click(object sender, EventArgs e)
         {
             if (_clubIdSeleccionado == null)
             {
@@ -102,7 +102,7 @@ namespace Kicket.WinForms.Forms
             LimpiarFormulario(); // Opcional: limpiamos las cajas de texto tras modificar
         }
 
-        private async void btnEliminar_Click(object sender, EventArgs e)
+        private async void buttonEliminar_Click(object sender, EventArgs e)
         {
             if (_clubIdSeleccionado == null) return;
 
@@ -114,5 +114,21 @@ namespace Kicket.WinForms.Forms
                 await CargarClubes();
             }
         }
+
+        /*private void buttonEliminar_Click(object sender, EventArgs e)
+        {
+            if (_clubIdSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un club de la lista primero.", "Aviso");
+                return;
+            }
+            var confirmResult = MessageBox.Show("¿Está seguro de eliminar este club?", "Confirmar eliminación", MessageBoxButtons.YesNo);
+            if (confirmResult == DialogResult.Yes)
+            {
+                _clubApiClient.DeleteAsync(_clubIdSeleccionado.Value).Wait();
+                CargarClubes().Wait();
+                LimpiarFormulario();
+            }*/
+
+        }
     }
-}

@@ -39,17 +39,18 @@
             // 
             lblBienvenida.AutoSize = true;
             lblBienvenida.Font = new Font("Segoe UI Black", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblBienvenida.Location = new Point(109, 9);
+            lblBienvenida.Location = new Point(12, 9);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(154, 32);
+            lblBienvenida.Size = new Size(196, 41);
             lblBienvenida.TabIndex = 0;
             lblBienvenida.Text = "Bienvenido!";
             // 
             // btnCerrarSesion
             // 
-            btnCerrarSesion.Location = new Point(151, 255);
+            btnCerrarSesion.Location = new Point(173, 340);
+            btnCerrarSesion.Margin = new Padding(3, 4, 3, 4);
             btnCerrarSesion.Name = "btnCerrarSesion";
-            btnCerrarSesion.Size = new Size(75, 23);
+            btnCerrarSesion.Size = new Size(86, 31);
             btnCerrarSesion.TabIndex = 1;
             btnCerrarSesion.Text = "Cerrar \r\nSesion";
             btnCerrarSesion.UseVisualStyleBackColor = true;
@@ -57,9 +58,10 @@
             // 
             // buttonGestionClubes
             // 
-            buttonGestionClubes.Location = new Point(123, 80);
+            buttonGestionClubes.Location = new Point(123, 97);
+            buttonGestionClubes.Margin = new Padding(3, 4, 3, 4);
             buttonGestionClubes.Name = "buttonGestionClubes";
-            buttonGestionClubes.Size = new Size(128, 23);
+            buttonGestionClubes.Size = new Size(198, 31);
             buttonGestionClubes.TabIndex = 2;
             buttonGestionClubes.Text = "Gestion de Clubes";
             buttonGestionClubes.UseVisualStyleBackColor = true;
@@ -67,9 +69,10 @@
             // 
             // buttonGestionEstadios
             // 
-            buttonGestionEstadios.Location = new Point(123, 132);
+            buttonGestionEstadios.Location = new Point(123, 166);
+            buttonGestionEstadios.Margin = new Padding(3, 4, 3, 4);
             buttonGestionEstadios.Name = "buttonGestionEstadios";
-            buttonGestionEstadios.Size = new Size(128, 23);
+            buttonGestionEstadios.Size = new Size(198, 31);
             buttonGestionEstadios.TabIndex = 3;
             buttonGestionEstadios.Text = "Gestion de Estadios";
             buttonGestionEstadios.UseVisualStyleBackColor = true;
@@ -77,9 +80,10 @@
             // 
             // buttonGestionUsuarios
             // 
-            buttonGestionUsuarios.Location = new Point(123, 195);
+            buttonGestionUsuarios.Location = new Point(123, 250);
+            buttonGestionUsuarios.Margin = new Padding(3, 4, 3, 4);
             buttonGestionUsuarios.Name = "buttonGestionUsuarios";
-            buttonGestionUsuarios.Size = new Size(128, 23);
+            buttonGestionUsuarios.Size = new Size(198, 31);
             buttonGestionUsuarios.TabIndex = 4;
             buttonGestionUsuarios.Text = "Gestion de Usuarios";
             buttonGestionUsuarios.UseVisualStyleBackColor = true;
@@ -87,15 +91,19 @@
             // 
             // FormPrincipal
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(374, 325);
+            AutoSize = true;
+            ClientSize = new Size(427, 433);
             Controls.Add(buttonGestionUsuarios);
             Controls.Add(buttonGestionEstadios);
             Controls.Add(buttonGestionClubes);
             Controls.Add(btnCerrarSesion);
             Controls.Add(lblBienvenida);
+            Margin = new Padding(3, 4, 3, 4);
+            MaximizeBox = false;
             Name = "FormPrincipal";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "FormPrincipal";
             Load += FormPrincipal_Load;
             ResumeLayout(false);
