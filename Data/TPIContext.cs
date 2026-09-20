@@ -140,7 +140,7 @@ namespace Data
                 u.HasIndex(u => u.Email).IsUnique();
                 u.Property(u => u.Password).HasMaxLength(32);
                 u.Property(u => u.FechaRegistro);
-                u.Property(u => u.Rol);
+                u.Property(u => u.Rol).HasDefaultValue("Usuario");
 
                 u.HasData(
                     new

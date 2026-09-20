@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Interfaces;
+﻿using Data.Interfaces;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Data.Implementaciones
 {
@@ -69,6 +70,27 @@ namespace Data.Implementaciones
         public async Task<Usuario?> GetByEmailAsync(string email)
         {
             return await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<IEnumerable<Usuario>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Usuario, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Usuario>, IOrderedQueryable<Usuario>>? ordenamiento = null)
+        {
+            IQueryable<Usuario> query = context.Set<Usuario>();
+
+            if (esFiltrado && filtro is not null)
+            {
+                query=query.Where(filtro).Where(u=>u.Rol=="Usuario");
+            }
+
+            if(esOrdenado && ordenamiento is not null)
+            {
+                query=ordenamiento(query);
+            }
+
+            query = query
+                .Skip((pagina - 1) * cantidadPorPagina)
+                .Take(cantidadPorPagina);
+
+            return await query.ToListAsync();
         }
     }
 }
