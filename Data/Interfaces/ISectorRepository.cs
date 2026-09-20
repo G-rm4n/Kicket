@@ -9,6 +9,12 @@ namespace Data.Interfaces
 {
     public interface ISectorRepository
     {
-        Task<Sector> ObtenerSectorPorIdAsync(int sectorId);
+        Task<Sector?> ObtenerSectorPorIdAsync(int sectorId);
+        Task AddSectorAsync(Sector sector);
+
+        Task<bool> UpdateSectorAsync(Sector sector);
+
+        Task<bool> DeleteSectorAsync(int sectorId);
+        Task<IEnumerable<Sector>> GetAll();
     }
 }
