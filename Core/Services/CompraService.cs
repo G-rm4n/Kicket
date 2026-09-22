@@ -30,7 +30,7 @@ namespace Core.Services
                 throw new ArgumentException("La cantidad de entradas debe ser mayor a cero.");
             }
             var evento = await _eventoRepository.GetOneById(eventoId);
-            if (evento == null || !evento.EstaCancelado)
+            if (evento == null || !evento.EstaDisponible())
             {
                 throw new ArgumentException("El evento no existe o ya caduco");
             }
@@ -44,7 +44,7 @@ namespace Core.Services
 
             if (cantidad > capacidadRestante)
             {
-                throw new Exception("$\"Stock insuficiente. Solo quedan {capacidadRestante} lugares en este sector.");
+                throw new Exception($"Stock insuficiente. Solo quedan {capacidadRestante} lugares en este sector.");
             }
 
             decimal montoCalculado = sector.PrecioBase * cantidad;
@@ -58,7 +58,7 @@ namespace Core.Services
                 MontoTotal = montoCalculado,
                 FechaCompra = DateTime.Now,
                 Entradas = new List<Entrada>()
-            }; 
+            };
 
             for (int i = 0; i < cantidad; i++)
             {

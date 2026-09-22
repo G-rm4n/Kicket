@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Kicket.Contracts.Sectores
+{
+    public class SectorDto
+    {
+        public int SectorId { get; set; }
+        public int EstadioId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public int CapacidadMaxima { get; set; }
+        public decimal PrecioBase { get; set; }
+    }
+}

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Data.Interfaces
 {
-    internal interface IEntradaRepository
+    public interface IEntradaRepository
     {
         Task<Entrada?> ObtenerPorIdAsync(int id);
         Task<IEnumerable<Entrada>> ObtenerPorEventoAsync(int eventoId);
