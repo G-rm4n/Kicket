@@ -1,3 +1,57 @@
+:root {
+    /* =========================================
+       1. COLORES DE MARCA (BRAND COLORS)
+       ========================================= */
+    /* Color principal: Usado en llamados a la acción fuertes (Botones "Registrarse", "Comprar Entradas")[cite: 1]. */
+    --bs-primary: #25d366;
+    --bs-primary-rgb: 37, 211, 102;
+    /* Color secundario: Usado en acciones neutras o de navegación (Botón "Iniciar Sesión", botones de cancelar)[cite: 1]. */
+    --bs-secondary: #56637a;
+    --bs-secondary-rgb: 86, 99, 122;
+    /* =========================================
+       2. COLORES SEMÁNTICOS (ESTADOS Y ALERTAS)
+       ========================================= */
+    /* Éxito: Usado para confirmaciones (Pago aprobado, entrada generada con éxito, notificaciones positivas). */
+    --bs-success: #10b981;
+    /* Peligro: Usado para acciones destructivas o errores (Eliminar reserva, error de pago, entradas agotadas). */
+    --bs-danger: #ef4444;
+    /* Advertencia: Usado para estados de precaución (Últimas entradas disponibles, pago pendiente de acreditación). */
+    --bs-warning: #f59e0b;
+    /* Información: Usado para tooltips o mensajes del sistema (Instrucciones de acceso al estadio). */
+    --bs-info: #3b82f6;
+    /* =========================================
+       3. SUPERFICIES Y FONDOS (SURFACES)
+       ========================================= */
+    /* Fondo claro: Usado en la barra de navegación superior, fondos de tarjetas de eventos o menús desplegables[cite: 1]. */
+    --bs-light: #f4f5f7;
+    --bs-light-rgb: 244, 245, 247;
+    /* Fondo principal: El color del lienzo o "body" de toda la aplicación web. */
+    --bs-body-bg: #ffffff;
+    /* Color de borde: Usado para delimitar contenedores, separadores de listas y contornos de tarjetas. */
+    --bs-border-color: #e5e7eb;
+    /* =========================================
+       4. COLOR DE TEXTO (TYPOGRAPHY COLORS)
+       ========================================= */
+    /* Texto principal: Alto contraste, usado para los títulos de los eventos y el texto de cuerpo general. */
+    --bs-body-color: #1f2937;
+    /* Texto secundario: Menor contraste, usado para metadatos (fechas, ubicaciones, categorías, subtítulos). */
+    --bs-secondary-color: #6b7280;
+    /* =========================================
+       5. TAMAÑOS DE FUENTE (TYPOGRAPHY SCALE)
+       ========================================= */
+    /* Texto pequeño (12px / 0.75rem): Usado en etiquetas de estado (badges de "Pendiente" o "Confirmado"), fechas pequeñas. */
+    --bs-body-font-size-sm: 0.75rem;
+    /* Texto base (16px / 1rem): Usado en párrafos, descripciones de los eventos y campos de formularios. */
+    --bs-body-font-size: 1rem;
+    /* Títulos H4 (20px / 1.25rem): Usado en los nombres de los eventos dentro de la grilla de tarjetas. */
+    --bs-h4-font-size: 1.25rem;
+    /* Títulos H3 (24px / 1.5rem): Usado en cabeceras de sección (Ej. "Mis Entradas", "Próximos Eventos"). */
+    --bs-h3-font-size: 1.5rem;
+    /* Títulos H1 (40px / 2.5rem): Usado exclusivamente en banners principales (Ej. "Sentí la camiseta, viví el partido"). */
+    --bs-h1-font-size: 2.5rem;
+}
+
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

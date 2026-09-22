@@ -1,9 +1,10 @@
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Clientes;
+using Kicket.ApiClient.Configuracion;
+using Kicket.ApiClient.Http;
 using Kicket.ApiClient.Sesion;
 using Kicket.Blazor.Components;
-using Kicket.Blazor.Core.Interceptors;
-using Microsoft.AspNetCore.Authentication;
+using Kicket.Blazor.Core.session;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +12,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<ISesionUsuario, SesionUsuario>();
-builder.Services.AddTransient<TokenInsertor>();
+builder.Services.AddTransient<IClubApiClient, ClubApiClient>();
+builder.Services.AddTransient<IUsuarioApiClient, UsuarioApiClient>();
+builder.Services.AddTransient<IAuthApiClient, AuthApiClient>();
+builder.Services.AddTransient<IEstadioApiClient, EstadioApiClient>();
 
-builder.Services.AddHttpClient("UsuarioApiClient").AddHttpMessageHandler<TokenInsertor>();
+builder.Services.AddKicketApiClient(options =>
+{
+    options.TimeoutSegundos = 30;
+    options.BaseUrl = "http://localhost:5268/";
+});
+
+builder.Services.AddScoped<BlazorSesionUsuario>();
+builder.Services.AddScoped<ISesionUsuario>(sp => sp.GetRequiredService<BlazorSesionUsuario>());
 
 var app = builder.Build();
 
