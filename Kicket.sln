@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.WinForms", "Kicket.WinForms\Kicket.WinForms.csproj", "{20006F04-83DD-415A-A371-4A5B75F85772}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.Blazor", "Kicket.Blazor\Kicket.Blazor.csproj", "{C2EFD902-30AB-4244-A636-905CFE62ECC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x64.Build.0 = Release|Any CPU
 		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x86.ActiveCfg = Release|Any CPU
 		{20006F04-83DD-415A-A371-4A5B75F85772}.Release|x86.Build.0 = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|x64.Build.0 = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Debug|x86.Build.0 = Debug|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|x64.ActiveCfg = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|x64.Build.0 = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|x86.ActiveCfg = Release|Any CPU
+		{C2EFD902-30AB-4244-A636-905CFE62ECC8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
