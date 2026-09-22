@@ -1,0 +1,54 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@using Core.session
+@inject BlazorSesionUsuario session
+
+<nav class="navbar bg-light navbar-light container-fluid shadow-sm m-1">
+    <div class="d-flex flex-row gap-3 align-items-center justify-content-around">
+        <div>
+            <NavLink href="" >
+                <img style="height:40px ;width:auto" src="/assets/logo.png"/>
+            </NavLink>
+        </div>
+
+        <NavLink href="" class="text-decoration-none text-reset">
+            <h3 class="text-center mb-0 fw-bolder">
+                Kicket
+            </h3>
+        </NavLink>
+
+    </div>
+
+    <div class="container-button d-flex flex-row gap-3 align-items-center justify-content-around">
+        @if (!session.EstaAutenticado)
+        {
+            <button class="btn bg-primary text-white-100">Registrarse</button>
+            <button class="btn bg-secondary text-white">Ingresar</button>
+        } else {
+            <button class="btn bg-primary text-white-100">Mi perfil</button>
+        }
+    </div>
+</nav>
+
+<main class="container mt-4">
+    @Body
+</main>
+
+    @code {
+
+    protected override void OnInitialized()
+    {
+        session.SesionCambiada += StateHasChangedEnEvento;
+    }
+
+    private void StateHasChangedEnEvento(object? obj, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        session.SesionCambiada -= StateHasChangedEnEvento;
+    }
+
+}
