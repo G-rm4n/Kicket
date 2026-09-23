@@ -38,7 +38,7 @@ namespace Kicket.Blazor.Core.session
                 this.ExpiraEn = response.ExpiraEn;
             }
 
-            _ = GuardarEnStorageAsync(respuesta);
+            _ = GuardarEnStorageAsync(response);
 
             SesionCambiada?.Invoke(this, EventArgs.Empty);
         }
@@ -52,7 +52,7 @@ namespace Kicket.Blazor.Core.session
             catch { }
         }
 
-        private async Task CargarSession()
+        public async Task CargarSession()
         {
             try
             {
