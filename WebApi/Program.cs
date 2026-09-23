@@ -1,5 +1,3 @@
-
-
 using System.Text;
 using Core.Interfaces;
 using Core.Services;
@@ -92,11 +90,11 @@ var conectionString = builder.Configuration.GetConnectionString("Local");
 //Mapeo de los EndPoints base, comentado hasta que se 
 //Implementen los services.
 app.MapClubEndPoints();
-//app.MapCompraEndPoints();
-//app.MapEntradaEndPoints();
-//app.MapEventoEndPoints();
+app.MapCompraEndPoints();
+app.MapEntradaEndPoints();
+app.MapEventoEndPoints();
 app.MapUsuarioEndPoints();
-//app.MapSectorEndPoints();
+app.MapSectorEndPoints();
 app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
 

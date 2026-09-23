@@ -23,7 +23,7 @@ namespace Core.Services
             _sectorRepository = sectorRepository;
         }
 
-        public async Task<bool> GenerarCompraAsync(int usuarioId, int eventoId, int sectorId, int cantidad)
+        public async Task<Compra> GenerarCompraAsync(int usuarioId, int eventoId, int sectorId, int cantidad)
         {
             if (cantidad <= 0)
             {
@@ -37,14 +37,14 @@ namespace Core.Services
             var sector = await _sectorRepository.ObtenerSectorPorIdAsync(sectorId);
             if (sector == null)
             {
-                throw new Exception("El sector seleccionado no existe.");
+                throw new ArgumentException("El sector seleccionado no existe.");
             }
             int entradasVendidas = await _compraRepository.ObtenerCantidadEntradasVendidasAsync(eventoId, sectorId);
             int capacidadRestante = sector.CapacidadMaxima - entradasVendidas;
 
             if (cantidad > capacidadRestante)
             {
-                throw new Exception($"Stock insuficiente. Solo quedan {capacidadRestante} lugares en este sector.");
+                throw new ArgumentException($"Stock insuficiente. Solo quedan {capacidadRestante} lugares en este sector.");
             }
 
             decimal montoCalculado = sector.PrecioBase * cantidad;
@@ -52,8 +52,6 @@ namespace Core.Services
             var nuevaCompra = new Compra
             {
                 UsuarioId = usuarioId,
-                //EventoId = eventoId,
-                //SectorId = sectorId,
                 Cantidad = cantidad,
                 MontoTotal = montoCalculado,
                 FechaCompra = DateTime.Now,
@@ -70,8 +68,22 @@ namespace Core.Services
                 nuevaCompra.Entradas.Add(nuevaEntrada);
             }
             await _compraRepository.AddAsync(nuevaCompra);
-            // Aquí programaremos la validación de stock y cálculo de precios
-            return true;
+            return nuevaCompra;
+        }
+
+        public async Task<Compra?> ObtenerPorIdAsync(int id)
+        {
+            return await _compraRepository.GetByIdAsync(id);
+        }
+
+        public async Task<IEnumerable<Compra>> ObtenerTodosAsync()
+        {
+            return await _compraRepository.GetAllAsync();
+        }
+
+        public async Task<bool> EliminarCompraAsync(int id)
+        {
+            return await _compraRepository.DeleteAsync(id);
         }
     }
 }

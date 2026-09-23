@@ -54,6 +54,10 @@ namespace Kicket.ApiClient.Configuracion
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
             services.AgregarCliente<IUsuarioApiClient, UsuarioApiClient>(opciones);
             services.AgregarCliente<IAuthApiClient, AuthApiClient>(opciones);
+            services.AgregarCliente<IEventoApiClient, EventoApiClient>(opciones);
+            services.AgregarCliente<ISectorApiClient, SectorApiClient>(opciones);
+            services.AgregarCliente<ICompraApiClient, CompraApiClient>(opciones);
+            services.AgregarCliente<IEntradaApiClient, EntradaApiClient>(opciones);
 
             return services;
         }
@@ -64,10 +68,10 @@ namespace Kicket.ApiClient.Configuracion
             where TImpl : class, TInterfaz
         {
             services.AddHttpClient<TInterfaz, TImpl>(http =>
-                   {
-                       http.BaseAddress = new Uri(opciones.BaseUrl);
-                       http.Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos);
-                   })
+            {
+                http.BaseAddress = new Uri(opciones.BaseUrl);
+                http.Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos);
+            })
                    .AddHttpMessageHandler<AuthTokenHandler>();
         }
     }
