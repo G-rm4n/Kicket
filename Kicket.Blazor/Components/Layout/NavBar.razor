@@ -1,7 +1,6 @@
 ﻿@inherits LayoutComponentBase
-@implements IDisposable
-@using Core.session
-@inject BlazorSesionUsuario session
+@using Microsoft.AspNetCore.Components.Authorization
+
 
 <nav class="navbar bg-light navbar-light container-fluid shadow-sm m-1">
     <div class="d-flex flex-row gap-3 align-items-center justify-content-around">
@@ -20,35 +19,23 @@
     </div>
 
     <div class="container-button d-flex flex-row gap-3 align-items-center justify-content-around">
-        @if (!session.EstaAutenticado)
-        {
-            <button class="btn bg-primary text-white-100">Registrarse</button>
-            <button class="btn bg-secondary text-white">Ingresar</button>
-        } else {
-            <button class="btn bg-primary text-white-100">Mi perfil</button>
-        }
+        <AuthorizeView>
+            <Authorizing>
+                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                    <span>Cargando...</span>
+                </div>
+            </Authorizing>
+            <NotAuthorized>
+                <button class="btn bg-primary text-white-100">Registrarse</button>
+                <button class="btn bg-secondary text-white">Ingresar</button>
+            </NotAuthorized>
+            <Authorized>
+                <button class="btn bg-primary text-white-100">Mi perfil</button>
+            </Authorized>
+        </AuthorizeView>
     </div>
 </nav>
 
 <main class="container mt-4">
     @Body
 </main>
-
-    @code {
-
-    protected override void OnInitialized()
-    {
-        session.SesionCambiada += StateHasChangedEnEvento;
-    }
-
-    private void StateHasChangedEnEvento(object? obj, EventArgs e)
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        session.SesionCambiada -= StateHasChangedEnEvento;
-    }
-
-}

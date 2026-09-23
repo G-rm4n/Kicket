@@ -1,9 +1,7 @@
 using Kicket.ApiClient.Abstracciones;
-using Kicket.ApiClient.Clientes;
 using Kicket.ApiClient.Configuracion;
 using Kicket.Blazor.Components;
 using Kicket.Blazor.Core.session;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,7 +21,7 @@ builder.Services.AddScoped<ISesionUsuario>(sp => sp.GetRequiredService<BlazorSes
 
 builder.Services.AddAuthenticationCore();
 builder.Services.AddScoped<KicketAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService <KicketAuthStateProvider>());
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<KicketAuthStateProvider>());
 
 var app = builder.Build();
 
