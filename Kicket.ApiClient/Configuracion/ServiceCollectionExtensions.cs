@@ -46,8 +46,7 @@ namespace Kicket.ApiClient.Configuracion
 
             services.AddSingleton(opciones);
 
-            // Una sola sesion por proceso: es el usuario sentado frente a la aplicacion.
-            services.AddSingleton<ISesionUsuario, SesionUsuario>();
+            //Se elimino para que cada Interfaz grafica Decrete a la sesion deacuerdo a si misma
             services.AddTransient<AuthTokenHandler>();
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);

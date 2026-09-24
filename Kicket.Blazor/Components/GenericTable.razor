@@ -1,0 +1,31 @@
+﻿@typeparam TItem
+
+<table class="table">
+    <thead>
+        <tr>
+            @Cabeceras
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var item in DatosTabla)
+        {
+            <tr>
+                @fila(item)
+            </tr>
+        }
+    </tbody>
+</table>
+@code {
+    [Parameter]
+    public IEnumerable<TItem> DatosTabla { get; set; } = Enumerable.Empty<TItem>();
+
+    [Parameter]
+    public RenderFragment? Cabeceras { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? fila { get; set; }
+
+
+
+
+}

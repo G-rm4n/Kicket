@@ -1,8 +1,9 @@
 ﻿using Kicket.ApiClient.Abstracciones;
+using Kicket.Blazor.Core.session;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
-namespace Kicket.Blazor.Core.session
+namespace Kicket.Blazor.Core.state
 {
     public class KicketAuthStateProvider:AuthenticationStateProvider
     {
