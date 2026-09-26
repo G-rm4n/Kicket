@@ -40,9 +40,24 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            // Esto imprimirá en la consola de tu backend la razón exacta del fallo (ej. firma inválida, expirado, etc.)
+            Console.WriteLine($"[JWT ERROR] Falló la autenticación: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("EL TOKEN SI SE VALIDO");
+            return Task.CompletedTask;
+        }
+    };
 });
 
-builder.Services.AddAuthentication();
+
 builder.Services.AddAuthorization();
 
 

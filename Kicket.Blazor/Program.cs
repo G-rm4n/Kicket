@@ -13,18 +13,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddKicketApiClient(options =>
-{
-    options.TimeoutSegundos = 30;
-    options.BaseUrl = "http://localhost:5268/";
-});
-
 builder.Services.AddScoped<BlazorSesionUsuario>();
 builder.Services.AddScoped<ISesionUsuario>(sp => sp.GetRequiredService<BlazorSesionUsuario>());
 
 builder.Services.AddAuthenticationCore();
 builder.Services.AddScoped<KicketAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<KicketAuthStateProvider>());
+
+builder.Services.AddKicketApiClient(options =>
+{
+    options.TimeoutSegundos = 30;
+    options.BaseUrl = "http://localhost:5268/";
+});
 
 var app = builder.Build();
 

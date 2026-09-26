@@ -47,7 +47,8 @@ namespace Kicket.ApiClient.Configuracion
             services.AddSingleton(opciones);
 
             //Se elimino para que cada Interfaz grafica Decrete a la sesion deacuerdo a si misma
-            services.AddTransient<AuthTokenHandler>();
+            //cambiar por scoped
+            services.AddScoped<AuthTokenHandler>();
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
@@ -62,12 +63,24 @@ namespace Kicket.ApiClient.Configuracion
             where TInterfaz : class
             where TImpl : class, TInterfaz
         {
-            services.AddHttpClient<TInterfaz, TImpl>(http =>
-                   {
-                       http.BaseAddress = new Uri(opciones.BaseUrl);
-                       http.Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos);
-                   })
-                   .AddHttpMessageHandler<AuthTokenHandler>();
+            services.AddScoped<TInterfaz, TImpl>(sp =>
+            {
+                
+                var handler = sp.GetRequiredService<AuthTokenHandler>();
+
+                
+                handler.InnerHandler = new HttpClientHandler();
+
+                
+                var httpClient = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri(opciones.BaseUrl),
+                    Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos)
+                };
+
+                
+                return ActivatorUtilities.CreateInstance<TImpl>(sp, httpClient);
+            });
         }
     }
 }
