@@ -57,6 +57,13 @@
 
         </GenericModalForm>
     }
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger">
+            @MensajeError
+        </div>
+    }
 </div>
 
 
@@ -65,8 +72,6 @@
     public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Descripccion", "Abreviatura"];
 
     public IEnumerable<ClubDto>? clubs { get; set; }
-
-    public bool ErrorEnCarga { get; set; } = false;
 
     public bool IsClubSelected { get; set; } = false;
     public bool ShowModalEdicion { get; set; } = false;
@@ -79,7 +84,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
         await CargarClubesAsync();
     }
 
@@ -91,14 +95,11 @@
 
     public async Task CargarClubesAsync()
     {
-        try
+        await this.SecureExec(async () =>
         {
-            this.clubs= await clubClient.GetAllAsync();
-        }
-        catch
-        {
-            this.ErrorEnCarga = true;
-        }
+            this.clubs=await clubClient.GetAllAsync();
+
+        });
     }
 
     public void AbrirModalEdicion()
