@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Modules\Entradas\components\" />
     <Folder Include="Modules\Eventos\" />
-    <Folder Include="Modules\Clubes\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
     <ProjectReference Include="..\Kicket.ApiClient\Kicket.ApiClient.csproj" />
+    <ProjectReference Include="..\Kicket.Contracts\Kicket.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
