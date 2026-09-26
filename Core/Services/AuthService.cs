@@ -41,9 +41,9 @@ namespace Core.Services
         {
             var payloadInfo = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub,usuario.IdUsuario.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email,usuario.Email),
-                new Claim(ClaimTypes.Role,usuario.Rol),
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.IdUsuario.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
+                new Claim(ClaimTypes.Role, usuario.Rol),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -63,6 +63,19 @@ namespace Core.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return (tokenHandler.WriteToken(token), DateTime.Now.AddHours(2));
+        }
+
+
+        public async Task RegistrarUsuario(Usuario usuario)
+        {
+            var EmailDupp = await this._usuarios.ExistsEmail(usuario.Email);
+
+            if (EmailDupp) throw new ArgumentException("El correo provisto Ya se encuentra en uso");
+
+            usuario.Rol = "Cliente";
+            usuario.FechaRegistro=DateTime.UtcNow;
+
+            await this._usuarios.AddAsync(usuario);
         }
     }
 }

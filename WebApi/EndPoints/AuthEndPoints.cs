@@ -1,5 +1,6 @@
 ﻿using Core.Interfaces;
 using Core.Services;
+using Domain.Entities;
 using Kicket.Contracts.Auth;
 using Kicket.Contracts.Usuarios;
 using System.Net;
@@ -32,6 +33,15 @@ namespace WebApi.EndPoints
                         Rol = usuario.Rol
                     }
                 });
+            });
+
+            app.MapPost("auth/register", async (UsuarioRequest RegReq, IAuthService authService) =>
+            {
+                var usuario = new Usuario() { Email = RegReq.Email, Apellido = RegReq.Apellido, Nombre = RegReq.Nombre, Password = RegReq.Pass };
+
+                await authService.RegistrarUsuario(usuario);
+
+                return Results.Ok(new { Mensaje = "Usuario creado correctamente" });
             });
         }
     }

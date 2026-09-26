@@ -1,6 +1,7 @@
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Auth;
+using Kicket.Contracts.Usuarios;
 
 namespace Kicket.ApiClient.Clientes
 {
@@ -27,6 +28,12 @@ namespace Kicket.ApiClient.Clientes
             var respuesta = await PostAsync<LoginResponse>($"{Ruta}/login", request, ct);
             _sesion.Iniciar(respuesta);
 
+            return respuesta;
+        }
+
+        public async Task<RegisterResponse> RegistAsync(UsuarioRequest request, CancellationToken ct = default)
+        {
+            var respuesta= await PostAsync<RegisterResponse>($"{Ruta}/register", request, ct);
             return respuesta;
         }
 
