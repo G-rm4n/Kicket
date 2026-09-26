@@ -47,8 +47,8 @@ namespace Kicket.ApiClient.Configuracion
             services.AddSingleton(opciones);
 
             //Se elimino para que cada Interfaz grafica Decrete a la sesion deacuerdo a si misma
-            //cambiar por scoped
-            services.AddScoped<AuthTokenHandler>();
+            
+            services.AddTransient<AuthTokenHandler>();
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
