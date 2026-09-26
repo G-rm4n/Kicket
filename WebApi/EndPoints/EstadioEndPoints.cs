@@ -9,10 +9,13 @@ namespace WebApi.EndPoints
     {
         public static void MapEstadioEndPoints(this WebApplication app)
         {
-            app.MapGet("/estadios", async (IEstadioService estadioService) =>
+            
+            var estadiosGroup = app.MapGroup("/estadios")
+                                   .RequireAuthorization();
+
+            estadiosGroup.MapGet("/", async (IEstadioService estadioService) =>
             {
-                
-                 var estadios=await estadioService.ObtenerTodosAsync();
+                var estadios = await estadioService.ObtenerTodosAsync();
 
                 IEnumerable<EstadioDto> dtos = estadios.Select(e => new EstadioDto()
                 {
@@ -23,20 +26,22 @@ namespace WebApi.EndPoints
                 }).ToList();
 
                 return Results.Ok(dtos);
-                 
+
             })
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK)
             ;
 
-            app.MapGet("/estadios/{id}", async (int id,IEstadioService estadioService) =>
+            estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 Estadio? estadio = await estadioService.ObtenerPorIdAsync(id);
-                
-                 
-                if(estadio ==null){
-                   return Results.NotFound();
-                };
+
+
+                if (estadio == null)
+                {
+                    return Results.NotFound();
+                }
+                ;
 
                 EstadioDto estadioDto = new()
                 {
@@ -45,17 +50,17 @@ namespace WebApi.EndPoints
                     Nombre = estadio.Nombre,
                     IdEstadio = estadio.EstadioId
                 };
-                 
+
                 return Results.Ok(estadioDto);
-                
-                 
+
+
             })
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             ;
 
-            app.MapPost("/estadios", async (EstadioRequest estadioReq,IEstadioService estadioService) =>
+            estadiosGroup.MapPost("/", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
             {
                 Estadio estadio = new()
                 {
@@ -80,7 +85,7 @@ namespace WebApi.EndPoints
             .Produces<EstadioDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapPut("/estadios", async (EstadioUpdateRequest estadioReq,IEstadioService estadioService) =>
+            estadiosGroup.MapPut("/", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
 
                 Estadio estadio = new()
@@ -88,7 +93,7 @@ namespace WebApi.EndPoints
                     Ciudad = estadioReq.Ciudad,
                     Direccion = estadioReq.Direccion,
                     Nombre = estadioReq.Nombre,
-                    EstadioId=estadioReq.IdEstadio
+                    EstadioId = estadioReq.IdEstadio
                 };
 
                 var found = await estadioService.ActualizarEstadioAsync(estadio);
@@ -99,7 +104,7 @@ namespace WebApi.EndPoints
                 }
 
                 return Results.NoContent();
-                
+
             })
             .WithName("UpdateEstadio")
             .Produces(StatusCodes.Status204NoContent)
@@ -107,9 +112,9 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             ;
 
-            app.MapDelete("/estadios/{id}",async (int id,IEstadioService estadioService) =>
+            estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
             {
-                
+
                 var deleted = await estadioService.EliminarEstadioAsync(id);
 
                 if (!deleted)
@@ -118,7 +123,7 @@ namespace WebApi.EndPoints
                 }
 
                 return Results.NoContent();
-                
+
             })
             .WithName("DeleteEstadio")
             .Produces(StatusCodes.Status204NoContent)

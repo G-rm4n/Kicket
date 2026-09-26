@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
@@ -10,7 +11,10 @@ namespace WebApi.EndPoints
     {
         public static void MapClubEndPoints(this WebApplication app)
         {
-            app.MapGet("/clubes", async (IClubService clubService) =>
+            var clubGroup = app.MapGroup("/clubes")
+                                .RequireAuthorization();
+
+            clubGroup.MapGet("/", async (IClubService clubService) =>
             {
 
                 var clubes = await clubService.ObtenerTodosAsync();
@@ -27,13 +31,13 @@ namespace WebApi.EndPoints
             .WithName("GetAllClubes")
             .Produces<IEnumerable<ClubDto>>(StatusCodes.Status200OK);
 
-            app.MapGet("/clubes/{id}", static async (int id, IClubService clubService) =>
+            clubGroup.MapGet("/{id}", static async (int id, IClubService clubService) =>
             {
                 
                   Club? club = await clubService.ObtenerPorIdAsync(id);
                   
                   if(club == null){
-                      return Results.NotFound();
+                      return Results.Problem(detail:"Club no encontrado",statusCode:(int)HttpStatusCode.NotFound);
                   }
 
                   ClubDto clubDto = new()
@@ -52,7 +56,7 @@ namespace WebApi.EndPoints
             .Produces<ClubDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-            app.MapPost("/clubes", async (ClubRequest clubReq, IClubService clubService) =>
+            clubGroup.MapPost("/", async (ClubRequest clubReq, IClubService clubService) =>
             {
 
                 Club club = new()
@@ -79,7 +83,7 @@ namespace WebApi.EndPoints
             .Produces<ClubDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapPut("/clubes", async (ClubUpdateRequest clubReq, IClubService clubService) =>
+            clubGroup.MapPut("/", async (ClubUpdateRequest clubReq, IClubService clubService) =>
             {
                 Club club = new()
                 {
@@ -95,14 +99,14 @@ namespace WebApi.EndPoints
                 {
                     return Results.NoContent();
                 }
-                return Results.NotFound();
+                return Results.Problem(detail:"El club No existe",statusCode:(int)HttpStatusCode.NotFound);
             })
             .WithName("UpdateClub")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
+            clubGroup.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
             {
                 
                  var deleted = await clubService.EliminarClubAsync(id);
@@ -110,7 +114,7 @@ namespace WebApi.EndPoints
                  {
                      return Results.NotFound();
                  }
-                 return Results.NoContent();
+                 return Results.Problem(detail: "El club No existe", statusCode: (int)HttpStatusCode.NotFound); ;
                  
             })
             .WithName("DeleteClub")
