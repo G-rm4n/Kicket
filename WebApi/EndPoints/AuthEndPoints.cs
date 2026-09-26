@@ -2,6 +2,7 @@
 using Core.Services;
 using Kicket.Contracts.Auth;
 using Kicket.Contracts.Usuarios;
+using System.Net;
 
 namespace WebApi.EndPoints
 {
@@ -13,7 +14,8 @@ namespace WebApi.EndPoints
             {
                 var result = await authService.Login(loginReq.Email, loginReq.Pass);
 
-                if (result is null) return Results.Unauthorized();
+                if (result is null)
+                    return Results.Problem(detail: "Credenciales incorrectas", statusCode: (int)HttpStatusCode.Unauthorized);
 
                 var (token, fechaExpiracion, usuario) = result.Value;
 
