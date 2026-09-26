@@ -1,24 +1,37 @@
 ﻿@page "/auth/login"
 @using Kicket.ApiClient.Abstracciones
+@using Kicket.ApiClient.Http
 @using Kicket.Blazor.Core.session;
 @using Kicket.Blazor.Core.state
 @using Kicket.Blazor.Modules.Auth.components
 @using Kicket.Contracts.Auth
+@using Kicket.Blazor.Core.HTTP
 @inject KicketAuthStateProvider stateProvider
 @inject IAuthApiClient authApiCli
 @inject NavigationManager Nav
+@inherits PaginaApi
+
+@if (!string.IsNullOrEmpty(MensajeError))
+{
+    <div class="alert alert-danger">
+        @MensajeError
+    </div>
+}
 
 <LoginForm submit="EnviarCredenciales"></LoginForm>
 
 @code {
+
+
+
     private async Task EnviarCredenciales(LoginRequest loginData)
     {
-        Console.WriteLine(loginData);
+        await this.SecureExec(async () =>
+        {
+            var result = await authApiCli.LoginAsync(loginData);
+            stateProvider.NotificarCambioDeEstado();
 
-        await authApiCli.LoginAsync(loginData);
-
-        stateProvider.NotificarCambioDeEstado();
-
-        Nav.NavigateTo("");
+            Nav.NavigateTo("");
+        });
     }
 }

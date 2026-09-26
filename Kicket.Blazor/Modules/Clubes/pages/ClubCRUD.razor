@@ -1,0 +1,139 @@
+﻿@page "/Admin/Clubs"
+@using Kicket.Contracts.Clubes
+@using Kicket.ApiClient.Abstracciones
+@inherits PaginaProtegida
+@layout AdminLayout
+@inject IClubApiClient clubClient
+
+<div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsClubSelected = false; this.IdClub = -7; }">
+    <h1>
+        Gestionar Clubes
+    </h1>
+        <div @onclick:stopPropagation="true" class="p-3">
+            <GenericTable TItem="ClubDto" DatosTabla="clubs"
+                          OnClick="SelectFila"
+                          FilaSeleccionada="@(c=>c.ClubId==this.IdClub)">
+                <Cabeceras>
+                    @foreach(var value in Cab)
+                    {
+                        <th>@value</th>
+                    }
+                </Cabeceras>
+                <fila Context="Club">
+                    <td>@Club.ClubId</td>
+                    <td>@Club.Nombre</td>
+                    <td>@Club.Descripcion</td>
+                    <td>@Club.Abreviatura</td>
+                </fila>
+            </GenericTable>
+        </div>
+
+            <div class="d-flex justify-content-end flex-row gap-4 w-100">
+                <button class="btn btn-danger text-white" disabled="@(!IsClubSelected)" @onclick="EliminarClub">Borrar Club</button>
+                <button class="btn bg-primary text-white" disabled="@(!IsClubSelected)" @onclick="AbrirModalEdicion">EditarClub</button>
+                <button class="btn bg-secondary text-white" @onclick="CargarClubesAsync">Refrescar</button>
+            </div>
+    @if (this.ShowModalEdicion)
+    {
+        <GenericModalForm TOjb="ClubUpdateRequest" Obj="clubEditando" Titulo="Editar Club" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
+
+            <CuerpoForm Context="club">
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <InputText class="form-control" @bind-Value="club!.Nombre" />
+                    <ValidationMessage For="@(()=>club.Nombre)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Abreviatura</label>
+                    <InputText class="form-control" @bind-Value="club.Abreviatura" />
+                    <ValidationMessage For="@(() => club.Abreviatura)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripccion</label>
+                    <InputText class="form-control" @bind-Value="club.Descripcion" />
+                    <ValidationMessage For="@(() => club.Descripcion)"></ValidationMessage>
+                </div>
+            </CuerpoForm>
+
+        </GenericModalForm>
+    }
+</div>
+
+
+
+@code {
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Descripccion", "Abreviatura"];
+
+    public IEnumerable<ClubDto>? clubs { get; set; }
+
+    public bool ErrorEnCarga { get; set; } = false;
+
+    public bool IsClubSelected { get; set; } = false;
+    public bool ShowModalEdicion { get; set; } = false;
+    public bool ShowModalConfirmacion { get; set; } = false;
+
+    public int IdClub { get; set; }
+
+    public ClubUpdateRequest? clubEditando { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await CargarClubesAsync();
+    }
+
+    private void SelectFila(ClubDto clubSelected)
+    {
+        this.IdClub = clubSelected.ClubId;
+        IsClubSelected = true;
+    }
+
+    public async Task CargarClubesAsync()
+    {
+        try
+        {
+            this.clubs= await clubClient.GetAllAsync();
+        }
+        catch
+        {
+            this.ErrorEnCarga = true;
+        }
+    }
+
+    public void AbrirModalEdicion()
+    {
+
+        var clubOriginal = clubs.First(c => c.ClubId == this.IdClub);
+        clubEditando = new ClubUpdateRequest
+        {
+            IdClub=clubOriginal.ClubId,
+            Descripcion=clubOriginal.Descripcion,
+            Abreviatura=clubOriginal.Abreviatura,
+            Nombre=clubOriginal.Nombre
+        };
+        ShowModalEdicion = true;
+    }
+
+    public void CerrarModalEdicion()
+    {
+        this.ShowModalEdicion = false;
+    }
+
+    public async Task EnviarEditado()
+    {
+        await clubClient.UpdateAsync(clubEditando!);
+
+        CerrarModalEdicion();
+
+        await this.CargarClubesAsync();
+    }
+
+    public async Task EliminarClub()
+    {
+        await clubClient.DeleteAsync(this.IdClub);
+        await this.CargarClubesAsync();
+
+
+    }
+}

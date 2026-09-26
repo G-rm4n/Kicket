@@ -26,8 +26,12 @@
                 </div>
             </Authorizing>
             <NotAuthorized>
-                <button class="btn bg-primary text-white-100">Registrarse</button>
-                <button class="btn bg-secondary text-white">Ingresar</button>
+                <NavLink href="/auth/registro">
+                    <button class="btn bg-primary text-white-100">Registrarse</button>
+                </NavLink>
+                <NavLink HREF="/auth/login">
+                    <button class="btn bg-secondary text-white">Ingresar</button>
+                </NavLink>
             </NotAuthorized>
             <Authorized>
                 <button class="btn bg-primary text-white-100">Mi perfil</button>

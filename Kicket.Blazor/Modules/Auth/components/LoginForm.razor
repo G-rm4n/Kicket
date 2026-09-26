@@ -3,14 +3,15 @@
 @using Kicket.Contracts.Auth
 <EditForm Model="@loginData"  OnValidSubmit="EnviarDatos" FormName="LoginForm">
     <DataAnnotationsValidator/>
-    <ValidationSummary/>
    <div class="mb-3">
        <label class="form-label" for="Email">Email</label>
        <InputText class="form-control" id="Email" @bind-Value="loginData.Email"></InputText>
+        <ValidationMessage For="@(() => loginData.Email)"></ValidationMessage>
    </div>
    <div class="mb-3">
         <label class="form-label" for="Pass">Contraseña</label>
         <InputText type="password" class="form-control" id="Pass" @bind-Value="loginData.Pass"></InputText>
+        <ValidationMessage For="@(()=>loginData.Pass)"></ValidationMessage>
    </div>
    <div class="mb-3">
        <button type="submit" class="btn btn-primary">Iniciar</button>
@@ -25,6 +26,6 @@
 
     public async Task EnviarDatos()
     {
-        await submit.InvokeAsync(loginData);
+            await submit.InvokeAsync(loginData);
     }
 }

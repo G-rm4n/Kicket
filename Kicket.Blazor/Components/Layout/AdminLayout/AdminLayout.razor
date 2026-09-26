@@ -1,0 +1,64 @@
+﻿@inherits LayoutComponentBase
+<HeadContent>
+    <link href="style.razor.css" rel="stylesheet" />
+</HeadContent>
+
+<div class="d-flex vh-100 overflow-hidden">
+
+    <!-- BARRA LATERAL (Sidebar) -->
+    <aside class="bg-light shadow-sm d-flex flex-column p-3" style="width: 260px;">
+        <div class="mb-4">
+            <span class="fs-5 fw-bolder text-secondary">Menú Principal</span>
+        </div>
+
+        <ul class="nav nav-pills flex-column mb-auto gap-2">
+            <li class="nav-item">
+                <NavLink href="admin/Clubs" class="nav-link text-dark" Match="NavLinkMatch.All">
+                    Clubs
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/Estadios" class="nav-link text-dark">
+                    Estadios
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/usuarios" class="nav-link text-dark">
+                    Usuarios
+                </NavLink>
+            </li>
+        </ul>
+
+        <hr />
+    </aside>
+
+    
+    <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+
+        <nav class="navbar bg-light navbar-light container-fluid shadow-sm m-1 rounded">
+            <div class="d-flex flex-row gap-3 align-items-center justify-content-start px-3">
+                <div>
+                    <NavLink href="">
+                        <img style="height:40px; width:auto" src="/assets/logo.png" alt="Logo Kicket" />
+                    </NavLink>
+                </div>
+
+                <NavLink href="" class="text-decoration-none text-reset">
+                    <h3 class="text-center mb-0 fw-bolder">
+                        Kicket
+                    </h3>
+                </NavLink>
+            </div>
+        </nav>
+
+        <main class="container-fluid mt-4 overflow-auto px-4 h-100">
+            @Body
+        </main>
+    </div>
+
+</div>
+
+@code {
+
+
+}

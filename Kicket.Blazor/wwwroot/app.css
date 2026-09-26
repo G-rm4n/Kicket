@@ -8,6 +8,7 @@
     /* Color secundario: Usado en acciones neutras o de navegación (Botón "Iniciar Sesión", botones de cancelar)[cite: 1]. */
     --bs-secondary: #56637a;
     --bs-secondary-rgb: 86, 99, 122;
+    --bs-nav-pills-link-active-bg: var(--bs-primary);
     /* =========================================
        2. COLORES SEMÁNTICOS (ESTADOS Y ALERTAS)
        ========================================= */
@@ -102,4 +103,10 @@ h1:focus {
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
+}
+
+.nav-pills {
+    /* Aquí forzamos al componente a usar tu verde de marca */
+    --bs-nav-pills-link-active-bg: var(--bs-primary);
+    --bs-nav-pills-link-active-color: #ffffff;
 }

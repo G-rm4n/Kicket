@@ -5,6 +5,7 @@ using Kicket.Blazor.Core.session;
 using Kicket.Blazor.Core.state;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using Kicket.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
