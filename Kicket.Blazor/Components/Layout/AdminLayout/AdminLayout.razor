@@ -1,11 +1,16 @@
 ﻿@inherits LayoutComponentBase
+@using Kicket.Blazor.Core.session
+@using Kicket.Blazor.Core.state
+@inject BlazorSesionUsuario session
+@inject KicketAuthStateProvider stateProvider
+@inject NavigationManager nav
+
 <HeadContent>
     <link href="style.razor.css" rel="stylesheet" />
 </HeadContent>
 
 <div class="d-flex vh-100 overflow-hidden">
 
-    <!-- BARRA LATERAL (Sidebar) -->
     <aside class="bg-light shadow-sm d-flex flex-column p-3" style="width: 260px;">
         <div class="mb-4">
             <span class="fs-5 fw-bolder text-secondary">Menú Principal</span>
@@ -30,26 +35,16 @@
         </ul>
 
         <hr />
+
+        <div class="mb-4">
+            <button type="button" class="btn btn-primary" @onclick="cerrarSesion">Cerrar sesion</button>
+        </div>
     </aside>
 
     
     <div class="d-flex flex-column flex-grow-1 overflow-hidden">
 
-        <nav class="navbar bg-light navbar-light container-fluid shadow-sm m-1 rounded">
-            <div class="d-flex flex-row gap-3 align-items-center justify-content-start px-3">
-                <div>
-                    <NavLink href="">
-                        <img style="height:40px; width:auto" src="/assets/logo.png" alt="Logo Kicket" />
-                    </NavLink>
-                </div>
-
-                <NavLink href="" class="text-decoration-none text-reset">
-                    <h3 class="text-center mb-0 fw-bolder">
-                        Kicket
-                    </h3>
-                </NavLink>
-            </div>
-        </nav>
+        <NavBar></NavBar>
 
         <main class="container-fluid mt-4 overflow-auto px-4 h-100">
             @Body
@@ -60,5 +55,10 @@
 
 @code {
 
-
+    public void cerrarSesion()
+    {
+        session.Cerrar();
+        stateProvider.NotificarCambioDeEstado();
+        nav.NavigateTo("/Auth/Login");
+    }
 }
