@@ -31,6 +31,7 @@
             <div class="d-flex justify-content-end flex-row gap-4 w-100">
                 <button class="btn btn-danger text-white" disabled="@(!IsClubSelected)" @onclick="EliminarClub">Borrar Club</button>
                 <button class="btn bg-primary text-white" disabled="@(!IsClubSelected)" @onclick="AbrirModalEdicion">EditarClub</button>
+                <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear club</button>
                 <button class="btn bg-secondary text-white" @onclick="CargarClubesAsync">Refrescar</button>
             </div>
     @if (this.ShowModalEdicion)
@@ -42,6 +43,31 @@
                     <label class="form-label">Nombre</label>
                     <InputText class="form-control" @bind-Value="club!.Nombre" />
                     <ValidationMessage For="@(()=>club.Nombre)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Abreviatura</label>
+                    <InputText class="form-control" @bind-Value="club.Abreviatura" />
+                    <ValidationMessage For="@(() => club.Abreviatura)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripccion</label>
+                    <InputText class="form-control" @bind-Value="club.Descripcion" />
+                    <ValidationMessage For="@(() => club.Descripcion)"></ValidationMessage>
+                </div>
+            </CuerpoForm>
+
+        </GenericModalForm>
+    }
+
+    @if (this.ShowModalCreacion)
+    {
+        <GenericModalForm TOjb="ClubRequest" Obj="nuevoClub" Titulo="CrearClub" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoClub">
+
+            <CuerpoForm Context="club">
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <InputText class="form-control" @bind-Value="club!.Nombre" />
+                    <ValidationMessage For="@(() => club.Nombre)"></ValidationMessage>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Abreviatura</label>
@@ -76,10 +102,12 @@
     public bool IsClubSelected { get; set; } = false;
     public bool ShowModalEdicion { get; set; } = false;
     public bool ShowModalConfirmacion { get; set; } = false;
+    public bool ShowModalCreacion { get; set; } = false;
 
     public int IdClub { get; set; }
 
     public ClubUpdateRequest? clubEditando { get; set; }
+    public ClubRequest? nuevoClub{ get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,17 +141,40 @@
             Abreviatura=clubOriginal.Abreviatura,
             Nombre=clubOriginal.Nombre
         };
-        ShowModalEdicion = true;
+        this.ShowModalEdicion = true;
     }
 
     public void CerrarModalEdicion()
     {
         this.ShowModalEdicion = false;
     }
+    public void CerrarModalCreacion()
+    {
+        this.ShowModalCreacion = false;
+    }
+
+    public void AbrirModalCreacion()
+    {
+        this.nuevoClub = new();
+        this.ShowModalCreacion = true;
+    }
+
+    public async Task EnviarNuevoClub()
+    {
+        await this.SecureExec(async () =>
+        {
+            await this.clubClient.CreateAsync(nuevoClub);
+        });
+
+        this.CerrarModalCreacion();
+    }
 
     public async Task EnviarEditado()
     {
-        await clubClient.UpdateAsync(clubEditando!);
+        await this.SecureExec(async () =>
+        {
+            await clubClient.UpdateAsync(clubEditando!);
+        });
 
         CerrarModalEdicion();
 
@@ -132,9 +183,7 @@
 
     public async Task EliminarClub()
     {
-        await clubClient.DeleteAsync(this.IdClub);
-        await this.CargarClubesAsync();
-
-
+        await this.SecureExec(async () => await clubClient.DeleteAsync(this.IdClub));
+        //await this.CargarClubesAsync();
     }
 }
