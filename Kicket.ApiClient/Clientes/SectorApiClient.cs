@@ -21,6 +21,9 @@ namespace Kicket.ApiClient.Clientes
         public Task<SectorDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<SectorDto>($"{Ruta}/{id}", ct);
 
+        public async Task<IReadOnlyList<SectorDto>> GetByEstadioIdAsync(int estadioId, CancellationToken ct = default) =>
+            await GetAsync<List<SectorDto>>($"{Ruta}/estadio/{estadioId}", ct);
+
         public Task<SectorDto> CreateAsync(SectorRequest request, CancellationToken ct = default) =>
             PostAsync<SectorDto>(Ruta, request, ct);
 

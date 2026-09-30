@@ -37,7 +37,10 @@ namespace Core.Services
         {
             return await _sectorRepository.GetAll();
         }
-
+        public async Task<IEnumerable<Sector>> ObtenerPorEstadioAsync(int estadioId)
+        {
+            return await _sectorRepository.ObtenerPorEstadioAsync(estadioId);
+        }
         public async Task<bool> ActualizarSectorAsync(Sector sector)
         {
             await ValidarSectorAsync(sector);

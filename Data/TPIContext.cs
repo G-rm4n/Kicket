@@ -4,15 +4,15 @@ using Domain.Entities;
 
 namespace Data
 {
-    public class TPIContext:DbContext
+    public class TPIContext : DbContext
     {
         public DbSet<Compra> Compras { get; set; }
-        public DbSet<Entrada> Entradas { get; set;}
-        public DbSet<Club> Clubs {get;set;}
-        public DbSet<Estadio> Estadios {get;set;}
-        public DbSet<Evento> Eventos {get;set;}
-        public DbSet<Sector> Sectores {get;set;}
-        public DbSet<Usuario> Usuarios {get;set;}
+        public DbSet<Entrada> Entradas { get; set; }
+        public DbSet<Club> Clubs { get; set; }
+        public DbSet<Estadio> Estadios { get; set; }
+        public DbSet<Evento> Eventos { get; set; }
+        public DbSet<Sector> Sectores { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
 
         public TPIContext(DbContextOptions<TPIContext> options) : base(options)
         {
@@ -23,12 +23,12 @@ namespace Data
         {
             base.OnModelCreating(modelBuilder);
 
-            
+
             modelBuilder.Entity<Club>((c) =>
             {
                 c.HasKey(c => c.ClubId);
-                c.Property(c=>c.ClubId).ValueGeneratedOnAdd();
-                c.Property(c=>c.Nombre).HasMaxLength(100);
+                c.Property(c => c.ClubId).ValueGeneratedOnAdd();
+                c.Property(c => c.Nombre).HasMaxLength(100);
                 c.Property(c => c.Descripcion).HasMaxLength(255);
                 c.Property(c => c.Abreviatura).HasMaxLength(10);
 
@@ -37,7 +37,7 @@ namespace Data
                     new { ClubId = -2, Nombre = "Rosario Central", Descripcion = "Club atletico rosarino", Abreviatura = "CARC" }
                 );
             });
-            
+
 
             modelBuilder.Entity<Compra>((c) =>
             {
@@ -66,8 +66,8 @@ namespace Data
             {
                 e.HasKey(e => e.EntradaId);
                 e.Property(e => e.EntradaId).ValueGeneratedOnAdd();
-                e.HasOne<Evento>().WithMany().HasForeignKey(e=>e.EventoId).OnDelete(DeleteBehavior.Restrict);
-                e.HasOne<Sector>().WithMany().HasForeignKey(e => e.SectorId);
+                e.HasOne<Evento>().WithMany().HasForeignKey(e => e.EventoId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne<Sector>().WithMany().HasForeignKey(e => e.SectorId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne<Compra>().WithMany(c => c.Entradas).HasForeignKey(e => e.CompraId);
                 e.Property(e => e.FilaAsiento);
 
@@ -117,13 +117,13 @@ namespace Data
 
             modelBuilder.Entity<Sector>(s =>
             {
-                s.HasKey(s =>  s.SectorId );
+                s.HasKey(s => s.SectorId);
                 s.Property(s => s.SectorId).ValueGeneratedOnAdd();
                 s.Property(s => s.EstadioId);
                 s.Property(s => s.Nombre);
                 s.Property(s => s.CapacidadMaxima);
                 s.Property(s => s.PrecioBase).HasColumnType("decimal(18,2)");
-                s.HasOne<Estadio>().WithMany().HasForeignKey(s => s.EstadioId);
+                s.HasOne<Estadio>().WithMany().HasForeignKey(s => s.EstadioId).OnDelete(DeleteBehavior.Restrict);
 
                 s.HasData(
                     new { SectorId = -1, EstadioId = -1, Nombre = "Platea Este", CapacidadMaxima = 5000, PrecioBase = 15000m },

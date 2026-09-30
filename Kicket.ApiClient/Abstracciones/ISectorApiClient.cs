@@ -11,6 +11,7 @@ namespace Kicket.ApiClient.Abstracciones
     {
         Task<IReadOnlyList<SectorDto>> GetAllAsync(CancellationToken ct = default);
         Task<SectorDto> GetOneAsync(int id, CancellationToken ct = default);
+        Task<IReadOnlyList<SectorDto>> GetByEstadioIdAsync(int estadioId, CancellationToken ct = default);
         Task<SectorDto> CreateAsync(SectorRequest request, CancellationToken ct = default);
         Task UpdateAsync(SectorUpdateRequest request, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);

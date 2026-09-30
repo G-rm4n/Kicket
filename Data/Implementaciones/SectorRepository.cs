@@ -34,6 +34,10 @@ namespace Data.Implementaciones
             return await _context.Sectores.ToListAsync();
         }
 
+        public async Task<IEnumerable<Sector>> ObtenerPorEstadioAsync(int estadioId)
+        {
+            return await _context.Sectores.Where(s => s.EstadioId == estadioId).ToListAsync();
+        }
         public async Task<bool> DeleteSectorAsync(int idSector)
         {
             var sectorFound = await _context.Sectores.FirstOrDefaultAsync(s => s.SectorId == idSector);

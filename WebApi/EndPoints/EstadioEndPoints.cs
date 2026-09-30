@@ -1,7 +1,9 @@
 ﻿using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.EndPoints
 {
@@ -11,8 +13,8 @@ namespace WebApi.EndPoints
         {
             app.MapGet("/estadios", async (IEstadioService estadioService) =>
             {
-                
-                 var estadios=await estadioService.ObtenerTodosAsync();
+
+                var estadios = await estadioService.ObtenerTodosAsync();
 
                 IEnumerable<EstadioDto> dtos = estadios.Select(e => new EstadioDto()
                 {
@@ -23,20 +25,22 @@ namespace WebApi.EndPoints
                 }).ToList();
 
                 return Results.Ok(dtos);
-                 
+
             })
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK)
             ;
 
-            app.MapGet("/estadios/{id}", async (int id,IEstadioService estadioService) =>
+            app.MapGet("/estadios/{id}", async (int id, IEstadioService estadioService) =>
             {
                 Estadio? estadio = await estadioService.ObtenerPorIdAsync(id);
-                
-                 
-                if(estadio ==null){
-                   return Results.NotFound();
-                };
+
+
+                if (estadio == null)
+                {
+                    return Results.NotFound();
+                }
+                ;
 
                 EstadioDto estadioDto = new()
                 {
@@ -45,17 +49,17 @@ namespace WebApi.EndPoints
                     Nombre = estadio.Nombre,
                     IdEstadio = estadio.EstadioId
                 };
-                 
+
                 return Results.Ok(estadioDto);
-                
-                 
+
+
             })
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             ;
 
-            app.MapPost("/estadios", async (EstadioRequest estadioReq,IEstadioService estadioService) =>
+            app.MapPost("/estadios", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
             {
                 Estadio estadio = new()
                 {
@@ -80,7 +84,7 @@ namespace WebApi.EndPoints
             .Produces<EstadioDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapPut("/estadios", async (EstadioUpdateRequest estadioReq,IEstadioService estadioService) =>
+            app.MapPut("/estadios", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
 
                 Estadio estadio = new()
@@ -88,7 +92,7 @@ namespace WebApi.EndPoints
                     Ciudad = estadioReq.Ciudad,
                     Direccion = estadioReq.Direccion,
                     Nombre = estadioReq.Nombre,
-                    EstadioId=estadioReq.IdEstadio
+                    EstadioId = estadioReq.IdEstadio
                 };
 
                 var found = await estadioService.ActualizarEstadioAsync(estadio);
@@ -99,7 +103,7 @@ namespace WebApi.EndPoints
                 }
 
                 return Results.NoContent();
-                
+
             })
             .WithName("UpdateEstadio")
             .Produces(StatusCodes.Status204NoContent)
@@ -107,22 +111,29 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             ;
 
-            app.MapDelete("/estadios/{id}",async (int id,IEstadioService estadioService) =>
+            app.MapDelete("/estadios/{id}", async (int id, IEstadioService estadioService) =>
             {
-                
-                var deleted = await estadioService.EliminarEstadioAsync(id);
-
-                if (!deleted)
+                try
                 {
-                    return Results.NotFound();
+                    var deleted = await estadioService.EliminarEstadioAsync(id);
+
+                    if (!deleted)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    return Results.NoContent();
+                }
+                catch (DbUpdateException)
+                {
+                    return Results.Conflict(new ApiError { Status = StatusCodes.Status409Conflict, Title = "No se puede eliminar el estadio", Detail = "El estadio tiene sectores asociados. Elimina primero sus sectores." });
                 }
 
-                return Results.NoContent();
-                
             })
             .WithName("DeleteEstadio")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status400BadRequest)
             ;
         }

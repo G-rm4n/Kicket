@@ -16,5 +16,6 @@ namespace Data.Interfaces
 
         Task<bool> DeleteSectorAsync(int sectorId);
         Task<IEnumerable<Sector>> GetAll();
+        Task<IEnumerable<Sector>> ObtenerPorEstadioAsync(int estadioId);
     }
 }

@@ -14,5 +14,6 @@ namespace Core.Interfaces
         Task<IEnumerable<Sector>> ObtenerTodosAsync();
         Task<bool> ActualizarSectorAsync(Sector sector);
         Task<bool> EliminarSectorAsync(int id);
+        Task<IEnumerable<Sector>> ObtenerPorEstadioAsync(int estadioId);
     }
 }

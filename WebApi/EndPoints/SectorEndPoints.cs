@@ -2,6 +2,7 @@
 using Domain.Entities;
 using Kicket.Contracts.Common;
 using Kicket.Contracts.Sectores;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.EndPoints
 {
@@ -50,6 +51,24 @@ namespace WebApi.EndPoints
             .WithName("GetSector")
             .Produces<SectorDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+            app.MapGet("/sectores/estadio/{estadioId}", async (int estadioId, ISectorService sectorService) =>
+            {
+                var sectores = await sectorService.ObtenerPorEstadioAsync(estadioId);
+
+                IEnumerable<SectorDto> dtos = sectores.Select(s => new SectorDto
+                {
+                    SectorId = s.SectorId,
+                    EstadioId = s.EstadioId,
+                    Nombre = s.Nombre,
+                    CapacidadMaxima = s.CapacidadMaxima,
+                    PrecioBase = s.PrecioBase
+                }).ToList();
+
+                return Results.Ok(dtos);
+            })
+            .WithName("GetSectoresPorEstadio")
+            .Produces<IEnumerable<SectorDto>>(StatusCodes.Status200OK);
 
             app.MapPost("/sectores", async (SectorRequest sectorReq, ISectorService sectorService) =>
             {
@@ -119,18 +138,26 @@ namespace WebApi.EndPoints
 
             app.MapDelete("/sectores/{id}", async (int id, ISectorService sectorService) =>
             {
-                var deleted = await sectorService.EliminarSectorAsync(id);
-
-                if (!deleted)
+                try
                 {
-                    return Results.NotFound();
-                }
+                    var deleted = await sectorService.EliminarSectorAsync(id);
 
-                return Results.NoContent();
+                    if (!deleted)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    return Results.NoContent();
+                }
+                catch (DbUpdateException)
+                {
+                    return Results.Conflict(new ApiError { Status = StatusCodes.Status409Conflict, Title = "No se puede eliminar el sector", Detail = "El sector tiene entradas vendidas asociadas." });
+                }
             })
             .WithName("DeleteSector")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
         }
     }
 }
