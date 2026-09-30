@@ -9,14 +9,13 @@
             </div>
             <EditForm Model="Obj" OnValidSubmit="Enviar">
                 <DataAnnotationsValidator></DataAnnotationsValidator>
-                <ValidationSummary></ValidationSummary>
             <div class="modal-body">
                 @if(CuerpoForm is not null && this.Obj is not null){
                     @CuerpoForm!(Obj!) 
                 }
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary">Close</button>
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Close</button>
                 <button type="submit" class="btn bg-primary">Confirmar</button>
             </div>
             </EditForm>
