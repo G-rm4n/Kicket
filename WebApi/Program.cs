@@ -1,4 +1,4 @@
-using System.Text;
+ï»¿using System.Text;
 using Core.Interfaces;
 using Core.Services;
 using Data;
@@ -51,6 +51,8 @@ builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<IEstadioRepository, EstadioRepository>();
 builder.Services.AddScoped<IEventoRepository, EventoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ISectorRepository, SectorRepository>();
+builder.Services.AddScoped<IEntradaRepository, EntradaRepository>();
 
 //Mapeo de Services
 
@@ -58,6 +60,10 @@ builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IEstadioService, EstadioService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventoService, EventoService>();
+builder.Services.AddScoped<ISectorService, SectorService>();
+builder.Services.AddScoped<IEntradaService, EntradaService>();
+builder.Services.AddScoped<ICompraService, CompraService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -81,7 +87,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al crear la base de datos.");
+        logger.LogError(ex, "Ocurriï¿½ un error al crear la base de datos.");
     }
 }
 
@@ -99,4 +105,3 @@ app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
 
 app.Run();
-

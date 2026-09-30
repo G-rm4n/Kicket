@@ -55,9 +55,10 @@ namespace Data.Implementaciones
             var sectorFound = await _context.Sectores.FirstOrDefaultAsync(s => s.SectorId == sector.SectorId);
             if (sectorFound != null)
             {
-                sectorFound.PrecioBase=sector.PrecioBase;
-                sectorFound.Nombre=sector.Nombre;
-                sectorFound.CapacidadMaxima=sector.CapacidadMaxima;
+                sectorFound.PrecioBase = sector.PrecioBase;
+                sectorFound.Nombre = sector.Nombre;
+                sectorFound.CapacidadMaxima = sector.CapacidadMaxima;
+                sectorFound.EstadioId = sector.EstadioId;
                 await _context.SaveChangesAsync();
                 return true;
             }
