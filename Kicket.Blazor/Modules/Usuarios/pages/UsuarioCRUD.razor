@@ -1,8 +1,85 @@
-﻿@page "/Admin/Usuarios"
+﻿@page "/admin/usuarios"
 @using Kicket.Blazor.Core.Auth
-@inherits PaginaProtegida
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Contracts.Usuarios
 @layout AdminLayout
+@inherits PaginaProtegida
+@inject IUsuarioApiClient usuarioApi
+
+<div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsUsuarioSelected = false; this.IdUsuario = 0; }">
+    <h1>
+        Gestionar Estadios
+    </h1>
+    <div @onclick:stopPropagation="true" class="p-3">
+        <GenericTable TItem="UsuarioDto" DatosTabla="Usuarios"
+                      OnClick="SelectFila"
+                      FilaSeleccionada="@(u=>u.IdUsuario==this.IdUsuario)">
+            <Cabeceras>
+                @foreach (var value in Cab)
+                {
+                    <th>@value</th>
+                }
+            </Cabeceras>
+            <fila Context="Usuario">
+                <td>@Usuario.IdUsuario</td>
+                <td>@Usuario.Nombre</td>
+                <td>@Usuario.Apellido</td>
+                <td>@Usuario.Email</td>
+                <td>@Usuario.Rol</td>
+            </fila>
+        </GenericTable>
+    </div>
+
+    <div class="d-flex justify-content-end flex-row gap-4 w-100">
+        <button class="btn btn-danger text-white" disabled="@(!IsUsuarioSelected)" @onclick="EliminarUsuario">Borrar Club</button>
+        <button class="btn bg-secondary text-white" @onclick="CargarUsuariosAsync">Refrescar</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger">
+            @MensajeError
+        </div>
+    }
+</div>
+
+
 
 @code {
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Apellido", "Email","Rol"];
 
+    public IEnumerable<UsuarioDto>? Usuarios { get; set; }
+
+    public bool IsUsuarioSelected { get; set; } = false;
+
+    public int IdUsuario { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await CargarUsuariosAsync();
+    }
+
+    private void SelectFila(UsuarioDto usuario)
+    {
+        this.IdUsuario = usuario.IdUsuario;
+        this.IsUsuarioSelected = true;
+    }
+
+    public async Task CargarUsuariosAsync()
+    {
+        await this.SecureExec(async () =>
+        {
+            this.Usuarios= await usuarioApi.GetAllAsync();
+
+        });
+    }
+
+    public async Task EliminarUsuario()
+    {
+        await this.SecureExec(async () =>
+        {
+            await usuarioApi.DeleteAsync(this.IdUsuario);
+        });
+    }
 }
