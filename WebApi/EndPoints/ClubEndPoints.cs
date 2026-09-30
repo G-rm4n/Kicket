@@ -106,16 +106,16 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            clubGroup.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
+            clubGroup.MapDelete("/{id}",async (int id, IClubService clubService) =>
             {
                 
-                 var deleted = await clubService.EliminarClubAsync(id);
-                 if (!deleted)
-                 {
-                     return Results.NotFound();
-                 }
-                 return Results.Problem(detail: "El club No existe", statusCode: (int)HttpStatusCode.NotFound); ;
-                 
+                var deleted = await clubService.EliminarClubAsync(id);
+                if (!deleted)
+                {
+                    return Results.Problem(detail: "El club No existe", statusCode: (int)HttpStatusCode.NotFound);
+                }
+
+                return Results.Ok();
             })
             .WithName("DeleteClub")
             .Produces(StatusCodes.Status204NoContent)

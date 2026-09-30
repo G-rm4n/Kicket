@@ -119,7 +119,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            usuariosGroup.MapDelete("/usuarios/{id}", async (int id, IUsuarioService usuarioService) =>
+            usuariosGroup.MapDelete("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
 
                 var deleted = await usuarioService.EliminarUsuarioAsync(id);
