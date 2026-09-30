@@ -1,0 +1,61 @@
+﻿@page "/auth/login"
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.ApiClient.Http
+@using Kicket.Blazor.Core.session;
+@using Kicket.Blazor.Core.state
+@using Kicket.Blazor.Modules.Auth.components
+@using Kicket.Contracts.Auth
+@using Kicket.Blazor.Core.HTTP
+@inject KicketAuthStateProvider stateProvider
+@inject IAuthApiClient authApiCli
+@inject NavigationManager Nav
+@inherits PaginaApi
+
+<div class="container-fluid login-wrapper p-0">
+    <div class="row g-0 h-100 min-vh-100">
+
+        
+        <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center hero-section-log">
+            <div class="hero-overlay"></div>
+            <h1 class="text-white text-center hero-text">
+                DEJANDO LA<br />VIDA POR LOS<br />COLORES
+            </h1>
+        </div>
+
+        
+        <div class="col-12 col-md-6 d-flex align-items-center justify-content-center flex-column p-4 p-md-5">
+            <div class="w-100" style="max-width: 450px;">
+
+                @if (!string.IsNullOrEmpty(MensajeError))
+                {
+                    <div class="alert alert-danger text-center shadow-sm">
+                        @MensajeError
+                    </div>
+                }
+                <div class="text-end mb-5 text-secondary small">
+                    ¿No tenés cuenta? <a href="/auth/registro" class="text-green">Registrate</a>
+                </div>
+
+                <h2 class="text-white text-center fw-bold mb-4 uppercase">
+                    INGRESAR A MI CUENTA
+                </h2>
+
+                <LoginForm submit="EnviarCredenciales"></LoginForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private async Task EnviarCredenciales(LoginRequest loginData)
+    {
+        await this.SecureExec(async () =>
+        {
+            var result = await authApiCli.LoginAsync(loginData);
+            stateProvider.NotificarCambioDeEstado();
+
+            Nav.NavigateTo("");
+        });
+    }
+}
