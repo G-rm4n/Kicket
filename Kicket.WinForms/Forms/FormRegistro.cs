@@ -14,11 +14,11 @@ namespace Kicket.WinForms.Forms
 {
     public partial class FormRegistro : Form
     {
-        private readonly IUsuarioApiClient _usuarioApiClient;
-        public FormRegistro(IUsuarioApiClient usuarioApiClient)
+        private readonly IAuthApiClient _ApiClient;
+        public FormRegistro(IAuthApiClient ApiClient)
         {
             InitializeComponent();
-            this._usuarioApiClient = usuarioApiClient;
+            this._ApiClient = ApiClient;
         }
 
         private async void btnRegistrar_Click(object sender, EventArgs args)
@@ -43,7 +43,7 @@ namespace Kicket.WinForms.Forms
                 };
 
 
-                var newUsuario = await _usuarioApiClient.CreateAsync(requestRegistro);
+                var newUsuario = await _ApiClient.RegistAsync(requestRegistro);
                 if (newUsuario is not null)
                 {
                     this.DialogResult = DialogResult.OK;
