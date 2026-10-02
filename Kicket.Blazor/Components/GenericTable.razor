@@ -1,0 +1,51 @@
+﻿@typeparam TItem
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            @Cabeceras
+        </tr>
+    </thead>
+    <tbody>
+        @if(DatosTabla is not null){
+        @foreach(var item in DatosTabla)
+        {
+                string claseSeleccion = FilaSeleccionada != null && FilaSeleccionada(item) ? "table-active table" : "";
+
+            <tr class="@claseSeleccion" @ondblclick="()=>OnDoubleClick.InvokeAsync(item)" @onclick="()=>OnClick.InvokeAsync(item)" style="cursor:pointer">
+                @if (fila != null)
+                {
+                    @fila(item)
+                }
+            </tr>
+            }
+        }
+        else
+        {
+            <tr>No hay Clubes creados</tr>
+        }
+    </tbody>
+</table>
+@code {
+    [Parameter]
+    public IEnumerable<TItem> DatosTabla { get; set; } = Enumerable.Empty<TItem>();
+
+    [Parameter]
+    public RenderFragment? Cabeceras { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? fila { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> OnDoubleClick{ get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> OnClick{ get; set; }
+
+    [Parameter]
+    public Func<TItem, bool>? FilaSeleccionada { get; set; }
+
+
+
+
+}

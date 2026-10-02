@@ -10,5 +10,6 @@ namespace Core.Interfaces
     public interface IAuthService
     {
         Task<(string Token, DateTime ExpiraEn, Usuario Usuario)?> Login(string mail, string pass);
+        Task RegistrarUsuario(Usuario usuario);
     }
 }

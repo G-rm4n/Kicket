@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
@@ -36,7 +37,7 @@ namespace WebApi.EndPoints
                   Club? club = await clubService.ObtenerPorIdAsync(id);
                   
                   if(club == null){
-                      return Results.NotFound();
+                      return Results.Problem(detail:"Club no encontrado",statusCode:(int)HttpStatusCode.NotFound);
                   }
 
                   ClubDto clubDto = new()
@@ -98,23 +99,23 @@ namespace WebApi.EndPoints
                 {
                     return Results.NoContent();
                 }
-                return Results.NotFound();
+                return Results.Problem(detail:"El club No existe",statusCode:(int)HttpStatusCode.NotFound);
             })
             .WithName("UpdateClub")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            clubGroup.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
+            clubGroup.MapDelete("/{id}",async (int id, IClubService clubService) =>
             {
                 
-                 var deleted = await clubService.EliminarClubAsync(id);
-                 if (!deleted)
-                 {
-                     return Results.NotFound();
-                 }
-                 return Results.NoContent();
-                 
+                var deleted = await clubService.EliminarClubAsync(id);
+                if (!deleted)
+                {
+                    return Results.Problem(detail: "El club No existe", statusCode: (int)HttpStatusCode.NotFound);
+                }
+
+                return Results.Ok();
             })
             .WithName("DeleteClub")
             .Produces(StatusCodes.Status204NoContent)

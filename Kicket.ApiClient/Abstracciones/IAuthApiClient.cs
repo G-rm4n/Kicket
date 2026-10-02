@@ -1,4 +1,5 @@
 using Kicket.Contracts.Auth;
+using Kicket.Contracts.Usuarios;
 
 namespace Kicket.ApiClient.Abstracciones
 {
@@ -10,6 +11,8 @@ namespace Kicket.ApiClient.Abstracciones
         /// Lanza ApiException con NoAutenticado = true si el email o la contrasena no coinciden.
         /// </summary>
         Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct = default);
+
+        Task<RegisterResponse> RegistAsync(UsuarioRequest request, CancellationToken ct = default);
 
         /// <summary>Cierra la sesion local. El token JWT es sin estado, no hay nada que avisarle a la API.</summary>
         void Logout();

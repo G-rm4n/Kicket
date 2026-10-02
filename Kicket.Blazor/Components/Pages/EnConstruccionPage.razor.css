@@ -1,0 +1,7 @@
+﻿.btn-custom-green {
+    background-color: #24d160;
+    border-color: #24d160;
+    color: #ffffff;
+    padding: 14px 45px;
+    transition: all 0.2s ease-in-out;
+}

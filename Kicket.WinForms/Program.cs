@@ -1,6 +1,7 @@
-ï»¿using Kicket.ApiClient.Abstracciones;
+using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Clientes;
 using Kicket.ApiClient.Configuracion;
+using Kicket.ApiClient.Sesion;
 using Kicket.WinForms.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -21,16 +22,14 @@ namespace Kicket.WinForms
 
             services.AddHttpClient();
 
-            // Inyectamos el cliente de clubes
-            services.AddScoped<IClubApiClient, ClubApiClient>();
-            services.AddScoped<IEstadioApiClient, EstadioApiClient>();
-            services.AddScoped<IUsuarioApiClient, UsuarioApiClient>();
-
+            // ¡Mantenemos la configuración vital de tu compañero!
             services.AddKicketApiClient(options =>
             {
                 options.BaseUrl = "http://localhost:5268/";
                 options.TimeoutSegundos = 30;
             });
+
+            services.AddSingleton<ISesionUsuario, SesionUsuario>();
 
             // Registramos todos los formularios
             services.AddTransient<FormRegistro>();
@@ -39,12 +38,11 @@ namespace Kicket.WinForms
             services.AddTransient<FormClub>();
             services.AddTransient<FormEstadio>();
             services.AddTransient<FormUsuario>();
-            services.AddTransient<FormSectorDetalle>();
 
-            // Guardamos el proveedor en la variable estetica
+            // Guardamos el proveedor en la variable estática
             ServiceProvider = services.BuildServiceProvider();
 
-
+            
             Application.Run(ServiceProvider.GetRequiredService<FormLogin>());
         }
     }
