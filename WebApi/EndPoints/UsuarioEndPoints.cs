@@ -30,7 +30,8 @@ namespace WebApi.EndPoints
 
             })
             .WithName("GetAllUsuarios")
-            .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK)
+            .RequireAuthorization("Solo admin");
 
             usuariosGroup.MapGet("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
@@ -56,7 +57,8 @@ namespace WebApi.EndPoints
             })
             .WithName("GetUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization("Solo admin");
 
             usuariosGroup.MapPost("/", async (UsuarioRequest usuarioReq, IUsuarioService usuarioService) =>
             {
@@ -83,7 +85,8 @@ namespace WebApi.EndPoints
             })
             .WithName("AddUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             usuariosGroup.MapPut("/", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
             {
@@ -117,7 +120,8 @@ namespace WebApi.EndPoints
             .WithName("UpdateUsuario")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             usuariosGroup.MapDelete("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
@@ -133,7 +137,8 @@ namespace WebApi.EndPoints
             .WithName("DeleteUsuario")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
         }
     }
 }

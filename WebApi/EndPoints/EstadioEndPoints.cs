@@ -30,6 +30,7 @@ namespace WebApi.EndPoints
             })
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK)
+            .RequireAuthorization("Solo admin")
             ;
 
             estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
@@ -58,6 +59,7 @@ namespace WebApi.EndPoints
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization("Solo admin")
             ;
 
             estadiosGroup.MapPost("/", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
@@ -83,7 +85,8 @@ namespace WebApi.EndPoints
             })
             .WithName("AddEstadio")
             .Produces<EstadioDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             estadiosGroup.MapPut("/", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
@@ -110,6 +113,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin")
             ;
 
             estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
@@ -129,6 +133,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin")
             ;
         }
     }
