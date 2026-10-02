@@ -52,6 +52,7 @@ namespace Kicket.ApiClient.Configuracion
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
+            services.AgregarCliente<ISectorApiClient, SectorApiClient>(opciones);
             services.AgregarCliente<IUsuarioApiClient, UsuarioApiClient>(opciones);
             services.AgregarCliente<IAuthApiClient, AuthApiClient>(opciones);
 

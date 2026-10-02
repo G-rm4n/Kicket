@@ -38,6 +38,7 @@ namespace Kicket.WinForms
             services.AddTransient<FormClub>();
             services.AddTransient<FormEstadio>();
             services.AddTransient<FormUsuario>();
+            services.AddTransient<FormSectorDetalle>();
 
             // Guardamos el proveedor en la variable estática
             ServiceProvider = services.BuildServiceProvider();
