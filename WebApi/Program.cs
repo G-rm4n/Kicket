@@ -45,7 +45,7 @@ builder.Services.AddAuthentication(options =>
         OnAuthenticationFailed = context =>
         {
             
-            Console.WriteLine($"[JWT ERROR] Falló la autenticación: {context.Exception.Message}");
+            Console.WriteLine($"[JWT ERROR] Fallï¿½ la autenticaciï¿½n: {context.Exception.Message}");
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
@@ -57,7 +57,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Solo admin", policy => policy.RequireRole("Admin"));
+});
 
 
 
