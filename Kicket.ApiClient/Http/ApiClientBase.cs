@@ -28,6 +28,14 @@ namespace Kicket.ApiClient.Http
         protected Task<T> GetAsync<T>(string ruta, CancellationToken ct = default) =>
             LeerCuerpoAsync<T>(() => new HttpRequestMessage(HttpMethod.Get, ruta), ct);
 
+        /// <summary>
+        /// GET de una pagina de resultados. Los parametros de paginado van en la query
+        /// string porque el endpoint es un GET y tiene que poder pegarse en el navegador.
+        /// </summary>
+        protected Task<PagedResult<T>> GetPaginadoAsync<T>(
+            string ruta, PageRequest? pagina, CancellationToken ct = default) =>
+            GetAsync<PagedResult<T>>(ConPaginado(ruta, pagina), ct);
+
         /// <summary>POST que devuelve el recurso creado (201 con cuerpo).</summary>
         protected Task<T> PostAsync<T>(string ruta, object cuerpo, CancellationToken ct = default) =>
             LeerCuerpoAsync<T>(() => Crear(HttpMethod.Post, ruta, cuerpo), ct);
@@ -45,6 +53,35 @@ namespace Kicket.ApiClient.Http
 
         private static HttpRequestMessage Crear(HttpMethod metodo, string ruta, object cuerpo) =>
             new(metodo, ruta) { Content = JsonContent.Create(cuerpo, options: JsonOpciones) };
+
+        /// <summary>
+        /// Arma la ruta con los parametros de paginado. Normaliza antes de mandar asi la
+        /// API no recibe una pagina 0 o un tamano absurdo: se corrige aca, del lado del
+        /// cliente, en vez de que vuelva un 400 que el usuario no puede interpretar.
+        /// </summary>
+        private static string ConPaginado(string ruta, PageRequest? pagina)
+        {
+            var p = (pagina ?? new PageRequest()).Normalizado();
+
+            var parametros = new List<string>
+            {
+                $"pagina={p.Pagina}",
+                $"tamanoPagina={p.TamanoPagina}"
+            };
+
+            if (p.Busqueda is not null)
+                parametros.Add($"busqueda={Uri.EscapeDataString(p.Busqueda)}");
+
+            // Descendente solo tiene sentido acompanado de un campo de orden.
+            if (p.OrdenarPor is not null)
+            {
+                parametros.Add($"ordenarPor={Uri.EscapeDataString(p.OrdenarPor)}");
+                parametros.Add($"descendente={(p.Descendente ? "true" : "false")}");
+            }
+
+            var separador = ruta.Contains('?') ? "&" : "?";
+            return ruta + separador + string.Join('&', parametros);
+        }
 
         private async Task<T> LeerCuerpoAsync<T>(Func<HttpRequestMessage> fabrica, CancellationToken ct)
         {

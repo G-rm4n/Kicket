@@ -15,11 +15,13 @@ namespace Kicket.Contracts.Clubes
         [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")]
         public string Nombre { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La URL del logo es obligatoria.")]
-        [StringLength(300, ErrorMessage = "La Descripccion no puede superar los 300 caracteres.")]
+        // Opcional: Club.Descripcion es nullable en el dominio y ClubService no la exige.
+        // El tope son los 255 que declara el TPIContext, no 300: con 300 el formulario
+        // dejaba pasar un texto que despues fallaba al guardar.
+        [StringLength(255, ErrorMessage = "La descripcion no puede superar los 255 caracteres.")]
         public string Descripcion { get; set; } = string.Empty;
 
-        [StringLength(300, ErrorMessage = "La Abreviatura no puede superar los 300 caracteres.")]
+        [StringLength(10, ErrorMessage = "La Abreviatura no puede superar los 10 caracteres.")]
         public string Abreviatura { get; set; } = string.Empty;
     }
 }

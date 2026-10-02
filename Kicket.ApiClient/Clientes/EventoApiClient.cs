@@ -1,14 +1,9 @@
-﻿using Kicket.ApiClient.Abstracciones;
+using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Eventos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Kicket.ApiClient.Clientes
-
 {
     public class EventoApiClient : ApiClientBase, IEventoApiClient
     {
@@ -18,6 +13,10 @@ namespace Kicket.ApiClient.Clientes
 
         public async Task<IReadOnlyList<EventoDto>> GetAllAsync(CancellationToken ct = default) =>
             await GetAsync<List<EventoDto>>(Ruta, ct);
+
+        public Task<PagedResult<EventoDto>> GetPaginadoAsync(
+            PageRequest? pagina = null, CancellationToken ct = default) =>
+            GetPaginadoAsync<EventoDto>($"{Ruta}/paginado", pagina, ct);
 
         public Task<EventoDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<EventoDto>($"{Ruta}/{id}", ct);
