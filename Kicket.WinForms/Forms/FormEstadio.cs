@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
 using Kicket.Contracts.Estadios;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.WinForms.Forms
 {
@@ -57,6 +58,23 @@ namespace Kicket.WinForms.Forms
                 textBoxDireccion.Text = fila.Cells[2].Value?.ToString();
                 textBoxCiudad.Text = fila.Cells[3].Value?.ToString();
             }
+        }
+
+        // --- 2b. BOTÓN "Sectores" DE LA FILA: abre el maestro-detalle en una ventana aparte ---
+        private void dataGridEstadios_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != ColumnSectores.Index)
+            {
+                return;
+            }
+
+            var fila = dataGridViewEstadios.Rows[e.RowIndex];
+            int estadioId = Convert.ToInt32(fila.Cells[0].Value);
+            string nombreEstadio = fila.Cells[1].Value?.ToString() ?? string.Empty;
+
+            var formSectores = Program.ServiceProvider.GetRequiredService<FormSectorDetalle>();
+            formSectores.Inicializar(estadioId, nombreEstadio);
+            formSectores.ShowDialog(this);
         }
 
         // --- 3. BOTÓN LIMPIAR ---

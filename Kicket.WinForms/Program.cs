@@ -1,4 +1,4 @@
-using Kicket.ApiClient.Abstracciones;
+ï»¿using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Clientes;
 using Kicket.ApiClient.Configuracion;
 using Kicket.WinForms.Forms;
@@ -26,8 +26,6 @@ namespace Kicket.WinForms
             services.AddScoped<IEstadioApiClient, EstadioApiClient>();
             services.AddScoped<IUsuarioApiClient, UsuarioApiClient>();
 
-
-            // ¡Mantenemos la configuración vital de tu compañero!
             services.AddKicketApiClient(options =>
             {
                 options.BaseUrl = "http://localhost:5268/";
@@ -41,11 +39,12 @@ namespace Kicket.WinForms
             services.AddTransient<FormClub>();
             services.AddTransient<FormEstadio>();
             services.AddTransient<FormUsuario>();
+            services.AddTransient<FormSectorDetalle>();
 
-            // Guardamos el proveedor en la variable estática
+            // Guardamos el proveedor en la variable estetica
             ServiceProvider = services.BuildServiceProvider();
 
-            
+
             Application.Run(ServiceProvider.GetRequiredService<FormLogin>());
         }
     }
