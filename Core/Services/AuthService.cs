@@ -62,7 +62,7 @@ namespace Core.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return (tokenHandler.WriteToken(token), DateTime.Now.AddHours(2));
+            return (tokenHandler.WriteToken(token), DateTime.UtcNow.AddHours(2));
         }
 
 
