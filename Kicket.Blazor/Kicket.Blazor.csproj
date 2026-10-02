@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Modules\Entradas\components\" />
+    <Folder Include="Modules\Entradas\pages\" />
     <Folder Include="Modules\Eventos\" />
   </ItemGroup>
 
