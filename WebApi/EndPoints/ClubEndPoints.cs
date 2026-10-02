@@ -10,7 +10,10 @@ namespace WebApi.EndPoints
     {
         public static void MapClubEndPoints(this WebApplication app)
         {
-            app.MapGet("/clubes", async (IClubService clubService) =>
+            var clubGroup = app.MapGroup("/clubes")
+                                .RequireAuthorization();
+
+            clubGroup.MapGet("/", async (IClubService clubService) =>
             {
 
                 var clubes = await clubService.ObtenerTodosAsync();
@@ -27,7 +30,7 @@ namespace WebApi.EndPoints
             .WithName("GetAllClubes")
             .Produces<IEnumerable<ClubDto>>(StatusCodes.Status200OK);
 
-            app.MapGet("/clubes/{id}", static async (int id, IClubService clubService) =>
+            clubGroup.MapGet("/{id}", static async (int id, IClubService clubService) =>
             {
                 
                   Club? club = await clubService.ObtenerPorIdAsync(id);
@@ -52,7 +55,7 @@ namespace WebApi.EndPoints
             .Produces<ClubDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-            app.MapPost("/clubes", async (ClubRequest clubReq, IClubService clubService) =>
+            clubGroup.MapPost("/", async (ClubRequest clubReq, IClubService clubService) =>
             {
 
                 Club club = new()
@@ -79,7 +82,7 @@ namespace WebApi.EndPoints
             .Produces<ClubDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapPut("/clubes", async (ClubUpdateRequest clubReq, IClubService clubService) =>
+            clubGroup.MapPut("/", async (ClubUpdateRequest clubReq, IClubService clubService) =>
             {
                 Club club = new()
                 {
@@ -102,7 +105,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
+            clubGroup.MapDelete("/clubes/{id}",async (int id, IClubService clubService) =>
             {
                 
                  var deleted = await clubService.EliminarClubAsync(id);
