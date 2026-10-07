@@ -45,6 +45,12 @@ namespace Kicket.WinForms
                     Pass = txtPassword.Text
                 };
                 var response = await _authApiClient.LoginAsync(request);
+
+                if (response.Usuario.Rol == "Cliente") {                     
+                    MessageBox.Show("No tienes permisos para acceder a esta aplicación.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 Hide();
                 _formPrincipal.ShowDialog();
                 Close();

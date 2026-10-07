@@ -1,0 +1,47 @@
+﻿@typeparam TOjb
+
+<div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Titulo</h5>
+                <button type="button" class="btn-close" @onclick="Cerrar"></button>
+            </div>
+            <EditForm Model="Obj" OnValidSubmit="Enviar">
+                <DataAnnotationsValidator></DataAnnotationsValidator>
+            <div class="modal-body">
+                @if(CuerpoForm is not null && this.Obj is not null){
+                    @CuerpoForm!(Obj!) 
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Close</button>
+                <button type="submit" class="btn bg-primary">Confirmar</button>
+            </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Titulo { get; set; } = "Fromulario";
+    [Parameter]
+    public RenderFragment<TOjb>? CuerpoForm{ get; set; }
+    [Parameter]
+    public TOjb Obj { get; set; } = default!;
+    [Parameter]
+    public EventCallback<TOjb> Onsubmit { get; set; }
+    [Parameter]
+    public EventCallback OnCerrar{ get; set; }
+
+    public async Task Cerrar()
+    {
+        await OnCerrar.InvokeAsync();
+    }
+
+    public async Task Enviar()
+    {
+        await Onsubmit.InvokeAsync(this.Obj);
+    }
+}

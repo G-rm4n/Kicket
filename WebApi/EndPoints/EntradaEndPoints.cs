@@ -1,71 +1,55 @@
-﻿namespace WebApi.EndPoints
+﻿using Core.Interfaces;
+using Domain.Entities;
+using Kicket.Contracts.Entradas;
+
+namespace WebApi.EndPoints
 {
+    /// <summary>
+    /// Solo lectura: una Entrada siempre nace dentro de una Compra (POST /compras la crea).
+    /// No hay POST/PUT/DELETE acá, ni un "traer todas" — IEntradaService solo permite
+    /// consultar por id o por evento.
+    /// </summary>
     public static class EntradaEndPoints
     {
         public static void MapEntradaEndPoints(this WebApplication app)
         {
-            app.MapGet("/entradas", async (/*IEntradaService entradaService*/) =>
+            app.MapGet("/entradas/{id}", async (int id, IEntradaService entradaService) =>
             {
-                /*
-                 * var entradas = await entradaService.GetAllEntradas();
-                 */
-            })
-            .WithName("GetAllEntradas");
+                Entrada? entrada = await entradaService.ObtenerPorIdAsync(id);
 
-            app.MapGet("/entradas/{id}", async (/*int id, IEntradaService entradaService*/) =>
-            {
-                /*
-                 * EntradaDTO entrada = await entradaService.GetEntradaById(id);
-                 * 
-                 * if(entrada == null){
-                 *     return Results.NotFound();
-                 * }
-                 * 
-                 * return entrada;
-                 */
+                if (entrada is null)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(MapearAEntradaDto(entrada));
             })
             .WithName("GetEntrada")
+            .Produces<EntradaDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-            app.MapPost("/entradas", async (/*EntradaDTO dto, IEntradaService entradaService*/) =>
+            app.MapGet("/entradas/evento/{eventoId}", async (int eventoId, IEntradaService entradaService) =>
             {
-                /*
-                 * EntradaDTO entrada = await entradaService.AddAsync(dto);
-                 * return Results.Created($"/entradas/{entrada.Id}", entrada);
-                 */
-            })
-            .WithName("AddEntrada")
-            .Produces(StatusCodes.Status400BadRequest);
+                var entradas = await entradaService.ObtenerPorEventoAsync(eventoId);
 
-            app.MapPut("/entradas", (/*EntradaDTO dto, IEntradaService entradaService*/) =>
-            {
-                /*
-                 * var found = await entradaService.Update(dto);
-                 * if (!found)
-                 * {
-                 *     return Results.NotFound();
-                 * }
-                 * return Results.NoContent();
-                 */
-            })
-            .WithName("UpdateEntrada")
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+                IEnumerable<EntradaDto> dtos = entradas.Select(MapearAEntradaDto).ToList();
 
-            app.MapDelete("/entradas/{id}", (/*int id, IEntradaService entradaService*/) =>
-            {
-                /*
-                 * var deleted = await entradaService.Delete(id);
-                 * if (!deleted)
-                 * {
-                 *     return Results.NotFound();
-                 * }
-                 * return Results.NoContent();
-                 */
+                return Results.Ok(dtos);
             })
-            .WithName("DeleteEntrada")
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .WithName("GetEntradasPorEvento")
+            .Produces<IEnumerable<EntradaDto>>(StatusCodes.Status200OK);
+        }
+
+        private static EntradaDto MapearAEntradaDto(Entrada entrada)
+        {
+            return new EntradaDto
+            {
+                EntradaId = entrada.EntradaId,
+                CompraId = entrada.CompraId,
+                EventoId = entrada.EventoId,
+                SectorId = entrada.SectorId,
+                FilaAsiento = entrada.FilaAsiento
+            };
         }
     }
 }

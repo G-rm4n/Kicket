@@ -19,7 +19,7 @@ namespace Kicket.Contracts.Clubes
         [StringLength(300, ErrorMessage = "La Descripccion no puede superar los 300 caracteres.")]
         public string Descripcion { get; set; } = string.Empty;
 
-        [StringLength(300, ErrorMessage = "La Abreviatura no puede superar los 300 caracteres.")]
+        [StringLength(10, ErrorMessage = "La Abreviatura no puede superar los 10 caracteres.")]
         public string Abreviatura { get; set; } = string.Empty;
     }
 }

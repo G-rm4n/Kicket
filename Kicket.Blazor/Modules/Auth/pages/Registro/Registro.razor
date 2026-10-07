@@ -1,0 +1,60 @@
+﻿@page "/auth/registro"
+@rendermode InteractiveServer
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.ApiClient.Http
+@using Kicket.Blazor.Core.session
+@using Kicket.Blazor.Core.state
+@using Kicket.Blazor.Modules.Auth.components
+@using Kicket.Contracts.Usuarios
+@using Kicket.Blazor.Core.HTTP
+@inject KicketAuthStateProvider stateProvider
+@inject IAuthApiClient authApi
+@inject NavigationManager Nav
+@inherits PaginaApi
+
+<div class="container-fluid registro-wrapper p-0">
+    <div class="row g-0 h-100 min-vh-100">
+
+
+        <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center hero-section-log">
+            <div class="hero-overlay"></div>
+            <h1 class="text-white text-center hero-text">
+                UNITE A LA<br />PASION MAS<br />GRANDE
+            </h1>
+        </div>
+
+
+        <div class="col-12 col-md-6 d-flex align-items-center justify-content-center flex-column p-4 p-md-5">
+            <div class="w-100" style="max-width: 450px;">
+
+                @if (!string.IsNullOrEmpty(MensajeError))
+                {
+                    <div class="alert alert-danger text-center shadow-sm">
+                        @MensajeError
+                    </div>
+                }
+                <div class="text-end mb-5 text-secondary small">
+                    ¿ya tienés cuenta? <a href="/auth/login" class="text-green">Ingresa</a>
+                </div>
+
+                <h2 class="text-white text-center fw-bold mb-4 uppercase">
+                    INGRESAR A MI CUENTA
+                </h2>
+
+                <RegisterForm submit="EnviarDatos"></RegisterForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public async Task EnviarDatos(UsuarioRequest request)
+    {
+        await this.SecureExec(async () =>
+        {
+            await authApi.RegistAsync(request);
+            Nav.NavigateTo("auth/login");
+        });
+    }
+}

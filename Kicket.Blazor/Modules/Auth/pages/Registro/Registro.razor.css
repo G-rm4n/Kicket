@@ -1,0 +1,39 @@
+﻿.registro-wrapper {
+    min-height: calc(100vh - 68px);
+    background-color: #1b222d;
+}
+
+.hero-section-log {
+    background-image: url('/assets/images.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.hero-text {
+    position: relative;
+    z-index: 1;
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+}
+
+.text-green {
+    color: #22c55e;
+    text-decoration: none;
+}
+
+    .text-green:hover {
+        text-decoration: underline;
+        color: #1ea34d;
+    }

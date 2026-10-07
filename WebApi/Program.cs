@@ -1,6 +1,4 @@
-
-
-using System.Text;
+ï»¿using System.Text;
 using Core.Interfaces;
 using Core.Services;
 using Data;
@@ -11,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApi.EndPoints;
+using WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,9 +39,28 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            
+            Console.WriteLine($"[JWT ERROR] Fallï¿½ la autenticaciï¿½n: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("EL TOKEN SI SE VALIDO");
+            return Task.CompletedTask;
+        }
+    };
 });
 
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Solo admin", policy => policy.RequireRole("Admin"));
+});
 
 
 
@@ -53,6 +71,8 @@ builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<IEstadioRepository, EstadioRepository>();
 builder.Services.AddScoped<IEventoRepository, EventoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ISectorRepository, SectorRepository>();
+builder.Services.AddScoped<IEntradaRepository, EntradaRepository>();
 
 //Mapeo de Services
 
@@ -60,9 +80,16 @@ builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IEstadioService, EstadioService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventoService, EventoService>();
+builder.Services.AddScoped<ISectorService, SectorService>();
+builder.Services.AddScoped<IEntradaService, EntradaService>();
+builder.Services.AddScoped<ICompraService, CompraService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -83,7 +110,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al crear la base de datos.");
+        logger.LogError(ex, "Ocurriï¿½ un error al crear la base de datos.");
     }
 }
 
@@ -92,13 +119,12 @@ var conectionString = builder.Configuration.GetConnectionString("Local");
 //Mapeo de los EndPoints base, comentado hasta que se 
 //Implementen los services.
 app.MapClubEndPoints();
-//app.MapCompraEndPoints();
-//app.MapEntradaEndPoints();
-//app.MapEventoEndPoints();
+app.MapCompraEndPoints();
+app.MapEntradaEndPoints();
+app.MapEventoEndPoints();
 app.MapUsuarioEndPoints();
-//app.MapSectorEndPoints();
+app.MapSectorEndPoints();
 app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
 
 app.Run();
-

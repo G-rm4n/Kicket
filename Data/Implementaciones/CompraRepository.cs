@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Interfaces;
+﻿using Data.Interfaces;
 using Domain.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Data.Implementaciones
 {
@@ -69,6 +70,26 @@ namespace Data.Implementaciones
 
             int cantidadEntradas = resultado != null ? Convert.ToInt32(resultado) : 0;
             return cantidadEntradas;
+        }
+
+        public async Task<IEnumerable<Compra>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Compra, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Compra>, IOrderedQueryable<Compra>>? ordenamiento = null)
+        {
+            IQueryable<Compra> query = context.Set<Compra>();
+            if (esFiltrado && filtro is not null)
+            {
+                query = query.Where(filtro);
+            }
+
+            if (esOrdenado && ordenamiento is not null)
+            {
+                query = ordenamiento(query);
+            }
+
+            query = query
+                .Skip((pagina - 1) * cantidadPorPagina)
+                .Take(cantidadPorPagina);
+
+            return await query.ToListAsync();
         }
     }
 }

@@ -1,0 +1,64 @@
+﻿@inherits LayoutComponentBase
+@using Kicket.Blazor.Core.session
+@using Kicket.Blazor.Core.state
+@inject BlazorSesionUsuario session
+@inject KicketAuthStateProvider stateProvider
+@inject NavigationManager nav
+
+<HeadContent>
+    <link href="style.razor.css" rel="stylesheet" />
+</HeadContent>
+
+<div class="d-flex vh-100 overflow-hidden">
+
+    <aside class="bg-light shadow-sm d-flex flex-column p-3" style="width: 260px;">
+        <div class="mb-4">
+            <span class="fs-5 fw-bolder text-secondary">Menú Principal</span>
+        </div>
+
+        <ul class="nav nav-pills flex-column mb-auto gap-2">
+            <li class="nav-item">
+                <NavLink href="admin/Clubs" class="nav-link text-dark" Match="NavLinkMatch.All">
+                    Clubs
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/Estadios" class="nav-link text-dark">
+                    Estadios
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/usuarios" class="nav-link text-dark">
+                    Usuarios
+                </NavLink>
+            </li>
+        </ul>
+
+        <hr />
+
+        <div class="mb-4">
+            <button type="button" class="btn btn-primary" @onclick="cerrarSesion">Cerrar sesion</button>
+        </div>
+    </aside>
+
+    
+    <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+
+        <NavBar></NavBar>
+
+        <main class="container-fluid mt-4 overflow-auto px-4 h-100">
+            @Body
+        </main>
+    </div>
+
+</div>
+
+@code {
+
+    public void cerrarSesion()
+    {
+        session.Cerrar();
+        stateProvider.NotificarCambioDeEstado();
+        nav.NavigateTo("/Auth/Login");
+    }
+}

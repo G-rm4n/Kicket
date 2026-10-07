@@ -1,0 +1,190 @@
+﻿@page "/Admin/Estadios"
+@using Kicket.Blazor.Core.Auth
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Contracts.Estadios
+@layout AdminLayout
+@inherits PaginaProtegida
+@inject IEstadioApiClient estadioApi
+
+<div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsEstadioSelected = false; this.IdEstadio = 0; }">
+    <h1>
+        Gestionar Estadios
+    </h1>
+        <div @onclick:stopPropagation="true" class="p-3">
+            <GenericTable TItem="EstadioDto" DatosTabla="estadios"
+                          OnClick="SelectFila"
+                          FilaSeleccionada="@(e=>e.IdEstadio==this.IdEstadio)">
+                <Cabeceras>
+                    @foreach(var value in Cab)
+                    {
+                        <th>@value</th>
+                    }
+                </Cabeceras>
+                <fila Context="Estadio">
+                    <td>@Estadio.IdEstadio</td>
+                    <td>@Estadio.Nombre</td>
+                    <td>@Estadio.Ciudad</td>
+                    <td>@Estadio.Direccion</td>
+                </fila>
+            </GenericTable>
+        </div>
+
+            <div class="d-flex justify-content-end flex-row gap-4 w-100">
+                <button class="btn btn-danger text-white" disabled="@(!IsEstadioSelected)" @onclick="EliminarEstadio">Borrar Estadio</button>
+                <button class="btn bg-primary text-white" disabled="@(!IsEstadioSelected)" @onclick="AbrirModalEdicion">Editar Estadio</button>
+                <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Estadio</button>
+                <button class="btn bg-secondary text-white" @onclick="CargarEstadiosAsync">Refrescar</button>
+            </div>
+    @if (this.ShowModalEdicion)
+    {
+        <GenericModalForm TOjb="EstadioUpdateRequest" Obj="EstadioEditando" Titulo="Editar estadio" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
+
+            <CuerpoForm Context="estadio">
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <InputText class="form-control" @bind-Value="estadio!.Nombre" />
+                    <ValidationMessage For="@(()=>estadio.Nombre)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ciudad</label>
+                    <InputText class="form-control" @bind-Value="estadio.Ciudad" />
+                    <ValidationMessage For="@(() => estadio.Ciudad)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Direccion</label>
+                    <InputText class="form-control" @bind-Value="estadio.Direccion" />
+                    <ValidationMessage For="@(() => estadio.Direccion)"></ValidationMessage>
+                </div>
+            </CuerpoForm>
+
+        </GenericModalForm>
+    }
+
+    @if (this.ShowModalCreacion)
+    {
+        <GenericModalForm TOjb="EstadioRequest" Obj="NuevoEstadio" Titulo="Crear Estadio" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoEstadio">
+
+            <CuerpoForm Context="estadio">
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <InputText class="form-control" @bind-Value="estadio!.Nombre" />
+                    <ValidationMessage For="@(() => estadio.Nombre)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ciudad</label>
+                    <InputText class="form-control" @bind-Value="estadio.Ciudad" />
+                    <ValidationMessage For="@(() => estadio.Ciudad)"></ValidationMessage>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Direccion</label>
+                    <InputText class="form-control" @bind-Value="estadio.Direccion" />
+                    <ValidationMessage For="@(() => estadio.Direccion)"></ValidationMessage>
+                </div>
+            </CuerpoForm>
+
+        </GenericModalForm>
+    }
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger">
+            @MensajeError
+        </div>
+    }
+</div>
+
+
+
+@code {
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Descripccion", "Abreviatura"];
+
+    public IEnumerable<EstadioDto>? estadios { get; set; }
+
+    public bool IsEstadioSelected { get; set; } = false;
+    public bool ShowModalEdicion { get; set; } = false;
+    public bool ShowModalConfirmacion { get; set; } = false;
+    public bool ShowModalCreacion { get; set; } = false;
+
+    public int IdEstadio { get; set; }
+
+    public EstadioUpdateRequest? EstadioEditando { get; set; }
+    public EstadioRequest? NuevoEstadio{ get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await CargarEstadiosAsync();
+    }
+
+    private void SelectFila(EstadioDto estadioSelected)
+    {
+        this.IdEstadio = estadioSelected.IdEstadio;
+        this.IsEstadioSelected = true;
+    }
+
+    public async Task CargarEstadiosAsync()
+    {
+        await this.SecureExec(async () =>
+        {
+            this.estadios=await estadioApi.GetAllAsync();
+
+        });
+    }
+
+    public void AbrirModalEdicion()
+    {
+
+        var estadioOriginal = estadios.First(c => c.IdEstadio==this.IdEstadio);
+        EstadioEditando = new EstadioUpdateRequest
+        {
+            IdEstadio=estadioOriginal.IdEstadio,
+            Ciudad=estadioOriginal.Ciudad,
+            Direccion=estadioOriginal.Direccion,
+            Nombre=estadioOriginal.Nombre
+        };
+        this.ShowModalEdicion=true;
+    }
+
+    public void CerrarModalEdicion()
+    {
+        this.ShowModalEdicion = false;
+    }
+    public void CerrarModalCreacion()
+    {
+        this.ShowModalCreacion = false;
+    }
+
+    public void AbrirModalCreacion()
+    {
+        this.NuevoEstadio = new();
+        this.ShowModalCreacion = true;
+    }
+
+    public async Task EnviarNuevoEstadio()
+    {
+        await this.SecureExec(async () =>
+        {
+            await this.estadioApi.CreateAsync(NuevoEstadio);
+        });
+
+        this.CerrarModalCreacion();
+    }
+
+    public async Task EnviarEditado()
+    {
+        await this.SecureExec(async () =>
+        {
+            await estadioApi.UpdateAsync(EstadioEditando!);
+        });
+
+        CerrarModalEdicion();
+
+        await this.CargarEstadiosAsync();
+    }
+
+    public async Task EliminarEstadio()
+    {
+        await estadioApi.DeleteAsync(this.IdEstadio);
+        await this.CargarEstadiosAsync();
+    }
+}

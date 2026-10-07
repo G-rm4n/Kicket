@@ -46,12 +46,13 @@ namespace Kicket.ApiClient.Configuracion
 
             services.AddSingleton(opciones);
 
-            // Una sola sesion por proceso: es el usuario sentado frente a la aplicacion.
-            services.AddSingleton<ISesionUsuario, SesionUsuario>();
+            //Se elimino para que cada Interfaz grafica Decrete a la sesion deacuerdo a si misma
+            
             services.AddTransient<AuthTokenHandler>();
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
+            services.AgregarCliente<ISectorApiClient, SectorApiClient>(opciones);
             services.AgregarCliente<IUsuarioApiClient, UsuarioApiClient>(opciones);
             services.AgregarCliente<IAuthApiClient, AuthApiClient>(opciones);
 
@@ -63,12 +64,24 @@ namespace Kicket.ApiClient.Configuracion
             where TInterfaz : class
             where TImpl : class, TInterfaz
         {
-            services.AddHttpClient<TInterfaz, TImpl>(http =>
-                   {
-                       http.BaseAddress = new Uri(opciones.BaseUrl);
-                       http.Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos);
-                   })
-                   .AddHttpMessageHandler<AuthTokenHandler>();
+            services.AddScoped<TInterfaz, TImpl>(sp =>
+            {
+                
+                var handler = sp.GetRequiredService<AuthTokenHandler>();
+
+                
+                handler.InnerHandler = new HttpClientHandler();
+
+                
+                var httpClient = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri(opciones.BaseUrl),
+                    Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos)
+                };
+
+                
+                return ActivatorUtilities.CreateInstance<TImpl>(sp, httpClient);
+            });
         }
     }
 }
