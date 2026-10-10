@@ -11,5 +11,18 @@
         "Action": "Start"
       }
     ]
+  },
+  {
+    "Name": "Web+Back",
+    "Projects": [
+      {
+        "Path": "WebApi\\WebApi.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Kicket.Blazor\\Kicket.Blazor.csproj",
+        "Action": "Start"
+      }
+    ]
   }
 ]

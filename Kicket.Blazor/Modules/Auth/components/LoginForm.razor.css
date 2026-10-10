@@ -1,0 +1,73 @@
+﻿.kicket-form-container ::deep .kicket-input {
+    background-color: #2a3441 !important;
+    border: 1px solid #3b4758 !important;
+    color: white !important;
+    padding-top: 0.8rem !important;
+    padding-bottom: 0.8rem !important;
+}
+
+    .kicket-form-container ::deep .kicket-input:focus {
+        border-color: #22c55e !important;
+        box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.25) !important;
+    }
+
+    .kicket-form-container ::deep .kicket-input::placeholder {
+        color: #6c757d !important;
+    }
+
+.kicket-form-container ::deep .pl-icon {
+    padding-left: 45px !important;
+}
+
+.kicket-form-container ::deep .pr-icon {
+    padding-right: 45px !important;
+}
+
+
+.input-icon-wrapper {
+    position: relative;
+}
+
+.icon-left {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+
+.icon-right {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.btn-green {
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    font-weight: bold;
+}
+
+    .btn-green:hover {
+        background-color: #1ea34d;
+        color: white;
+    }
+
+.text-green {
+    color: #22c55e;
+}
+
+    .text-green:hover {
+        color: #1ea34d;
+        text-decoration: underline;
+    }

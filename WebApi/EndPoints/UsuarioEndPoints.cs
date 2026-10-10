@@ -8,7 +8,11 @@ namespace WebApi.EndPoints
     {
         public static void MapUsuarioEndPoints(this WebApplication app)
         {
-            app.MapGet("/usuarios", async (IUsuarioService usuarioService) =>
+
+            var usuariosGroup = app.MapGroup("/usuarios")
+                                    .RequireAuthorization();
+
+            usuariosGroup.MapGet("/", async (IUsuarioService usuarioService) =>
             {
 
                 var usuarios = await usuarioService.ObtenerTodosAsync();
@@ -26,9 +30,10 @@ namespace WebApi.EndPoints
 
             })
             .WithName("GetAllUsuarios")
-            .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK)
+            .RequireAuthorization("Solo admin");
 
-            app.MapGet("/usuarios/{id}", async (int id, IUsuarioService usuarioService) =>
+            usuariosGroup.MapGet("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
 
                 Usuario? usuario = await usuarioService.ObtenerPorIdAsync(id);
@@ -52,9 +57,10 @@ namespace WebApi.EndPoints
             })
             .WithName("GetUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization("Solo admin");
 
-            app.MapPost("/usuarios", async (UsuarioRequest usuarioReq, IUsuarioService usuarioService) =>
+            usuariosGroup.MapPost("/", async (UsuarioRequest usuarioReq, IUsuarioService usuarioService) =>
             {
 
                 Usuario usuario = new()
@@ -79,9 +85,10 @@ namespace WebApi.EndPoints
             })
             .WithName("AddUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
-            app.MapPut("/usuarios", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
+            usuariosGroup.MapPut("/", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
             {
                 // Pass es opcional en la modificación: si viene vacío, hay que
                 // conservar la contraseña actual en vez de pisarla con "".
@@ -113,9 +120,10 @@ namespace WebApi.EndPoints
             .WithName("UpdateUsuario")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
-            app.MapDelete("/usuarios/{id}", async (int id, IUsuarioService usuarioService) =>
+            usuariosGroup.MapDelete("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
 
                 var deleted = await usuarioService.EliminarUsuarioAsync(id);
@@ -129,7 +137,8 @@ namespace WebApi.EndPoints
             .WithName("DeleteUsuario")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
         }
     }
 }

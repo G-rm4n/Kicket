@@ -40,6 +40,7 @@
             ColumnNombre = new DataGridViewTextBoxColumn();
             ColumnDireccion = new DataGridViewTextBoxColumn();
             ColumnCiudad = new DataGridViewTextBoxColumn();
+            ColumnSectores = new DataGridViewButtonColumn();
             buttonLimpiar = new Button();
             buttonGuardar = new Button();
             buttonEliminar = new Button();
@@ -112,7 +113,7 @@
             // 
             dataGridViewEstadios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewEstadios.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewEstadios.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnNombre, ColumnDireccion, ColumnCiudad });
+            dataGridViewEstadios.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnNombre, ColumnDireccion, ColumnCiudad, ColumnSectores });
             dataGridViewEstadios.Location = new Point(12, 251);
             dataGridViewEstadios.Margin = new Padding(3, 4, 3, 4);
             dataGridViewEstadios.Name = "dataGridViewEstadios";
@@ -120,6 +121,7 @@
             dataGridViewEstadios.Size = new Size(506, 200);
             dataGridViewEstadios.TabIndex = 7;
             dataGridViewEstadios.CellClick += dataGridEstadios_CellClick;
+            dataGridViewEstadios.CellContentClick += dataGridEstadios_CellContentClick;
             // 
             // ColumnId
             // 
@@ -149,6 +151,14 @@
             ColumnCiudad.MinimumWidth = 6;
             ColumnCiudad.Name = "ColumnCiudad";
             // 
+            // ColumnSectores
+            // 
+            ColumnSectores.HeaderText = "Sectores";
+            ColumnSectores.MinimumWidth = 6;
+            ColumnSectores.Name = "ColumnSectores";
+            ColumnSectores.Text = "Sectores";
+            ColumnSectores.UseColumnTextForButtonValue = true;
+            // 
             // buttonLimpiar
             // 
             buttonLimpiar.Location = new Point(492, 604);
@@ -177,7 +187,7 @@
             buttonEliminar.Margin = new Padding(3, 4, 3, 4);
             buttonEliminar.Name = "buttonEliminar";
             buttonEliminar.Size = new Size(86, 31);
-            buttonEliminar.TabIndex = 11;
+            buttonEliminar.TabIndex = 10;
             buttonEliminar.Text = "Eliminar";
             buttonEliminar.UseVisualStyleBackColor = true;
             buttonEliminar.Click += btnEliminar_Click;
@@ -188,7 +198,7 @@
             buttonModificar.Margin = new Padding(3, 4, 3, 4);
             buttonModificar.Name = "buttonModificar";
             buttonModificar.Size = new Size(86, 31);
-            buttonModificar.TabIndex = 12;
+            buttonModificar.TabIndex = 11;
             buttonModificar.Text = "Modificar";
             buttonModificar.UseVisualStyleBackColor = true;
             buttonModificar.Click += btnModificar_Click;
@@ -248,6 +258,7 @@
         private DataGridViewTextBoxColumn ColumnNombre;
         private DataGridViewTextBoxColumn ColumnDireccion;
         private DataGridViewTextBoxColumn ColumnCiudad;
+        private DataGridViewButtonColumn ColumnSectores;
         private Button buttonLimpiar;
         private Button buttonGuardar;
         private Button buttonEliminar;

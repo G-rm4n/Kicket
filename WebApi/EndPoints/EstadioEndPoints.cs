@@ -1,9 +1,7 @@
 ﻿using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
-using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
-using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.EndPoints
 {
@@ -11,9 +9,12 @@ namespace WebApi.EndPoints
     {
         public static void MapEstadioEndPoints(this WebApplication app)
         {
-            app.MapGet("/estadios", async (IEstadioService estadioService) =>
-            {
+            
+            var estadiosGroup = app.MapGroup("/estadios")
+                                   .RequireAuthorization();
 
+            estadiosGroup.MapGet("/", async (IEstadioService estadioService) =>
+            {
                 var estadios = await estadioService.ObtenerTodosAsync();
 
                 IEnumerable<EstadioDto> dtos = estadios.Select(e => new EstadioDto()
@@ -29,9 +30,10 @@ namespace WebApi.EndPoints
             })
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK)
+            .RequireAuthorization("Solo admin")
             ;
 
-            app.MapGet("/estadios/{id}", async (int id, IEstadioService estadioService) =>
+            estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 Estadio? estadio = await estadioService.ObtenerPorIdAsync(id);
 
@@ -57,9 +59,10 @@ namespace WebApi.EndPoints
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization("Solo admin")
             ;
 
-            app.MapPost("/estadios", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
+            estadiosGroup.MapPost("/", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
             {
                 Estadio estadio = new()
                 {
@@ -82,9 +85,10 @@ namespace WebApi.EndPoints
             })
             .WithName("AddEstadio")
             .Produces<EstadioDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
-            app.MapPut("/estadios", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
+            estadiosGroup.MapPut("/", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
 
                 Estadio estadio = new()
@@ -109,32 +113,27 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin")
             ;
 
-            app.MapDelete("/estadios/{id}", async (int id, IEstadioService estadioService) =>
+            estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
             {
-                try
-                {
-                    var deleted = await estadioService.EliminarEstadioAsync(id);
 
-                    if (!deleted)
-                    {
-                        return Results.NotFound();
-                    }
+                var deleted = await estadioService.EliminarEstadioAsync(id);
 
-                    return Results.NoContent();
-                }
-                catch (DbUpdateException)
+                if (!deleted)
                 {
-                    return Results.Conflict(new ApiError { Status = StatusCodes.Status409Conflict, Title = "No se puede eliminar el estadio", Detail = "El estadio tiene sectores asociados. Elimina primero sus sectores." });
+                    return Results.NotFound();
                 }
+
+                return Results.NoContent();
 
             })
             .WithName("DeleteEstadio")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin")
             ;
         }
     }

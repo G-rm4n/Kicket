@@ -1,0 +1,10 @@
+﻿.nav-pills {
+    --bs-nav-pills-link-active-bg: #10b981;
+    --bs-nav-pills-link-active-color: white;
+}
+
+    /* Opcional: Un pequeño efecto hover para cuando pasas el mouse y no está activo */
+    .nav-pills .nav-link:not(.active):hover {
+        background-color: rgba(16, 185, 129, 0.1); /* Tu verde pero transparente */
+        color: #10b981;
+    }
