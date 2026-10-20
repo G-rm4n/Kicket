@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
@@ -15,9 +15,11 @@ namespace Kicket.WinForms.Forms
         {
             InitializeComponent();
             _usuarioApiClient = usuarioApiClient;
+
+            comboBoxRol.DataSource = new[] { Roles.Cliente, Roles.Usuario, Roles.Admin };
+            comboBoxRol.SelectedIndex = 0;
         }
 
-        // --- CARGA INICIAL ---
         private async void FormUsuario_Load(object sender, EventArgs e)
         {
             dataGridViewUsuarios.AutoGenerateColumns = false;
@@ -38,8 +40,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
-        // --- SELECCIÓN EN TABLA ---
-        private void dataGridUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridViewUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
@@ -49,11 +50,15 @@ namespace Kicket.WinForms.Forms
                 textBoxNombre.Text = fila.Cells[1].Value?.ToString();
                 textBoxApellido.Text = fila.Cells[2].Value?.ToString();
                 textBoxEmail.Text = fila.Cells[3].Value?.ToString();
-                textBoxPassword.Clear(); // La API nunca devuelve la contraseña; se completa solo si se quiere cambiar
+                string? rolFila = fila.Cells[4].Value?.ToString();
+                if (!string.IsNullOrWhiteSpace(rolFila) && comboBoxRol.Items.Contains(rolFila))
+                {
+                    comboBoxRol.SelectedItem = rolFila;
+                }
+                textBoxPassword.Clear();
             }
         }
 
-        // --- LIMPIAR FORMULARIO ---
         private void buttonLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
@@ -65,10 +70,10 @@ namespace Kicket.WinForms.Forms
             textBoxApellido.Clear();
             textBoxEmail.Clear();
             textBoxPassword.Clear();
+            if (comboBoxRol.Items.Count > 0) comboBoxRol.SelectedIndex = 0;
             _usuarioIdSeleccionado = null;
         }
 
-        // --- CREAR (POST) ---
         private async void buttonGuardar_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(textBoxNombre.Text) || string.IsNullOrWhiteSpace(textBoxEmail.Text))
@@ -88,7 +93,8 @@ namespace Kicket.WinForms.Forms
                 Nombre = textBoxNombre.Text.Trim(),
                 Apellido = textBoxApellido.Text.Trim(),
                 Email = textBoxEmail.Text.Trim(),
-                Pass = textBoxPassword.Text
+                Pass = textBoxPassword.Text,
+                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente
             };
 
             try
@@ -103,7 +109,6 @@ namespace Kicket.WinForms.Forms
             }
         }
 
-        // --- ACTUALIZAR (PUT) ---
         private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (_usuarioIdSeleccionado == null)
@@ -118,8 +123,8 @@ namespace Kicket.WinForms.Forms
                 Nombre = textBoxNombre.Text.Trim(),
                 Apellido = textBoxApellido.Text.Trim(),
                 Email = textBoxEmail.Text.Trim(),
-                // Si se deja en blanco, la API conserva la contraseña actual.
-                Pass = string.IsNullOrWhiteSpace(textBoxPassword.Text) ? null : textBoxPassword.Text
+                Pass = string.IsNullOrWhiteSpace(textBoxPassword.Text) ? null : textBoxPassword.Text,
+                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente
             };
 
             try
@@ -134,7 +139,6 @@ namespace Kicket.WinForms.Forms
             }
         }
 
-        // --- ELIMINAR (DELETE) ---
         private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (_usuarioIdSeleccionado == null)

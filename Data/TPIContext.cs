@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Domain.Entities;
 
@@ -105,8 +105,8 @@ namespace Data
                     new
                     {
                         IdEvento = -1,
-                        Nombre = "Clásico Rosarino", // Si la propiedad Nombre existe en la clase, agrégala. Si no, borra esta línea.
-                        Fecha = new DateTime(2024, 12, 15, 17, 0, 0),
+                        Nombre = "Clásico Rosarino",
+                        Fecha = new DateTime(2027, 12, 15, 17, 0, 0),
                         EstadioId = -1,
                         ClubLocalId = -1,
                         ClubVisitanteId = -2,
@@ -149,7 +149,7 @@ namespace Data
                         Nombre = "Pepe",
                         Apellido = "Perez",
                         Email = "EmailRaro@gmail.com",
-                        Password = "Has", // Corregido de "PassWord" a "Password" para que coincida con la propiedad
+                        Password = "Has",
                         FechaRegistro = new DateTime(2024, 1, 1),
                         Rol = "Admin"
                     }

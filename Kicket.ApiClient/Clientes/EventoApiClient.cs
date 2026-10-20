@@ -1,14 +1,12 @@
-﻿using Kicket.ApiClient.Abstracciones;
+using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Eventos;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Kicket.ApiClient.Clientes
-
 {
     public class EventoApiClient : ApiClientBase, IEventoApiClient
     {
@@ -21,6 +19,9 @@ namespace Kicket.ApiClient.Clientes
 
         public Task<EventoDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<EventoDto>($"{Ruta}/{id}", ct);
+
+        public async Task<IReadOnlyList<SectorDisponibilidadDto>> GetDisponibilidadAsync(int eventoId, CancellationToken ct = default) =>
+            await GetAsync<List<SectorDisponibilidadDto>>($"{Ruta}/{eventoId}/disponibilidad", ct);
 
         public Task<EventoDto> CreateAsync(EventoRequest request, CancellationToken ct = default) =>
             PostAsync<EventoDto>(Ruta, request, ct);

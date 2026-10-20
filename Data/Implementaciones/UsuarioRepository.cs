@@ -1,11 +1,10 @@
-﻿using Data.Interfaces;
+using Data.Interfaces;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Data.Implementaciones
@@ -40,6 +39,10 @@ namespace Data.Implementaciones
                 usuarioFound.Apellido = usuario.Apellido;
                 usuarioFound.Email = usuario.Email;
                 usuarioFound.Password = usuario.Password;
+                if (!string.IsNullOrWhiteSpace(usuario.Rol))
+                {
+                    usuarioFound.Rol = usuario.Rol;
+                }
                 await context.SaveChangesAsync();
                 return true;
             }
@@ -78,12 +81,12 @@ namespace Data.Implementaciones
 
             if (esFiltrado && filtro is not null)
             {
-                query=query.Where(filtro).Where(u=>u.Rol=="Usuario");
+                query = query.Where(filtro).Where(u => u.Rol == "Usuario");
             }
 
-            if(esOrdenado && ordenamiento is not null)
+            if (esOrdenado && ordenamiento is not null)
             {
-                query=ordenamiento(query);
+                query = ordenamiento(query);
             }
 
             query = query

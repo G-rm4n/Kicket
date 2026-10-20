@@ -1,0 +1,409 @@
+@page "/comprar/{EventoId:int}"
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Blazor.Core.HTTP
+@using Kicket.Blazor.Core.state
+@using Kicket.Contracts.Clubes
+@using Kicket.Contracts.Compras
+@using Kicket.Contracts.Estadios
+@using Kicket.Contracts.Eventos
+@inherits PaginaApi
+@inject IEventoApiClient eventoApi
+@inject IClubApiClient clubApi
+@inject IEstadioApiClient estadioApi
+@inject ICompraApiClient compraApi
+@inject ISesionUsuario sesion
+@inject KicketAuthStateProvider authStateProvider
+@inject NavigationManager Nav
+
+<div class="container py-4" style="min-height: 82vh;">
+    <div class="mb-3">
+        <a href="/eventos" class="btn btn-outline-secondary btn-sm">
+            &larr; Volver a Eventos Disponibles
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger shadow-sm">
+            @MensajeError
+        </div>
+    }
+
+    @if (_evento is null && Procesando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status"></div>
+            <p class="mt-2 text-secondary">Cargando información del evento y disponibilidad...</p>
+        </div>
+    }
+    else if (_evento is not null)
+    {
+        <!-- Cabecera del Evento -->
+        <div class="card border-0 shadow-sm bg-dark text-white rounded-4 mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-8">
+                        <span class="badge bg-success mb-2">
+                            @_evento.Fecha.ToString("dddd dd/MM/yyyy - HH:mm") hs
+                        </span>
+                        <h2 class="fw-bold mb-1">@_evento.Nombre</h2>
+                        <p class="fs-5 text-light mb-1">
+                            <strong>@_nombreLocal</strong> vs <strong>@_nombreVisitante</strong>
+                        </p>
+                        <p class="small text-secondary-emphasis mb-0">
+                            Estadio: @_nombreEstadio
+                        </p>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+                        <div class="small text-light opacity-75">Comprador</div>
+                        <div class="fw-bold fs-5">@sesion.Usuario?.Nombre @sesion.Usuario?.Apellido</div>
+                        <div class="small text-light opacity-75">@sesion.Usuario?.Email</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (_compraRealizada is not null)
+        {
+            <!-- Comprobante de Compra Exitosa -->
+            <div class="card border-success shadow rounded-4 mb-4">
+                <div class="card-header bg-success text-white py-3 px-4">
+                    <h4 class="mb-0 fw-bold">¡Compra Confirmada con Éxito! (Operación #@_compraRealizada.CompraId)</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Fecha de Compra</div>
+                            <div class="fw-semibold">@_compraRealizada.FechaCompra.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Cantidad de Entradas</div>
+                            <div class="fw-semibold">@_compraRealizada.Cantidad</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Monto Total Abonado</div>
+                            <div class="fw-bold fs-5 text-success">$@_compraRealizada.MontoTotal.ToString("N2")</div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mt-4 mb-3">Detalle de Entradas Emitidas:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Código Entrada</th>
+                                    <th>Evento</th>
+                                    <th>Sector</th>
+                                    <th>Modalidad</th>
+                                    <th>Ubicación Asignada</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entrada in _compraRealizada.Entradas)
+                                {
+                                    var sectorInfo = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == entrada.SectorId);
+                                    bool esPlatea = sectorInfo?.EsPlatea ?? !string.IsNullOrWhiteSpace(entrada.FilaAsiento);
+                                    <tr>
+                                        <td class="fw-bold">#@entrada.EntradaId</td>
+                                        <td>@_evento.Nombre</td>
+                                        <td>@(sectorInfo?.Nombre ?? $"Sector #{entrada.SectorId}")</td>
+                                        <td>
+                                            @if (esPlatea)
+                                            {
+                                                <span class="badge bg-info text-dark">Platea Numerada</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Popular</span>
+                                            }
+                                        </td>
+                                        <td class="fw-semibold">
+                                            @(string.IsNullOrWhiteSpace(entrada.FilaAsiento)
+                                                ? "Sin numeración (Sector Popular)"
+                                                : entrada.FilaAsiento)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn btn-success fw-semibold" @onclick="NuevaCompraMismoEvento">
+                            Comprar más entradas para este partido
+                        </button>
+                        <a href="/mis-compras" class="btn btn-outline-primary fw-semibold">
+                            Ver todas mis compras
+                        </a>
+                        <a href="/eventos" class="btn btn-outline-secondary">
+                            Volver a la cartelera
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- Columna Izquierda: Sectores y Disponibilidad -->
+                <div class="col-12 col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header bg-white py-3 px-4 border-bottom">
+                            <h5 class="mb-0 fw-bold">1. Seleccioná el Sector del Estadio</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (_sectoresDisponibles.Count == 0)
+                            {
+                                <div class="alert alert-warning mb-0">
+                                    Este estadio no posee sectores configurados todavía.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sector</th>
+                                                <th>Ubicación</th>
+                                                <th>Precio</th>
+                                                <th>Capacidad</th>
+                                                <th>Vendidas</th>
+                                                <th>Disponibles</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var sec in _sectoresDisponibles)
+                                            {
+                                                bool seleccionado = _sectorSeleccionado?.SectorId == sec.SectorId;
+                                                <tr class="@(seleccionado ? "table-success" : "")"
+                                                    style="cursor: @(sec.TieneStock ? "pointer" : "not-allowed")"
+                                                    @onclick="() => SeleccionarSector(sec)">
+                                                    <td class="fw-bold">@sec.Nombre</td>
+                                                    <td>
+                                                        @if (sec.EsPlatea)
+                                                        {
+                                                            <span class="badge bg-info text-dark" title="Se asigna fila y asiento automáticamente">
+                                                                Platea (Numerada)
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary" title="Ingreso general sin numeración">
+                                                                Popular (Sin numerar)
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                    <td class="fw-semibold">$@sec.PrecioBase.ToString("N2")</td>
+                                                    <td>@sec.CapacidadTotal</td>
+                                                    <td>@sec.EntradasVendidas</td>
+                                                    <td>
+                                                        @if (sec.StockDisponible > 0)
+                                                        {
+                                                            <span class="badge bg-success">@sec.StockDisponible libres</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">Agotado</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button class="btn btn-sm @(seleccionado ? "btn-success" : "btn-outline-success")"
+                                                                disabled="@(!sec.TieneStock)"
+                                                                @onclick:stopPropagation="true"
+                                                                @onclick="() => SeleccionarSector(sec)">
+                                                            @(seleccionado ? "Seleccionado" : "Elegir")
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Resumen y Confirmación -->
+                <div class="col-12 col-lg-5">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header bg-white py-3 px-4 border-bottom">
+                            <h5 class="mb-0 fw-bold">2. Resumen de Compra</h5>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            @if (_sectorSeleccionado is null)
+                            {
+                                <div class="text-center text-muted my-auto py-5">
+                                    <p class="mb-0">Seleccioná un sector disponible en la tabla de la izquierda para continuar con tu compra.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <label class="text-secondary small d-block">Sector Elegido</label>
+                                    <span class="fs-5 fw-bold text-dark">@_sectorSeleccionado.Nombre</span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-secondary small d-block">Asignación de Ubicación</label>
+                                    @if (_sectorSeleccionado.EsPlatea)
+                                    {
+                                        <div class="alert alert-info py-2 px-3 small mb-0">
+                                            <strong>Sector Platea:</strong> Se asignará numeración de <strong>Fila y Asiento</strong> de forma automática al confirmar la compra.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-secondary py-2 px-3 small mb-0">
+                                            <strong>Sector Popular:</strong> Entrada general <strong>sin numeración</strong> de asiento.
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Cantidad de Entradas (Máx. @MaximoPermitido)</label>
+                                    <input type="number"
+                                           class="form-control form-control-lg"
+                                           min="1"
+                                           max="@MaximoPermitido"
+                                           @bind="_cantidad"
+                                           @bind:event="oninput" />
+                                </div>
+
+                                <hr />
+
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-secondary">Precio unitario:</span>
+                                    <span class="fw-semibold">$@_sectorSeleccionado.PrecioBase.ToString("N2")</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-secondary">Cantidad:</span>
+                                    <span class="fw-semibold">@CantidadValida</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                    <span class="fs-5 fw-bold">Total a Pagar:</span>
+                                    <span class="fs-4 fw-bolder text-success">$@MontoTotalCalculado.ToString("N2")</span>
+                                </div>
+
+                                <div class="mt-auto pt-4 d-grid">
+                                    <button class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm"
+                                            disabled="@(Procesando || !_sectorSeleccionado.TieneStock)"
+                                            @onclick="ConfirmarCompraAsync">
+                                        @(Procesando ? "Procesando compra..." : "Confirmar y Comprar Entrada")
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int EventoId { get; set; }
+
+    private EventoDto? _evento;
+    private string _nombreLocal = string.Empty;
+    private string _nombreVisitante = string.Empty;
+    private string _nombreEstadio = string.Empty;
+
+    private List<SectorDisponibilidadDto> _sectoresDisponibles = new();
+    private SectorDisponibilidadDto? _sectorSeleccionado;
+    private int _cantidad = 1;
+    private CompraDto? _compraRealizada;
+
+    private int MaximoPermitido => _sectorSeleccionado is null
+        ? 1
+        : Math.Min(20, Math.Max(1, _sectorSeleccionado.StockDisponible));
+
+    private int CantidadValida => Math.Clamp(_cantidad, 1, MaximoPermitido);
+
+    private decimal MontoTotalCalculado => _sectorSeleccionado is null
+        ? 0m
+        : _sectorSeleccionado.PrecioBase * CantidadValida;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true || !sesion.EstaAutenticado || sesion.Usuario is null)
+        {
+            Nav.NavigateTo("/auth/login");
+            return;
+        }
+
+        await CargarEventoYDisponibilidadAsync();
+    }
+
+    private async Task CargarEventoYDisponibilidadAsync()
+    {
+        await SecureExec(async () =>
+        {
+            _evento = await eventoApi.GetOneAsync(EventoId);
+            var clubes = await clubApi.GetAllAsync();
+            var estadio = await estadioApi.GetOneAsync(_evento.IdEstadio);
+
+            _nombreLocal = clubes.FirstOrDefault(c => c.ClubId == _evento.IdEquipoLocal)?.Nombre ?? $"Club #{_evento.IdEquipoLocal}";
+            _nombreVisitante = clubes.FirstOrDefault(c => c.ClubId == _evento.IdEquipoVisitante)?.Nombre ?? $"Club #{_evento.IdEquipoVisitante}";
+            _nombreEstadio = $"{estadio.Nombre} - {estadio.Direccion}, {estadio.Ciudad}";
+
+            var disp = await eventoApi.GetDisponibilidadAsync(EventoId);
+            _sectoresDisponibles = disp.ToList();
+
+            if (_sectorSeleccionado is not null)
+            {
+                _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == _sectorSeleccionado.SectorId && s.TieneStock);
+            }
+            else
+            {
+                _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.TieneStock);
+            }
+        });
+    }
+
+    private void SeleccionarSector(SectorDisponibilidadDto sector)
+    {
+        if (!sector.TieneStock) return;
+        _sectorSeleccionado = sector;
+        if (_cantidad > MaximoPermitido)
+        {
+            _cantidad = MaximoPermitido;
+        }
+        if (_cantidad < 1)
+        {
+            _cantidad = 1;
+        }
+    }
+
+    private async Task ConfirmarCompraAsync()
+    {
+        if (_sectorSeleccionado is null || sesion.Usuario is null) return;
+
+        int cantidadFinal = CantidadValida;
+        var request = new CompraRequest
+        {
+            UsuarioId = sesion.Usuario.IdUsuario,
+            EventoId = EventoId,
+            SectorId = _sectorSeleccionado.SectorId,
+            Cantidad = cantidadFinal
+        };
+
+        await SecureExec(async () =>
+        {
+            _compraRealizada = await compraApi.CreateAsync(request);
+            var disp = await eventoApi.GetDisponibilidadAsync(EventoId);
+            _sectoresDisponibles = disp.ToList();
+        });
+    }
+
+    private void NuevaCompraMismoEvento()
+    {
+        _compraRealizada = null;
+        _cantidad = 1;
+        _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.TieneStock);
+    }
+}

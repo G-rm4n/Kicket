@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Kicket.Contracts.Sectores
 {
     public class SectorRequest
     {
-        [Range(1, int.MaxValue, ErrorMessage = "El estadio es obligatorio.")]
+        [Required(ErrorMessage = "El estadio es obligatorio.")]
         public int EstadioId { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio.")]

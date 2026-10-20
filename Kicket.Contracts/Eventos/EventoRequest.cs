@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Kicket.Contracts.Eventos
@@ -13,13 +13,13 @@ namespace Kicket.Contracts.Eventos
         [Required(ErrorMessage = "La fecha es obligatoria.")]
         public DateTime Fecha { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "El estadio es obligatorio.")]
+        [Required(ErrorMessage = "El estadio es obligatorio.")]
         public int EstadioId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "El club local es obligatorio.")]
+        [Required(ErrorMessage = "El club local es obligatorio.")]
         public int ClubLocalId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "El club visitante es obligatorio.")]
+        [Required(ErrorMessage = "El club visitante es obligatorio.")]
         public int ClubVisitanteId { get; set; }
     }
 }

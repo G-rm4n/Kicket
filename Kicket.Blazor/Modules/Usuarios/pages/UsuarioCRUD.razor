@@ -1,4 +1,4 @@
-﻿@page "/admin/usuarios"
+@page "/admin/usuarios"
 @using Kicket.Blazor.Core.Auth
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Contracts.Usuarios
@@ -8,10 +8,10 @@
 
 <div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsUsuarioSelected = false; this.IdUsuario = 0; }">
     <h1>
-        Gestionar Estadios
+        Gestionar Usuarios
     </h1>
     <div @onclick:stopPropagation="true" class="p-3">
-        <GenericTable TItem="UsuarioDto" DatosTabla="Usuarios"
+        <GenericTable TItem="UsuarioDto" DatosTabla="Usuarios ?? Enumerable.Empty<UsuarioDto>()"
                       OnClick="SelectFila"
                       FilaSeleccionada="@(u=>u.IdUsuario==this.IdUsuario)">
             <Cabeceras>
@@ -31,22 +31,20 @@
     </div>
 
     <div class="d-flex justify-content-end flex-row gap-4 w-100">
-        <button class="btn btn-danger text-white" disabled="@(!IsUsuarioSelected)" @onclick="EliminarUsuario">Borrar Club</button>
+        <button class="btn btn-danger text-white" disabled="@(!IsUsuarioSelected)" @onclick="EliminarUsuario">Borrar Usuario</button>
         <button class="btn bg-secondary text-white" @onclick="CargarUsuariosAsync">Refrescar</button>
     </div>
 
     @if (!string.IsNullOrEmpty(MensajeError))
     {
-        <div class="alert alert-danger">
+        <div class="alert alert-danger mt-3">
             @MensajeError
         </div>
     }
 </div>
 
-
-
 @code {
-    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Apellido", "Email","Rol"];
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Apellido", "Email", "Rol"];
 
     public IEnumerable<UsuarioDto>? Usuarios { get; set; }
 
@@ -70,8 +68,7 @@
     {
         await this.SecureExec(async () =>
         {
-            this.Usuarios= await usuarioApi.GetAllAsync();
-
+            this.Usuarios = await usuarioApi.GetAllAsync();
         });
     }
 
@@ -81,5 +78,6 @@
         {
             await usuarioApi.DeleteAsync(this.IdUsuario);
         });
+        await CargarUsuariosAsync();
     }
 }

@@ -1,14 +1,16 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Kicket.Blazor.Core.state
+@using Kicket.ApiClient.Abstracciones
 @inject NavigationManager Nav
 @inject KicketAuthStateProvider prov
+@inject ISesionUsuario sesion
 @implements IDisposable
 
-<nav class="navbar bg-light navbar-light container-fluid shadow-sm">
-    <div class="d-flex flex-row gap-3 align-items-center justify-content-around">
+<nav class="navbar bg-light navbar-light container-fluid shadow-sm px-4 py-2">
+    <div class="d-flex flex-row gap-3 align-items-center">
         <div>
-            <NavLink href="" >
-                <img style="height:40px ;width:auto" src="/assets/logo.png"/>
+            <NavLink href="">
+                <img style="height:40px; width:auto" src="/assets/logo.png" alt="Kicket" />
             </NavLink>
         </div>
 
@@ -18,51 +20,65 @@
             </h3>
         </NavLink>
 
+        <NavLink href="/eventos" class="nav-link text-dark fw-semibold ms-3">
+            Eventos Disponibles
+        </NavLink>
     </div>
 
     @if (!EsRutaAuth)
     {
-        <div class="container-button d-flex flex-row gap-3 align-items-center justify-content-around">
+        <div class="container-button d-flex flex-row gap-3 align-items-center">
             <AuthorizeView>
-            <Authorizing>
-                <div class="spinner-border spinner-border-sm text-secondary" role="status">
-                    <span>Cargando...</span>
-                </div>
-            </Authorizing>
-            <NotAuthorized>
-                <NavLink href="/auth/registro">
-                    <button class="btn bg-primary text-white-100">Registrarse</button>
-                </NavLink>
-                <NavLink HREF="/auth/login">
-                    <button class="btn bg-secondary text-white">Iniciar Sesion</button>
-                </NavLink>
-            </NotAuthorized>
-            <Authorized>
-                    @if (!EstoyEnPerfil)
+                <Authorizing>
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                        <span>Cargando...</span>
+                    </div>
+                </Authorizing>
+                <NotAuthorized>
+                    <NavLink href="/auth/registro">
+                        <button class="btn bg-primary text-white">Registrarse</button>
+                    </NavLink>
+                    <NavLink href="/auth/login">
+                        <button class="btn bg-secondary text-white">Iniciar Sesión</button>
+                    </NavLink>
+                </NotAuthorized>
+                <Authorized>
+                    <span class="text-secondary small d-none d-md-inline">
+                        Hola, <strong>@(sesion.Usuario?.Nombre ?? context.User.Identity?.Name)</strong>
+                    </span>
+
+                    <NavLink href="/mis-compras">
+                        <button class="btn btn-outline-success btn-sm fw-semibold">Mis Entradas</button>
+                    </NavLink>
+
+                    @if (_esAdmin && !EstoyEnAdmin)
                     {
-                        <NavLink href="@_urlIngreso">
-                            <button class="btn bg-primary text-white-100">Ingresar</button>
+                        <NavLink href="/Admin/clubs">
+                            <button class="btn bg-primary text-white btn-sm">Panel Admin</button>
                         </NavLink>
                     }
-            </Authorized>
-        </AuthorizeView>
-    </div>
+
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="CerrarSesion">
+                        Cerrar Sesión
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
     }
 </nav>
 
 @code {
     private bool EsRutaAuth => Nav.Uri.Contains("/auth/login", StringComparison.OrdinalIgnoreCase) ||
-                                   Nav.Uri.Contains("/auth/registro", StringComparison.OrdinalIgnoreCase);
+                               Nav.Uri.Contains("/auth/registro", StringComparison.OrdinalIgnoreCase);
 
-    private bool EstoyEnPerfil => Nav.Uri.Contains("/perfil", StringComparison.OrdinalIgnoreCase) ||
-                                  Nav.Uri.Contains("/Admin", StringComparison.OrdinalIgnoreCase);
+    private bool EstoyEnAdmin => Nav.Uri.Contains("/Admin", StringComparison.OrdinalIgnoreCase);
 
-    private string? _urlIngreso;
+    private bool _esAdmin;
 
     protected override async Task OnInitializedAsync()
     {
         Nav.LocationChanged += OnLocationChanged;
-        _urlIngreso = await UrlIngreso();
+        _esAdmin = await EsAdminAsync();
     }
 
     public void Dispose()
@@ -72,26 +88,13 @@
 
     public void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        _ = SetUrlIngresoAsync();
-        StateHasChanged();
+        _ = ActualizarEstadoAsync();
     }
 
-    private async Task SetUrlIngresoAsync()
+    private async Task ActualizarEstadoAsync()
     {
-        _urlIngreso = await UrlIngreso();
-        StateHasChanged();
-    }
-
-    private async Task<string> UrlIngreso()
-    {
-        if (await this.EsAdminAsync())
-        {
-            return "/Admin/clubs";
-        }
-        else
-        {
-            return "/Building";
-        }
+        _esAdmin = await EsAdminAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<bool> EsAdminAsync()
@@ -99,5 +102,12 @@
         var authState = await prov.GetAuthenticationStateAsync();
         var user = authState.User;
         return user.Identity != null && user.Identity.IsAuthenticated && user.IsInRole("Admin");
+    }
+
+    private void CerrarSesion()
+    {
+        sesion.Cerrar();
+        prov.NotificarCambioDeEstado();
+        Nav.NavigateTo("/");
     }
 }

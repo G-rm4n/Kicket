@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Kicket.ApiClient.Abstracciones;
@@ -23,24 +23,36 @@ namespace Kicket.WinForms.Forms
             }
         }
 
-        // --- NAVEGACIÓN A CRUDS ---
+        // --- NAVEGACIÓN A CRUDS DE ADMINISTRACIÓN ---
 
         private void buttonClubes_Click(object sender, EventArgs e)
         {
-            var formClub = Program.ServiceProvider.GetRequiredService<FormClub>();
-            formClub.ShowDialog();
+            using var formClub = Program.ServiceProvider.GetRequiredService<FormClub>();
+            formClub.ShowDialog(this);
         }
 
         private void btnEstadios_Click(object sender, EventArgs e)
         {
-            var formEstadio = Program.ServiceProvider.GetRequiredService<FormEstadio>();
-            formEstadio.ShowDialog();
+            using var formEstadio = Program.ServiceProvider.GetRequiredService<FormEstadio>();
+            formEstadio.ShowDialog(this);
+        }
+
+        private void btnEventos_Click(object sender, EventArgs e)
+        {
+            using var formEvento = Program.ServiceProvider.GetRequiredService<FormEvento>();
+            formEvento.ShowDialog(this);
         }
 
         private void btnUsuarios_Click(object sender, EventArgs e)
         {
-            var formUsuario = Program.ServiceProvider.GetRequiredService<FormUsuario>();
-            formUsuario.ShowDialog();
+            using var formUsuario = Program.ServiceProvider.GetRequiredService<FormUsuario>();
+            formUsuario.ShowDialog(this);
+        }
+
+        private void btnCompras_Click(object sender, EventArgs e)
+        {
+            using var formCompras = Program.ServiceProvider.GetRequiredService<FormCompras>();
+            formCompras.ShowDialog(this);
         }
 
         // --- CERRAR SESIÓN ---
@@ -56,10 +68,9 @@ namespace Kicket.WinForms.Forms
 
             if (respuesta == DialogResult.Yes)
             {
-                // Si tu ISesionUsuario implementa un método como CerrarSesion() o Limpiar(), invócalo aquí:
-                // _sesion.CerrarSesion();
-
-                this.Close(); // Cierra el menú principal para retornar el control a FormLogin
+                _sesion.Cerrar();
+                this.DialogResult = DialogResult.Retry;
+                this.Close();
             }
         }
     }

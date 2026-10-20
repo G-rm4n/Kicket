@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Usuarios;
 
@@ -8,13 +8,11 @@ namespace WebApi.EndPoints
     {
         public static void MapUsuarioEndPoints(this WebApplication app)
         {
-
             var usuariosGroup = app.MapGroup("/usuarios")
-                                    .RequireAuthorization();
+                                   .RequireAuthorization();
 
             usuariosGroup.MapGet("/", async (IUsuarioService usuarioService) =>
             {
-
                 var usuarios = await usuarioService.ObtenerTodosAsync();
 
                 IEnumerable<UsuarioDto> dtos = usuarios.Select(u => new UsuarioDto()
@@ -27,7 +25,6 @@ namespace WebApi.EndPoints
                 }).ToList();
 
                 return Results.Ok(dtos);
-
             })
             .WithName("GetAllUsuarios")
             .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK)
@@ -35,7 +32,6 @@ namespace WebApi.EndPoints
 
             usuariosGroup.MapGet("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
-
                 Usuario? usuario = await usuarioService.ObtenerPorIdAsync(id);
 
                 if (usuario == null)
@@ -53,7 +49,6 @@ namespace WebApi.EndPoints
                 };
 
                 return Results.Ok(dto);
-
             })
             .WithName("GetUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status200OK)
@@ -62,13 +57,13 @@ namespace WebApi.EndPoints
 
             usuariosGroup.MapPost("/", async (UsuarioRequest usuarioReq, IUsuarioService usuarioService) =>
             {
-
                 Usuario usuario = new()
                 {
                     Apellido = usuarioReq.Apellido,
                     Email = usuarioReq.Email,
                     Nombre = usuarioReq.Nombre,
-                    Password = usuarioReq.Pass
+                    Password = usuarioReq.Pass,
+                    Rol = string.IsNullOrWhiteSpace(usuarioReq.Rol) ? Roles.Usuario : usuarioReq.Rol
                 };
                 Usuario newUsuario = await usuarioService.RegistrarUsuarioAsync(usuario);
 
@@ -81,7 +76,6 @@ namespace WebApi.EndPoints
                     Rol = newUsuario.Rol
                 };
                 return Results.Created($"/usuarios/{dto.IdUsuario}", dto);
-
             })
             .WithName("AddUsuario")
             .Produces<UsuarioDto>(StatusCodes.Status201Created)
@@ -90,8 +84,6 @@ namespace WebApi.EndPoints
 
             usuariosGroup.MapPut("/", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
             {
-                // Pass es opcional en la modificación: si viene vacío, hay que
-                // conservar la contraseña actual en vez de pisarla con "".
                 var existente = await usuarioService.ObtenerPorIdAsync(usuarioReq.IdUsuario);
                 if (existente is null)
                 {
@@ -105,8 +97,7 @@ namespace WebApi.EndPoints
                     Nombre = usuarioReq.Nombre,
                     IdUsuario = usuarioReq.IdUsuario,
                     Password = string.IsNullOrWhiteSpace(usuarioReq.Pass) ? existente.Password : usuarioReq.Pass,
-                    Rol = usuarioReq.Rol
-
+                    Rol = string.IsNullOrWhiteSpace(usuarioReq.Rol) ? existente.Rol : usuarioReq.Rol
                 };
 
                 var found = await usuarioService.ActualizarUsuarioAsync(usuario);
@@ -115,7 +106,6 @@ namespace WebApi.EndPoints
                     return Results.NotFound();
                 }
                 return Results.NoContent();
-
             })
             .WithName("UpdateUsuario")
             .Produces(StatusCodes.Status204NoContent)
@@ -125,14 +115,12 @@ namespace WebApi.EndPoints
 
             usuariosGroup.MapDelete("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
-
                 var deleted = await usuarioService.EliminarUsuarioAsync(id);
                 if (!deleted)
                 {
                     return Results.NotFound();
                 }
                 return Results.NoContent();
-
             })
             .WithName("DeleteUsuario")
             .Produces(StatusCodes.Status204NoContent)

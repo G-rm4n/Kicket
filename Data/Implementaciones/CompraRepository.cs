@@ -1,13 +1,10 @@
-﻿using Data.Interfaces;
+using Data.Interfaces;
 using Domain.Entities;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Data.Implementaciones
@@ -18,24 +15,36 @@ namespace Data.Implementaciones
 
         public CompraRepository(TPIContext context)
         {
-            this.context=context;
+            this.context = context;
         }
 
         public async Task<IEnumerable<Compra>> GetAllAsync()
         {
-            return await context.Compras.ToListAsync();
+            return await context.Compras
+                .Include(c => c.Entradas)
+                .OrderByDescending(c => c.FechaCompra)
+                .ToListAsync();
         }
 
         public async Task<Compra?> GetByIdAsync(int id)
         {
-            return await context.Compras.FirstOrDefaultAsync(c => c.CompraId == id);
+            return await context.Compras
+                .Include(c => c.Entradas)
+                .FirstOrDefaultAsync(c => c.CompraId == id);
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var compraFound = await context.Compras.FirstOrDefaultAsync(e => e.CompraId == id);
+            var compraFound = await context.Compras
+                .Include(c => c.Entradas)
+                .FirstOrDefaultAsync(e => e.CompraId == id);
+
             if (compraFound is not null)
             {
+                if (compraFound.Entradas.Any())
+                {
+                    context.Entradas.RemoveRange(compraFound.Entradas);
+                }
                 context.Compras.Remove(compraFound);
                 await context.SaveChangesAsync();
                 return true;
@@ -51,30 +60,21 @@ namespace Data.Implementaciones
 
         public async Task<int> ObtenerCantidadEntradasVendidasAsync(int eventoId, int sectorId)
         {
-            string query = @"
-                SELECT count(*)
-                FROM Compras comp
-                INNER JOIN Entradas ent ON ent.CompraId=comp.CompraId
-                WHERE ent.EventoId=@eventoId and ent.SectorId=@sectorId";
+            return await context.Entradas
+                .CountAsync(e => e.EventoId == eventoId && e.SectorId == sectorId);
+        }
 
-            string conectionString = context.Database.GetConnectionString()!;
-            using var connection = new SqlConnection(conectionString);
-            using var command = new SqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@eventoId", eventoId);
-            command.Parameters.AddWithValue("@sectorId", sectorId);
-
-            await connection.OpenAsync();
-
-            var resultado = await command.ExecuteScalarAsync();
-
-            int cantidadEntradas = resultado != null ? Convert.ToInt32(resultado) : 0;
-            return cantidadEntradas;
+        public async Task<IReadOnlyList<string>> ObtenerUbicacionesOcupadasAsync(int eventoId, int sectorId)
+        {
+            return await context.Entradas
+                .Where(e => e.EventoId == eventoId && e.SectorId == sectorId && e.FilaAsiento != null)
+                .Select(e => e.FilaAsiento!)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Compra>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Compra, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Compra>, IOrderedQueryable<Compra>>? ordenamiento = null)
         {
-            IQueryable<Compra> query = context.Set<Compra>();
+            IQueryable<Compra> query = context.Set<Compra>().Include(c => c.Entradas);
             if (esFiltrado && filtro is not null)
             {
                 query = query.Where(filtro);

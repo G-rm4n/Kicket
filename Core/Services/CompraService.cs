@@ -1,10 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
-using Data.Implementaciones;
 using Core.Interfaces;
 using Data.Interfaces;
 
@@ -32,13 +29,18 @@ namespace Core.Services
             var evento = await _eventoRepository.GetOneById(eventoId);
             if (evento == null || !evento.EstaDisponible())
             {
-                throw new ArgumentException("El evento no existe o ya caduco");
+                throw new ArgumentException("El evento no existe o ya caduco.");
             }
             var sector = await _sectorRepository.ObtenerSectorPorIdAsync(sectorId);
             if (sector == null)
             {
                 throw new ArgumentException("El sector seleccionado no existe.");
             }
+            if (sector.EstadioId != evento.EstadioId)
+            {
+                throw new ArgumentException("El sector seleccionado no pertenece al estadio donde se disputa el evento.");
+            }
+
             int entradasVendidas = await _compraRepository.ObtenerCantidadEntradasVendidasAsync(eventoId, sectorId);
             int capacidadRestante = sector.CapacidadMaxima - entradasVendidas;
 
@@ -58,15 +60,50 @@ namespace Core.Services
                 Entradas = new List<Entrada>()
             };
 
+            // La numeración es automática SOLAMENTE si el sector seleccionado es en Platea.
+            // Si el sector es Popular, no lleva numeración (FilaAsiento = null).
+            bool esPlatea = sector.Nombre.Contains("Platea", StringComparison.OrdinalIgnoreCase);
+
+            HashSet<string>? ubicacionesOcupadas = null;
+            if (esPlatea)
+            {
+                var ocupadas = await _compraRepository.ObtenerUbicacionesOcupadasAsync(eventoId, sectorId);
+                ubicacionesOcupadas = new HashSet<string>(ocupadas, StringComparer.OrdinalIgnoreCase);
+            }
+
+            int siguienteIndiceAsiento = 1;
+            const int asientosPorFila = 20;
+
             for (int i = 0; i < cantidad; i++)
             {
+                string? filaAsiento = null;
+
+                if (esPlatea && ubicacionesOcupadas is not null)
+                {
+                    while (true)
+                    {
+                        int fila = ((siguienteIndiceAsiento - 1) / asientosPorFila) + 1;
+                        int asiento = ((siguienteIndiceAsiento - 1) % asientosPorFila) + 1;
+                        string candidato = $"Fila {fila}, Asiento {asiento}";
+                        siguienteIndiceAsiento++;
+
+                        if (ubicacionesOcupadas.Add(candidato))
+                        {
+                            filaAsiento = candidato;
+                            break;
+                        }
+                    }
+                }
+
                 var nuevaEntrada = new Entrada
                 {
                     EventoId = eventoId,
                     SectorId = sectorId,
+                    FilaAsiento = filaAsiento
                 };
                 nuevaCompra.Entradas.Add(nuevaEntrada);
             }
+
             await _compraRepository.AddAsync(nuevaCompra);
             return nuevaCompra;
         }

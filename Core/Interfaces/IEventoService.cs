@@ -1,8 +1,6 @@
-﻿using Domain.Entities;
-using System;
+using Domain.Entities;
+using Kicket.Contracts.Eventos;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Core.Interfaces
@@ -12,6 +10,7 @@ namespace Core.Interfaces
         Task<Evento> CrearEventoAsync(Evento evento);
         Task<Evento?> ObtenerPorIdAsync(int id);
         Task<IEnumerable<Evento>> ObtenerTodosAsync();
+        Task<IReadOnlyList<SectorDisponibilidadDto>?> ObtenerDisponibilidadAsync(int eventoId);
         Task<bool> ActualizarEventoAsync(Evento evento);
         Task<bool> CancelarEventoAsync(int id);
         Task<bool> EliminarEventoAsync(int id);

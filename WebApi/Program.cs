@@ -1,10 +1,9 @@
-﻿using System.Text;
+using System.Text;
 using Core.Interfaces;
 using Core.Services;
 using Data;
 using Data.Implementaciones;
 using Data.Interfaces;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +19,6 @@ builder.Services.AddDbContext<TPIContext>((options) =>
 });
 
 //Autenticacion
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -44,8 +42,7 @@ builder.Services.AddAuthentication(options =>
     {
         OnAuthenticationFailed = context =>
         {
-            
-            Console.WriteLine($"[JWT ERROR] Fall� la autenticaci�n: {context.Exception.Message}");
+            Console.WriteLine($"[JWT ERROR] Falló la autenticación: {context.Exception.Message}");
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
@@ -56,16 +53,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Solo admin", policy => policy.RequireRole("Admin"));
 });
 
-
-
 //Mapeo de Repository
-
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
 builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<IEstadioRepository, EstadioRepository>();
@@ -75,7 +68,6 @@ builder.Services.AddScoped<ISectorRepository, SectorRepository>();
 builder.Services.AddScoped<IEntradaRepository, EntradaRepository>();
 
 //Mapeo de Services
-
 builder.Services.AddScoped<IClubService, ClubService>();
 builder.Services.AddScoped<IEstadioService, EstadioService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -92,6 +84,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -110,14 +104,10 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurri� un error al crear la base de datos.");
+        logger.LogError(ex, "Ocurrió un error al crear la base de datos.");
     }
 }
 
-var conectionString = builder.Configuration.GetConnectionString("Local");
-
-//Mapeo de los EndPoints base, comentado hasta que se 
-//Implementen los services.
 app.MapClubEndPoints();
 app.MapCompraEndPoints();
 app.MapEntradaEndPoints();

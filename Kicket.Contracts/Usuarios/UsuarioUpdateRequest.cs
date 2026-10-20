@@ -9,7 +9,7 @@ namespace Kicket.Contracts.Usuarios
     /// </summary>
     public class UsuarioUpdateRequest
     {
-        [Range(1, int.MaxValue, ErrorMessage = "El id del usuario es obligatorio.")]
+        [Required(ErrorMessage = "El id del usuario es obligatorio.")]
         public int IdUsuario { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio.")]

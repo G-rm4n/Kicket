@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net;
 using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
-using Kicket.Contracts.Estadios;
 
 namespace WebApi.EndPoints
 {
@@ -11,18 +10,16 @@ namespace WebApi.EndPoints
     {
         public static void MapClubEndPoints(this WebApplication app)
         {
-            var clubGroup = app.MapGroup("/clubes")
-                                .RequireAuthorization();
+            var clubGroup = app.MapGroup("/clubes");
 
             clubGroup.MapGet("/", async (IClubService clubService) =>
             {
-
                 var clubes = await clubService.ObtenerTodosAsync();
-                IEnumerable<ClubDto> clubDtos= clubes.Select(c => new ClubDto
+                IEnumerable<ClubDto> clubDtos = clubes.Select(c => new ClubDto
                 {
                     ClubId = c.ClubId,
                     Nombre = c.Nombre,
-                    Descripcion=c.Descripcion,
+                    Descripcion = c.Descripcion,
                     Abreviatura = c.Abreviatura
                 }).ToList();
 
@@ -33,7 +30,6 @@ namespace WebApi.EndPoints
 
             clubGroup.MapGet("/{id}", static async (int id, IClubService clubService) =>
             {
-
                 Club? club = await clubService.ObtenerPorIdAsync(id);
 
                 if (club == null)
@@ -47,11 +43,9 @@ namespace WebApi.EndPoints
                     Abreviatura = club.Abreviatura,
                     Descripcion = club.Descripcion,
                     Nombre = club.Nombre
-
                 };
 
                 return Results.Ok(clubDto);
-
             })
             .WithName("GetClub")
             .Produces<ClubDto>(StatusCodes.Status200OK)
@@ -59,7 +53,6 @@ namespace WebApi.EndPoints
 
             clubGroup.MapPost("/", async (ClubRequest clubReq, IClubService clubService) =>
             {
-
                 Club club = new()
                 {
                     Abreviatura = clubReq.Abreviatura,
@@ -74,16 +67,15 @@ namespace WebApi.EndPoints
                     Abreviatura = newClub.Abreviatura,
                     Descripcion = newClub.Descripcion,
                     Nombre = newClub.Nombre,
-                    ClubId=newClub.ClubId
+                    ClubId = newClub.ClubId
                 };
 
                 return Results.Created($"/clubes/{clubDto.ClubId}", clubDto);
-                 
             })
             .WithName("AddClub")
             .Produces<ClubDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest)
-            .RequireAuthorization("Solo admin"); ;
+            .RequireAuthorization("Solo admin");
 
             clubGroup.MapPut("/", async (ClubUpdateRequest clubReq, IClubService clubService) =>
             {
@@ -92,39 +84,38 @@ namespace WebApi.EndPoints
                     Abreviatura = clubReq.Abreviatura,
                     Descripcion = clubReq.Descripcion,
                     Nombre = clubReq.Nombre,
-                    ClubId=clubReq.IdClub
+                    ClubId = clubReq.IdClub
                 };
 
-                bool res=await clubService.ActualizarClubAsync(club);
+                bool res = await clubService.ActualizarClubAsync(club);
 
                 if (res)
                 {
                     return Results.NoContent();
                 }
-                return Results.Problem(detail:"El club No existe",statusCode:(int)HttpStatusCode.NotFound);
+                return Results.Problem(detail: "El club no existe", statusCode: (int)HttpStatusCode.NotFound);
             })
             .WithName("UpdateClub")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
-            .RequireAuthorization("Solo admin"); ;
+            .RequireAuthorization("Solo admin");
 
-            clubGroup.MapDelete("/{id}",async (int id, IClubService clubService) =>
+            clubGroup.MapDelete("/{id}", async (int id, IClubService clubService) =>
             {
-                
                 var deleted = await clubService.EliminarClubAsync(id);
                 if (!deleted)
                 {
-                    return Results.Problem(detail: "El club No existe", statusCode: (int)HttpStatusCode.NotFound);
+                    return Results.Problem(detail: "El club no existe", statusCode: (int)HttpStatusCode.NotFound);
                 }
 
-                return Results.Ok();
+                return Results.NoContent();
             })
             .WithName("DeleteClub")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
-            .RequireAuthorization("Solo admin"); ;
+            .RequireAuthorization("Solo admin");
         }
     }
 }

@@ -1,16 +1,12 @@
-﻿namespace Kicket.WinForms.Forms
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Kicket.WinForms.Forms
 {
     partial class FormClub
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,21 +18,20 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             dataGridClubes = new DataGridView();
             ColumnID = new DataGridViewTextBoxColumn();
             ColumnNombre = new DataGridViewTextBoxColumn();
             ColumnAbreviatura = new DataGridViewTextBoxColumn();
+            ColumnDescripcion = new DataGridViewTextBoxColumn();
             labelDatos = new Label();
             labelNombre = new Label();
             labelAbreviatura = new Label();
+            labelDescripcion = new Label();
             textBoxNombreClub = new TextBox();
             textBoxAbreviatura = new TextBox();
+            textBoxDescripcion = new TextBox();
             buttonGuardar = new Button();
             buttonModificar = new Button();
             buttonEliminar = new Button();
@@ -47,46 +42,58 @@
             // 
             // dataGridClubes
             // 
+            dataGridClubes.AllowUserToAddRows = false;
+            dataGridClubes.AllowUserToDeleteRows = false;
+            dataGridClubes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridClubes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridClubes.Columns.AddRange(new DataGridViewColumn[] { ColumnID, ColumnNombre, ColumnAbreviatura });
-            dataGridClubes.Location = new Point(14, 187);
-            dataGridClubes.Margin = new Padding(3, 4, 3, 4);
+            dataGridClubes.Columns.AddRange(new DataGridViewColumn[] { ColumnID, ColumnNombre, ColumnAbreviatura, ColumnDescripcion });
+            dataGridClubes.Location = new Point(18, 225);
+            dataGridClubes.MultiSelect = false;
             dataGridClubes.Name = "dataGridClubes";
+            dataGridClubes.ReadOnly = true;
             dataGridClubes.RowHeadersWidth = 51;
             dataGridClubes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridClubes.Size = new Size(392, 315);
+            dataGridClubes.Size = new Size(540, 290);
             dataGridClubes.TabIndex = 0;
             dataGridClubes.CellClick += dataGridClubes_CellClick;
             // 
             // ColumnID
             // 
             ColumnID.DataPropertyName = "ClubId";
+            ColumnID.FillWeight = 45F;
             ColumnID.HeaderText = "ID";
-            ColumnID.MinimumWidth = 6;
             ColumnID.Name = "ColumnID";
-            ColumnID.Width = 125;
+            ColumnID.ReadOnly = true;
             // 
             // ColumnNombre
             // 
             ColumnNombre.DataPropertyName = "Nombre";
+            ColumnNombre.FillWeight = 120F;
             ColumnNombre.HeaderText = "Nombre";
-            ColumnNombre.MinimumWidth = 6;
             ColumnNombre.Name = "ColumnNombre";
-            ColumnNombre.Width = 125;
+            ColumnNombre.ReadOnly = true;
             // 
             // ColumnAbreviatura
             // 
             ColumnAbreviatura.DataPropertyName = "Abreviatura";
+            ColumnAbreviatura.FillWeight = 70F;
             ColumnAbreviatura.HeaderText = "Abreviatura";
-            ColumnAbreviatura.MinimumWidth = 6;
             ColumnAbreviatura.Name = "ColumnAbreviatura";
-            ColumnAbreviatura.Width = 125;
+            ColumnAbreviatura.ReadOnly = true;
+            // 
+            // ColumnDescripcion
+            // 
+            ColumnDescripcion.DataPropertyName = "Descripcion";
+            ColumnDescripcion.FillWeight = 140F;
+            ColumnDescripcion.HeaderText = "Descripción";
+            ColumnDescripcion.Name = "ColumnDescripcion";
+            ColumnDescripcion.ReadOnly = true;
             // 
             // labelDatos
             // 
             labelDatos.AutoSize = true;
             labelDatos.Font = new Font("Segoe UI", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            labelDatos.Location = new Point(112, 12);
+            labelDatos.Location = new Point(18, 12);
             labelDatos.Name = "labelDatos";
             labelDatos.Size = new Size(204, 37);
             labelDatos.TabIndex = 1;
@@ -95,77 +102,88 @@
             // labelNombre
             // 
             labelNombre.AutoSize = true;
-            labelNombre.Location = new Point(24, 72);
+            labelNombre.Location = new Point(22, 65);
             labelNombre.Name = "labelNombre";
             labelNombre.Size = new Size(71, 20);
             labelNombre.TabIndex = 2;
-            labelNombre.Text = "Nombre: ";
+            labelNombre.Text = "Nombre:";
+            // 
+            // textBoxNombreClub
+            // 
+            textBoxNombreClub.Location = new Point(125, 62);
+            textBoxNombreClub.Name = "textBoxNombreClub";
+            textBoxNombreClub.Size = new Size(240, 27);
+            textBoxNombreClub.TabIndex = 3;
             // 
             // labelAbreviatura
             // 
             labelAbreviatura.AutoSize = true;
-            labelAbreviatura.Location = new Point(24, 111);
+            labelAbreviatura.Location = new Point(22, 104);
             labelAbreviatura.Name = "labelAbreviatura";
             labelAbreviatura.Size = new Size(89, 20);
-            labelAbreviatura.TabIndex = 3;
+            labelAbreviatura.TabIndex = 4;
             labelAbreviatura.Text = "Abreviatura:";
-            // 
-            // textBoxNombreClub
-            // 
-            textBoxNombreClub.Location = new Point(112, 61);
-            textBoxNombreClub.Margin = new Padding(3, 4, 3, 4);
-            textBoxNombreClub.Name = "textBoxNombreClub";
-            textBoxNombreClub.Size = new Size(114, 27);
-            textBoxNombreClub.TabIndex = 4;
             // 
             // textBoxAbreviatura
             // 
-            textBoxAbreviatura.Location = new Point(112, 100);
-            textBoxAbreviatura.Margin = new Padding(3, 4, 3, 4);
+            textBoxAbreviatura.Location = new Point(125, 101);
+            textBoxAbreviatura.MaxLength = 10;
             textBoxAbreviatura.Name = "textBoxAbreviatura";
-            textBoxAbreviatura.Size = new Size(114, 27);
+            textBoxAbreviatura.Size = new Size(120, 27);
             textBoxAbreviatura.TabIndex = 5;
+            // 
+            // labelDescripcion
+            // 
+            labelDescripcion.AutoSize = true;
+            labelDescripcion.Location = new Point(22, 143);
+            labelDescripcion.Name = "labelDescripcion";
+            labelDescripcion.Size = new Size(89, 20);
+            labelDescripcion.TabIndex = 6;
+            labelDescripcion.Text = "Descripción:";
+            // 
+            // textBoxDescripcion
+            // 
+            textBoxDescripcion.Location = new Point(125, 140);
+            textBoxDescripcion.Name = "textBoxDescripcion";
+            textBoxDescripcion.Size = new Size(240, 27);
+            textBoxDescripcion.TabIndex = 7;
             // 
             // buttonGuardar
             // 
-            buttonGuardar.Location = new Point(216, 604);
-            buttonGuardar.Margin = new Padding(3, 4, 3, 4);
+            buttonGuardar.Location = new Point(400, 55);
             buttonGuardar.Name = "buttonGuardar";
-            buttonGuardar.Size = new Size(86, 31);
-            buttonGuardar.TabIndex = 6;
+            buttonGuardar.Size = new Size(140, 32);
+            buttonGuardar.TabIndex = 8;
             buttonGuardar.Text = "Guardar";
             buttonGuardar.UseVisualStyleBackColor = true;
             buttonGuardar.Click += btnGuardar_Click;
             // 
             // buttonModificar
             // 
-            buttonModificar.Location = new Point(308, 604);
-            buttonModificar.Margin = new Padding(3, 4, 3, 4);
+            buttonModificar.Location = new Point(400, 95);
             buttonModificar.Name = "buttonModificar";
-            buttonModificar.Size = new Size(86, 31);
-            buttonModificar.TabIndex = 7;
+            buttonModificar.Size = new Size(140, 32);
+            buttonModificar.TabIndex = 9;
             buttonModificar.Text = "Modificar";
             buttonModificar.UseVisualStyleBackColor = true;
             buttonModificar.Click += buttonModificar_Click;
             // 
             // buttonEliminar
             // 
-            buttonEliminar.Location = new Point(400, 604);
-            buttonEliminar.Margin = new Padding(3, 4, 3, 4);
+            buttonEliminar.Location = new Point(400, 135);
             buttonEliminar.Name = "buttonEliminar";
-            buttonEliminar.Size = new Size(86, 31);
-            buttonEliminar.TabIndex = 8;
+            buttonEliminar.Size = new Size(140, 32);
+            buttonEliminar.TabIndex = 10;
             buttonEliminar.Text = "Eliminar";
             buttonEliminar.UseVisualStyleBackColor = true;
             buttonEliminar.Click += buttonEliminar_Click;
             // 
             // buttonLimpiar
             // 
-            buttonLimpiar.Location = new Point(492, 604);
-            buttonLimpiar.Margin = new Padding(3, 4, 3, 4);
+            buttonLimpiar.Location = new Point(400, 175);
             buttonLimpiar.Name = "buttonLimpiar";
-            buttonLimpiar.Size = new Size(86, 31);
-            buttonLimpiar.TabIndex = 9;
+            buttonLimpiar.Size = new Size(140, 32);
+            buttonLimpiar.TabIndex = 11;
             buttonLimpiar.Text = "Limpiar";
             buttonLimpiar.UseVisualStyleBackColor = true;
             buttonLimpiar.Click += btnLimpiar_Click;
@@ -173,22 +191,25 @@
             // labelListado
             // 
             labelListado.AutoSize = true;
-            labelListado.Location = new Point(14, 148);
+            labelListado.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            labelListado.Location = new Point(18, 195);
             labelListado.Name = "labelListado";
-            labelListado.Size = new Size(208, 20);
-            labelListado.TabIndex = 10;
-            labelListado.Text = "Listado de Clubes Registrados";
+            labelListado.Size = new Size(155, 23);
+            labelListado.TabIndex = 12;
+            labelListado.Text = "Listado de Clubes:";
             // 
             // FormClub
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(590, 648);
+            ClientSize = new Size(580, 535);
             Controls.Add(labelListado);
             Controls.Add(buttonLimpiar);
             Controls.Add(buttonEliminar);
             Controls.Add(buttonModificar);
             Controls.Add(buttonGuardar);
+            Controls.Add(textBoxDescripcion);
+            Controls.Add(labelDescripcion);
             Controls.Add(textBoxAbreviatura);
             Controls.Add(textBoxNombreClub);
             Controls.Add(labelAbreviatura);
@@ -196,12 +217,12 @@
             Controls.Add(labelDatos);
             Controls.Add(dataGridClubes);
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            Margin = new Padding(3, 4, 3, 4);
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "FormClub";
-            Text = "Gestion de Clubes";
-            Shown += FormClub_Load;
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Administración de Clubes";
+            Load += FormClub_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridClubes).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -209,19 +230,22 @@
 
         #endregion
 
-        private DataGridView dataGridClubes;
-        private Label labelDatos;
-        private Label labelNombre;
-        private Label labelAbreviatura;
-        private TextBox textBoxNombreClub;
-        private TextBox textBoxAbreviatura;
-        private Button buttonGuardar;
-        private Button buttonModificar;
-        private Button buttonEliminar;
-        private Button buttonLimpiar;
-        private Label labelListado;
-        private DataGridViewTextBoxColumn ColumnID;
-        private DataGridViewTextBoxColumn ColumnNombre;
-        private DataGridViewTextBoxColumn ColumnAbreviatura;
+        private DataGridView dataGridClubes = null!;
+        private DataGridViewTextBoxColumn ColumnID = null!;
+        private DataGridViewTextBoxColumn ColumnNombre = null!;
+        private DataGridViewTextBoxColumn ColumnAbreviatura = null!;
+        private DataGridViewTextBoxColumn ColumnDescripcion = null!;
+        private Label labelDatos = null!;
+        private Label labelNombre = null!;
+        private Label labelAbreviatura = null!;
+        private Label labelDescripcion = null!;
+        private TextBox textBoxNombreClub = null!;
+        private TextBox textBoxAbreviatura = null!;
+        private TextBox textBoxDescripcion = null!;
+        private Button buttonGuardar = null!;
+        private Button buttonModificar = null!;
+        private Button buttonEliminar = null!;
+        private Button buttonLimpiar = null!;
+        private Label labelListado = null!;
     }
 }

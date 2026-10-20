@@ -8,7 +8,7 @@ namespace Kicket.Contracts.Clubes
     /// </summary>
     public class ClubUpdateRequest : ClubRequest
     {
-        [Range(1, int.MaxValue, ErrorMessage = "El id del club es obligatorio.")]
+        [Required(ErrorMessage = "El id del club es obligatorio.")]
         public int IdClub { get; set; }
     }
 }

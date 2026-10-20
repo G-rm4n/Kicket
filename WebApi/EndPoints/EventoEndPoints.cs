@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Common;
 using Kicket.Contracts.Eventos;
@@ -55,6 +55,26 @@ namespace WebApi.EndPoints
             .Produces<EventoDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+            app.MapGet("/eventos/{id}/disponibilidad", async (int id, IEventoService eventoService) =>
+            {
+                var disponibilidad = await eventoService.ObtenerDisponibilidadAsync(id);
+
+                if (disponibilidad is null)
+                {
+                    return Results.NotFound(new ApiError
+                    {
+                        Status = StatusCodes.Status404NotFound,
+                        Title = "Evento no encontrado",
+                        Detail = $"No existe un evento con ID {id}."
+                    });
+                }
+
+                return Results.Ok(disponibilidad);
+            })
+            .WithName("GetEventoDisponibilidad")
+            .Produces<IReadOnlyList<SectorDisponibilidadDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
             app.MapPost("/eventos", async (EventoRequest eventoReq, IEventoService eventoService) =>
             {
                 Evento evento = new()
@@ -90,7 +110,8 @@ namespace WebApi.EndPoints
             })
             .WithName("AddEvento")
             .Produces<EventoDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             app.MapPut("/eventos", async (EventoUpdateRequest eventoReq, IEventoService eventoService) =>
             {
@@ -124,7 +145,8 @@ namespace WebApi.EndPoints
             .WithName("UpdateEvento")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             app.MapDelete("/eventos/{id}", async (int id, IEventoService eventoService) =>
             {
@@ -139,7 +161,8 @@ namespace WebApi.EndPoints
             })
             .WithName("DeleteEvento")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization("Solo admin");
         }
     }
 }

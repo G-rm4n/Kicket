@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
@@ -15,7 +9,8 @@ namespace Kicket.WinForms.Forms
     public partial class FormClub : Form
     {
         private readonly IClubApiClient _clubApiClient;
-        private int? _clubIdSeleccionado = null; // Variable para almacenar el ID del club seleccionado
+        private int? _clubIdSeleccionado = null;
+
         public FormClub(IClubApiClient clubApiClient)
         {
             InitializeComponent();
@@ -51,84 +46,107 @@ namespace Kicket.WinForms.Forms
         {
             textBoxNombreClub.Clear();
             textBoxAbreviatura.Clear();
-            _clubIdSeleccionado = null; // "Olvidamos" el club seleccionado
+            textBoxDescripcion.Clear();
+            _clubIdSeleccionado = null;
         }
 
         private void dataGridClubes_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0) // Aseguramos que no sea el encabezado
+            if (e.RowIndex >= 0)
             {
                 var fila = dataGridClubes.Rows[e.RowIndex];
                 _clubIdSeleccionado = Convert.ToInt32(fila.Cells["ColumnID"].Value);
                 textBoxNombreClub.Text = fila.Cells["ColumnNombre"].Value?.ToString();
                 textBoxAbreviatura.Text = fila.Cells["ColumnAbreviatura"].Value?.ToString();
+                textBoxDescripcion.Text = fila.Cells["ColumnDescripcion"].Value?.ToString();
             }
         }
 
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(textBoxNombreClub.Text)) return;
+            if (string.IsNullOrWhiteSpace(textBoxNombreClub.Text) || string.IsNullOrWhiteSpace(textBoxAbreviatura.Text))
+            {
+                MessageBox.Show("Nombre y Abreviatura son obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             var nuevoClub = new ClubRequest
             {
-                Nombre = textBoxNombreClub.Text,
-                Abreviatura = textBoxAbreviatura.Text
+                Nombre = textBoxNombreClub.Text.Trim(),
+                Abreviatura = textBoxAbreviatura.Text.Trim(),
+                Descripcion = string.IsNullOrWhiteSpace(textBoxDescripcion.Text)
+                    ? textBoxNombreClub.Text.Trim()
+                    : textBoxDescripcion.Text.Trim()
             };
 
-            await _clubApiClient.CreateAsync(nuevoClub);
-            await CargarClubes(); // Refresca la grilla
+            try
+            {
+                await _clubApiClient.CreateAsync(nuevoClub);
+                await CargarClubes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al guardar el club: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void buttonModificar_Click(object sender, EventArgs e)
         {
             if (_clubIdSeleccionado == null)
             {
-                MessageBox.Show("Seleccione un club de la lista primero.", "Aviso");
+                MessageBox.Show("Seleccione un club de la lista primero.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Armamos el paquete incluyendo el ID seleccionado
+            if (string.IsNullOrWhiteSpace(textBoxNombreClub.Text) || string.IsNullOrWhiteSpace(textBoxAbreviatura.Text))
+            {
+                MessageBox.Show("Nombre y Abreviatura son obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var clubModificado = new ClubUpdateRequest
             {
-                IdClub = _clubIdSeleccionado.Value, // <-- Agregamos el ID aquí adentro
-                Nombre = textBoxNombreClub.Text,
-                Abreviatura = textBoxAbreviatura.Text
+                IdClub = _clubIdSeleccionado.Value,
+                Nombre = textBoxNombreClub.Text.Trim(),
+                Abreviatura = textBoxAbreviatura.Text.Trim(),
+                Descripcion = string.IsNullOrWhiteSpace(textBoxDescripcion.Text)
+                    ? textBoxNombreClub.Text.Trim()
+                    : textBoxDescripcion.Text.Trim()
             };
 
-            // Le pasamos UN SOLO argumento al método (el paquete completo)
-            await _clubApiClient.UpdateAsync(clubModificado);
-
-            await CargarClubes();
-            LimpiarFormulario(); // Opcional: limpiamos las cajas de texto tras modificar
+            try
+            {
+                await _clubApiClient.UpdateAsync(clubModificado);
+                await CargarClubes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al modificar el club: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void buttonEliminar_Click(object sender, EventArgs e)
         {
-            if (_clubIdSeleccionado == null) return;
+            if (_clubIdSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un club de la lista primero.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             var respuesta = MessageBox.Show("¿Estás seguro de eliminar este club?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
             if (respuesta == DialogResult.Yes)
             {
-                await _clubApiClient.DeleteAsync(_clubIdSeleccionado.Value);
-                await CargarClubes();
+                try
+                {
+                    await _clubApiClient.DeleteAsync(_clubIdSeleccionado.Value);
+                    await CargarClubes();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al eliminar el club: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-        }
-
-        /*private void buttonEliminar_Click(object sender, EventArgs e)
-        {
-            if (_clubIdSeleccionado == null)
-            {
-                MessageBox.Show("Seleccione un club de la lista primero.", "Aviso");
-                return;
-            }
-            var confirmResult = MessageBox.Show("¿Está seguro de eliminar este club?", "Confirmar eliminación", MessageBoxButtons.YesNo);
-            if (confirmResult == DialogResult.Yes)
-            {
-                _clubApiClient.DeleteAsync(_clubIdSeleccionado.Value).Wait();
-                CargarClubes().Wait();
-                LimpiarFormulario();
-            }*/
-
         }
     }
+}

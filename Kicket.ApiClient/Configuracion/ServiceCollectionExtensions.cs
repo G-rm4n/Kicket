@@ -1,15 +1,15 @@
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Clientes;
 using Kicket.ApiClient.Http;
-using Kicket.ApiClient.Sesion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.ApiClient.Configuracion
 {
     /// <summary>
-    /// Punto de entrada de la capa cliente. El proyecto de escritorio solo llama a
-    /// AddKicketApiClient(...) y ya tiene inyectables IClubApiClient, IAuthApiClient, etc.
+    /// Punto de entrada de la capa cliente. El proyecto de escritorio y el web solo llaman a
+    /// AddKicketApiClient(...) y ya tienen inyectables IClubApiClient, IAuthApiClient,
+    /// IEventoApiClient, ICompraApiClient, IEntradaApiClient, etc.
     /// </summary>
     public static class ServiceCollectionExtensions
     {
@@ -46,8 +46,6 @@ namespace Kicket.ApiClient.Configuracion
 
             services.AddSingleton(opciones);
 
-            //Se elimino para que cada Interfaz grafica Decrete a la sesion deacuerdo a si misma
-            
             services.AddTransient<AuthTokenHandler>();
 
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
@@ -55,6 +53,9 @@ namespace Kicket.ApiClient.Configuracion
             services.AgregarCliente<ISectorApiClient, SectorApiClient>(opciones);
             services.AgregarCliente<IUsuarioApiClient, UsuarioApiClient>(opciones);
             services.AgregarCliente<IAuthApiClient, AuthApiClient>(opciones);
+            services.AgregarCliente<IEventoApiClient, EventoApiClient>(opciones);
+            services.AgregarCliente<ICompraApiClient, CompraApiClient>(opciones);
+            services.AgregarCliente<IEntradaApiClient, EntradaApiClient>(opciones);
 
             return services;
         }
@@ -66,20 +67,16 @@ namespace Kicket.ApiClient.Configuracion
         {
             services.AddScoped<TInterfaz, TImpl>(sp =>
             {
-                
                 var handler = sp.GetRequiredService<AuthTokenHandler>();
 
-                
                 handler.InnerHandler = new HttpClientHandler();
 
-                
                 var httpClient = new HttpClient(handler)
                 {
                     BaseAddress = new Uri(opciones.BaseUrl),
                     Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos)
                 };
 
-                
                 return ActivatorUtilities.CreateInstance<TImpl>(sp, httpClient);
             });
         }

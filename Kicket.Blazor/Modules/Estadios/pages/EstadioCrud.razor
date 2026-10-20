@@ -1,7 +1,6 @@
-﻿@page "/Admin/Estadios"
-@using Kicket.Blazor.Core.Auth
-@using Kicket.ApiClient.Abstracciones
+@page "/admin/Estadios"
 @using Kicket.Contracts.Estadios
+@using Kicket.ApiClient.Abstracciones
 @layout AdminLayout
 @inherits PaginaProtegida
 @inject IEstadioApiClient estadioApi
@@ -10,32 +9,32 @@
     <h1>
         Gestionar Estadios
     </h1>
-        <div @onclick:stopPropagation="true" class="p-3">
-            <GenericTable TItem="EstadioDto" DatosTabla="estadios"
-                          OnClick="SelectFila"
-                          FilaSeleccionada="@(e=>e.IdEstadio==this.IdEstadio)">
-                <Cabeceras>
-                    @foreach(var value in Cab)
-                    {
-                        <th>@value</th>
-                    }
-                </Cabeceras>
-                <fila Context="Estadio">
-                    <td>@Estadio.IdEstadio</td>
-                    <td>@Estadio.Nombre</td>
-                    <td>@Estadio.Ciudad</td>
-                    <td>@Estadio.Direccion</td>
-                </fila>
-            </GenericTable>
-        </div>
+    <div @onclick:stopPropagation="true" class="p-3">
+        <GenericTable TItem="EstadioDto" DatosTabla="estadios ?? Enumerable.Empty<EstadioDto>()"
+                      OnClick="SelectFila"
+                      FilaSeleccionada="@(e=>e.IdEstadio==this.IdEstadio)">
+            <Cabeceras>
+                @foreach (var value in Cab)
+                {
+                    <th>@value</th>
+                }
+            </Cabeceras>
+            <fila Context="Estadio">
+                <td>@Estadio.IdEstadio</td>
+                <td>@Estadio.Nombre</td>
+                <td>@Estadio.Ciudad</td>
+                <td>@Estadio.Direccion</td>
+            </fila>
+        </GenericTable>
+    </div>
 
-            <div class="d-flex justify-content-end flex-row gap-4 w-100">
-                <button class="btn btn-danger text-white" disabled="@(!IsEstadioSelected)" @onclick="EliminarEstadio">Borrar Estadio</button>
-                <button class="btn bg-primary text-white" disabled="@(!IsEstadioSelected)" @onclick="AbrirModalEdicion">Editar Estadio</button>
-                <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Estadio</button>
-                <button class="btn bg-secondary text-white" @onclick="CargarEstadiosAsync">Refrescar</button>
-            </div>
-    @if (this.ShowModalEdicion)
+    <div class="d-flex justify-content-end flex-row gap-4 w-100">
+        <button class="btn btn-danger text-white" disabled="@(!IsEstadioSelected)" @onclick="EliminarEstadio">Borrar Estadio</button>
+        <button class="btn bg-primary text-white" disabled="@(!IsEstadioSelected)" @onclick="AbrirModalEdicion">Editar Estadio</button>
+        <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Estadio</button>
+        <button class="btn bg-secondary text-white" @onclick="CargarEstadiosAsync">Refrescar</button>
+    </div>
+    @if (this.ShowModalEdicion && EstadioEditando is not null)
     {
         <GenericModalForm TOjb="EstadioUpdateRequest" Obj="EstadioEditando" Titulo="Editar estadio" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
 
@@ -60,7 +59,7 @@
         </GenericModalForm>
     }
 
-    @if (this.ShowModalCreacion)
+    @if (this.ShowModalCreacion && NuevoEstadio is not null)
     {
         <GenericModalForm TOjb="EstadioRequest" Obj="NuevoEstadio" Titulo="Crear Estadio" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoEstadio">
 
@@ -87,16 +86,14 @@
 
     @if (!string.IsNullOrEmpty(MensajeError))
     {
-        <div class="alert alert-danger">
+        <div class="alert alert-danger mt-3">
             @MensajeError
         </div>
     }
 </div>
 
-
-
 @code {
-    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Descripccion", "Abreviatura"];
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Ciudad", "Dirección"];
 
     public IEnumerable<EstadioDto>? estadios { get; set; }
 
@@ -108,7 +105,7 @@
     public int IdEstadio { get; set; }
 
     public EstadioUpdateRequest? EstadioEditando { get; set; }
-    public EstadioRequest? NuevoEstadio{ get; set; }
+    public EstadioRequest? NuevoEstadio { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -126,23 +123,24 @@
     {
         await this.SecureExec(async () =>
         {
-            this.estadios=await estadioApi.GetAllAsync();
-
+            this.estadios = await estadioApi.GetAllAsync();
         });
     }
 
     public void AbrirModalEdicion()
     {
+        if (estadios is null) return;
+        var estadioOriginal = estadios.FirstOrDefault(c => c.IdEstadio == this.IdEstadio);
+        if (estadioOriginal is null) return;
 
-        var estadioOriginal = estadios.First(c => c.IdEstadio==this.IdEstadio);
         EstadioEditando = new EstadioUpdateRequest
         {
-            IdEstadio=estadioOriginal.IdEstadio,
-            Ciudad=estadioOriginal.Ciudad,
-            Direccion=estadioOriginal.Direccion,
-            Nombre=estadioOriginal.Nombre
+            IdEstadio = estadioOriginal.IdEstadio,
+            Ciudad = estadioOriginal.Ciudad,
+            Direccion = estadioOriginal.Direccion,
+            Nombre = estadioOriginal.Nombre
         };
-        this.ShowModalEdicion=true;
+        this.ShowModalEdicion = true;
     }
 
     public void CerrarModalEdicion()
@@ -162,19 +160,22 @@
 
     public async Task EnviarNuevoEstadio()
     {
+        if (NuevoEstadio is null) return;
         await this.SecureExec(async () =>
         {
             await this.estadioApi.CreateAsync(NuevoEstadio);
         });
 
         this.CerrarModalCreacion();
+        await this.CargarEstadiosAsync();
     }
 
     public async Task EnviarEditado()
     {
+        if (EstadioEditando is null) return;
         await this.SecureExec(async () =>
         {
-            await estadioApi.UpdateAsync(EstadioEditando!);
+            await estadioApi.UpdateAsync(EstadioEditando);
         });
 
         CerrarModalEdicion();
@@ -184,7 +185,7 @@
 
     public async Task EliminarEstadio()
     {
-        await estadioApi.DeleteAsync(this.IdEstadio);
+        await this.SecureExec(async () => await estadioApi.DeleteAsync(this.IdEstadio));
         await this.CargarEstadiosAsync();
     }
 }

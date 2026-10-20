@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Common;
 using Kicket.Contracts.Compras;
@@ -10,7 +10,10 @@ namespace WebApi.EndPoints
     {
         public static void MapCompraEndPoints(this WebApplication app)
         {
-            app.MapGet("/compras", async (ICompraService compraService) =>
+            var comprasGroup = app.MapGroup("/compras")
+                                  .RequireAuthorization();
+
+            comprasGroup.MapGet("/", async (ICompraService compraService) =>
             {
                 var compras = await compraService.ObtenerTodosAsync();
 
@@ -21,7 +24,21 @@ namespace WebApi.EndPoints
             .WithName("GetAllCompras")
             .Produces<IEnumerable<CompraDto>>(StatusCodes.Status200OK);
 
-            app.MapGet("/compras/{id}", async (int id, ICompraService compraService) =>
+            comprasGroup.MapGet("/usuario/{usuarioId:int}", async (int usuarioId, ICompraService compraService) =>
+            {
+                var compras = await compraService.ObtenerTodosAsync();
+
+                IEnumerable<CompraDto> dtos = compras
+                    .Where(c => c.UsuarioId == usuarioId)
+                    .Select(MapearACompraDto)
+                    .ToList();
+
+                return Results.Ok(dtos);
+            })
+            .WithName("GetComprasPorUsuario")
+            .Produces<IEnumerable<CompraDto>>(StatusCodes.Status200OK);
+
+            comprasGroup.MapGet("/{id:int}", async (int id, ICompraService compraService) =>
             {
                 Compra? compra = await compraService.ObtenerPorIdAsync(id);
 
@@ -36,9 +53,9 @@ namespace WebApi.EndPoints
             .Produces<CompraDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-            // No hay PUT /compras: una compra no se modifica una vez generada
-            // (ver la nota en CompraRequest, Fase 1). Ante un error, se elimina.
-            app.MapPost("/compras", async (CompraRequest compraReq, ICompraService compraService) =>
+            // No hay PUT /compras: una compra no se modifica una vez generada.
+            // Ante un error, se elimina.
+            comprasGroup.MapPost("/", async (CompraRequest compraReq, ICompraService compraService) =>
             {
                 try
                 {
@@ -57,7 +74,7 @@ namespace WebApi.EndPoints
             .Produces<CompraDto>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status400BadRequest);
 
-            app.MapDelete("/compras/{id}", async (int id, ICompraService compraService) =>
+            comprasGroup.MapDelete("/{id:int}", async (int id, ICompraService compraService) =>
             {
                 var deleted = await compraService.EliminarCompraAsync(id);
 

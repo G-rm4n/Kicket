@@ -1,16 +1,12 @@
-﻿namespace Kicket.WinForms.Forms
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Kicket.WinForms.Forms
 {
     partial class FormPrincipal
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,89 +18,122 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             lblBienvenida = new Label();
-            btnCerrarSesion = new Button();
+            lblSubtitulo = new Label();
             buttonGestionClubes = new Button();
             buttonGestionEstadios = new Button();
+            buttonGestionEventos = new Button();
             buttonGestionUsuarios = new Button();
+            buttonGestionCompras = new Button();
+            btnCerrarSesion = new Button();
             SuspendLayout();
             // 
             // lblBienvenida
             // 
             lblBienvenida.AutoSize = true;
-            lblBienvenida.Font = new Font("Segoe UI Black", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblBienvenida.Location = new Point(12, 9);
+            lblBienvenida.Font = new Font("Segoe UI Black", 16F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblBienvenida.Location = new Point(28, 18);
             lblBienvenida.Name = "lblBienvenida";
-            lblBienvenida.Size = new Size(196, 41);
+            lblBienvenida.Size = new Size(185, 37);
             lblBienvenida.TabIndex = 0;
-            lblBienvenida.Text = "Bienvenido!";
+            lblBienvenida.Text = "¡Bienvenido!";
             // 
-            // btnCerrarSesion
+            // lblSubtitulo
             // 
-            btnCerrarSesion.Location = new Point(173, 340);
-            btnCerrarSesion.Margin = new Padding(3, 4, 3, 4);
-            btnCerrarSesion.Name = "btnCerrarSesion";
-            btnCerrarSesion.Size = new Size(86, 31);
-            btnCerrarSesion.TabIndex = 1;
-            btnCerrarSesion.Text = "Cerrar \r\nSesion";
-            btnCerrarSesion.UseVisualStyleBackColor = true;
-            btnCerrarSesion.Click += BtnCerrarSesion_Click;
+            lblSubtitulo.AutoSize = true;
+            lblSubtitulo.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblSubtitulo.ForeColor = SystemColors.ControlDarkDark;
+            lblSubtitulo.Location = new Point(32, 58);
+            lblSubtitulo.Name = "lblSubtitulo";
+            lblSubtitulo.Size = new Size(275, 23);
+            lblSubtitulo.TabIndex = 1;
+            lblSubtitulo.Text = "Panel de Administración - Kicket";
             // 
             // buttonGestionClubes
             // 
-            buttonGestionClubes.Location = new Point(123, 97);
-            buttonGestionClubes.Margin = new Padding(3, 4, 3, 4);
+            buttonGestionClubes.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            buttonGestionClubes.Location = new Point(85, 100);
             buttonGestionClubes.Name = "buttonGestionClubes";
-            buttonGestionClubes.Size = new Size(198, 31);
+            buttonGestionClubes.Size = new Size(280, 40);
             buttonGestionClubes.TabIndex = 2;
-            buttonGestionClubes.Text = "Gestion de Clubes";
+            buttonGestionClubes.Text = "Gestión de Clubes";
             buttonGestionClubes.UseVisualStyleBackColor = true;
             buttonGestionClubes.Click += buttonClubes_Click;
             // 
             // buttonGestionEstadios
             // 
-            buttonGestionEstadios.Location = new Point(123, 166);
-            buttonGestionEstadios.Margin = new Padding(3, 4, 3, 4);
+            buttonGestionEstadios.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            buttonGestionEstadios.Location = new Point(85, 152);
             buttonGestionEstadios.Name = "buttonGestionEstadios";
-            buttonGestionEstadios.Size = new Size(198, 31);
+            buttonGestionEstadios.Size = new Size(280, 40);
             buttonGestionEstadios.TabIndex = 3;
-            buttonGestionEstadios.Text = "Gestion de Estadios";
+            buttonGestionEstadios.Text = "Gestión de Estadios y Sectores";
             buttonGestionEstadios.UseVisualStyleBackColor = true;
             buttonGestionEstadios.Click += btnEstadios_Click;
             // 
+            // buttonGestionEventos
+            // 
+            buttonGestionEventos.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            buttonGestionEventos.Location = new Point(85, 204);
+            buttonGestionEventos.Name = "buttonGestionEventos";
+            buttonGestionEventos.Size = new Size(280, 40);
+            buttonGestionEventos.TabIndex = 4;
+            buttonGestionEventos.Text = "Gestión de Eventos / Partidos";
+            buttonGestionEventos.UseVisualStyleBackColor = true;
+            buttonGestionEventos.Click += btnEventos_Click;
+            // 
             // buttonGestionUsuarios
             // 
-            buttonGestionUsuarios.Location = new Point(123, 250);
-            buttonGestionUsuarios.Margin = new Padding(3, 4, 3, 4);
+            buttonGestionUsuarios.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            buttonGestionUsuarios.Location = new Point(85, 256);
             buttonGestionUsuarios.Name = "buttonGestionUsuarios";
-            buttonGestionUsuarios.Size = new Size(198, 31);
-            buttonGestionUsuarios.TabIndex = 4;
-            buttonGestionUsuarios.Text = "Gestion de Usuarios";
+            buttonGestionUsuarios.Size = new Size(280, 40);
+            buttonGestionUsuarios.TabIndex = 5;
+            buttonGestionUsuarios.Text = "Gestión de Usuarios";
             buttonGestionUsuarios.UseVisualStyleBackColor = true;
             buttonGestionUsuarios.Click += btnUsuarios_Click;
+            // 
+            // buttonGestionCompras
+            // 
+            buttonGestionCompras.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            buttonGestionCompras.Location = new Point(85, 308);
+            buttonGestionCompras.Name = "buttonGestionCompras";
+            buttonGestionCompras.Size = new Size(280, 40);
+            buttonGestionCompras.TabIndex = 6;
+            buttonGestionCompras.Text = "Auditoría de Compras y Entradas";
+            buttonGestionCompras.UseVisualStyleBackColor = true;
+            buttonGestionCompras.Click += btnCompras_Click;
+            // 
+            // btnCerrarSesion
+            // 
+            btnCerrarSesion.Location = new Point(155, 375);
+            btnCerrarSesion.Name = "btnCerrarSesion";
+            btnCerrarSesion.Size = new Size(140, 36);
+            btnCerrarSesion.TabIndex = 7;
+            btnCerrarSesion.Text = "Cerrar Sesión";
+            btnCerrarSesion.UseVisualStyleBackColor = true;
+            btnCerrarSesion.Click += BtnCerrarSesion_Click;
             // 
             // FormPrincipal
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            AutoSize = true;
-            ClientSize = new Size(427, 433);
+            ClientSize = new Size(450, 440);
+            Controls.Add(buttonGestionCompras);
+            Controls.Add(buttonGestionEventos);
             Controls.Add(buttonGestionUsuarios);
             Controls.Add(buttonGestionEstadios);
             Controls.Add(buttonGestionClubes);
             Controls.Add(btnCerrarSesion);
+            Controls.Add(lblSubtitulo);
             Controls.Add(lblBienvenida);
-            Margin = new Padding(3, 4, 3, 4);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             Name = "FormPrincipal";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "FormPrincipal";
+            Text = "Kicket - Panel de Administración";
             Load += FormPrincipal_Load;
             ResumeLayout(false);
             PerformLayout();
@@ -112,10 +141,13 @@
 
         #endregion
 
-        private Label lblBienvenida;
-        private Button btnCerrarSesion;
-        private Button buttonGestionClubes;
-        private Button buttonGestionEstadios;
-        private Button buttonGestionUsuarios;
+        private Label lblBienvenida = null!;
+        private Label lblSubtitulo = null!;
+        private Button btnCerrarSesion = null!;
+        private Button buttonGestionClubes = null!;
+        private Button buttonGestionEstadios = null!;
+        private Button buttonGestionEventos = null!;
+        private Button buttonGestionUsuarios = null!;
+        private Button buttonGestionCompras = null!;
     }
 }

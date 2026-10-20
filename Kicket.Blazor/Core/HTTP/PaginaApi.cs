@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Kicket.ApiClient.Http;
 
 namespace Kicket.Blazor.Core.HTTP
 {
-    public class PaginaApi:ComponentBase
+    public class PaginaApi : ComponentBase
     {
         public string? MensajeError { get; set; }
         public bool Procesando { get; set; }
@@ -20,7 +20,7 @@ namespace Kicket.Blazor.Core.HTTP
             {
                 if (exe.EsFalloDeConexion)
                 {
-                    MensajeError = "Ocurrio un error al conectar con el servidor, Intente denuevo Mas Tarde";
+                    MensajeError = "Ocurrio un error al conectar con el servidor, Intente de nuevo mas tarde";
                 }
                 else if (exe.NoEncontrado)
                 {
@@ -43,17 +43,15 @@ namespace Kicket.Blazor.Core.HTTP
                     MensajeError = exe.MensajeCompleto();
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 MensajeError = "Ocurrio un error inesperado";
             }
             finally
             {
-                Procesando &= Procesando;
+                Procesando = false;
                 StateHasChanged();
-
             }
-
         }
     }
 }

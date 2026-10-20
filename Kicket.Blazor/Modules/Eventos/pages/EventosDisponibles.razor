@@ -1,0 +1,166 @@
+@page "/eventos"
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Blazor.Core.HTTP
+@using Kicket.Blazor.Core.state
+@using Kicket.Contracts.Clubes
+@using Kicket.Contracts.Estadios
+@using Kicket.Contracts.Eventos
+@inherits PaginaApi
+@inject IEventoApiClient eventoApi
+@inject IClubApiClient clubApi
+@inject IEstadioApiClient estadioApi
+@inject ISesionUsuario sesion
+@inject KicketAuthStateProvider authStateProvider
+@inject NavigationManager Nav
+
+<div class="container py-5" style="min-height: 80vh;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="fw-bold text-dark mb-1">Próximos Eventos Disponibles</h1>
+            <p class="text-secondary mb-0">Seleccioná un partido para elegir tu sector y comprar tus entradas.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            @if (sesion.EstaAutenticado)
+            {
+                <a href="/mis-compras" class="btn btn-outline-success fw-semibold">
+                    Mis Entradas Compradas
+                </a>
+            }
+            <button class="btn btn-outline-secondary" @onclick="CargarDatosAsync">
+                Actualizar Cartelera
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger shadow-sm">
+            @MensajeError
+        </div>
+    }
+
+    @if (Procesando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status"></div>
+            <p class="mt-2 text-secondary">Cargando eventos disponibles...</p>
+        </div>
+    }
+    else if (_eventosDisponibles.Count == 0)
+    {
+        <div class="card border-0 shadow-sm text-center p-5 bg-light">
+            <h4 class="fw-bold text-secondary mb-2">No hay eventos disponibles en este momento</h4>
+            <p class="text-muted mb-0">Un administrador debe cargar próximos partidos desde la aplicación de escritorio.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var ev in _eventosDisponibles)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                @ev.Fecha.ToString("dd/MM/yyyy - HH:mm") hs
+                            </span>
+                            <small class="text-light opacity-75">@ObtenerCiudadEstadio(ev.IdEstadio)</small>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column">
+                            <h5 class="card-title fw-bold text-center text-uppercase text-secondary small mb-3">
+                                @ev.Nombre
+                            </h5>
+
+                            <div class="d-flex justify-content-around align-items-center my-3 py-3 bg-light rounded-3 px-2">
+                                <div class="text-center" style="width: 42%;">
+                                    <div class="fw-bolder fs-5 text-dark">@ObtenerAbreviaturaClub(ev.IdEquipoLocal)</div>
+                                    <div class="small text-secondary text-truncate" title="@ObtenerNombreClub(ev.IdEquipoLocal)">
+                                        @ObtenerNombreClub(ev.IdEquipoLocal)
+                                    </div>
+                                    <span class="badge bg-secondary-subtle text-secondary mt-1">Local</span>
+                                </div>
+
+                                <div class="fw-bold text-muted fs-6">VS</div>
+
+                                <div class="text-center" style="width: 42%;">
+                                    <div class="fw-bolder fs-5 text-dark">@ObtenerAbreviaturaClub(ev.IdEquipoVisitante)</div>
+                                    <div class="small text-secondary text-truncate" title="@ObtenerNombreClub(ev.IdEquipoVisitante)">
+                                        @ObtenerNombreClub(ev.IdEquipoVisitante)
+                                    </div>
+                                    <span class="badge bg-secondary-subtle text-secondary mt-1">Visitante</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-2 mb-4 text-center small text-secondary">
+                                <strong>Estadio:</strong> @ObtenerNombreEstadio(ev.IdEstadio)
+                            </div>
+
+                            <div class="mt-auto d-grid">
+                                <button class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm"
+                                        @onclick="() => IrAComprar(ev.IdEvento)">
+                                    Comprar Entradas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<EventoDto> _eventosDisponibles = new();
+    private Dictionary<int, ClubDto> _clubes = new();
+    private Dictionary<int, EstadioDto> _estadios = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await authStateProvider.GetAuthenticationStateAsync();
+        await CargarDatosAsync();
+    }
+
+    private async Task CargarDatosAsync()
+    {
+        await SecureExec(async () =>
+        {
+            var todosEventos = await eventoApi.GetAllAsync();
+            var clubesLista = await clubApi.GetAllAsync();
+            var estadiosLista = await estadioApi.GetAllAsync();
+
+            _clubes = clubesLista.ToDictionary(c => c.ClubId);
+            _estadios = estadiosLista.ToDictionary(e => e.IdEstadio);
+
+            _eventosDisponibles = todosEventos
+                .Where(e => !e.EstaCancelado && e.Fecha > DateTime.Now)
+                .OrderBy(e => e.Fecha)
+                .ToList();
+        });
+    }
+
+    private string ObtenerNombreClub(int clubId) =>
+        _clubes.TryGetValue(clubId, out var club) ? club.Nombre : $"Club #{clubId}";
+
+    private string ObtenerAbreviaturaClub(int clubId) =>
+        _clubes.TryGetValue(clubId, out var club) && !string.IsNullOrWhiteSpace(club.Abreviatura)
+            ? club.Abreviatura
+            : "CLUB";
+
+    private string ObtenerNombreEstadio(int estadioId) =>
+        _estadios.TryGetValue(estadioId, out var est) ? $"{est.Nombre} ({est.Direccion})" : $"Estadio #{estadioId}";
+
+    private string ObtenerCiudadEstadio(int estadioId) =>
+        _estadios.TryGetValue(estadioId, out var est) ? est.Ciudad : string.Empty;
+
+    private async Task IrAComprar(int eventoId)
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true || !sesion.EstaAutenticado)
+        {
+            Nav.NavigateTo("/auth/login");
+            return;
+        }
+
+        Nav.NavigateTo($"/comprar/{eventoId}");
+    }
+}

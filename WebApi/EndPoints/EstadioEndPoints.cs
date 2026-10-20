@@ -1,6 +1,5 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
-using Kicket.Contracts.Clubes;
 using Kicket.Contracts.Estadios;
 
 namespace WebApi.EndPoints
@@ -9,9 +8,7 @@ namespace WebApi.EndPoints
     {
         public static void MapEstadioEndPoints(this WebApplication app)
         {
-            
-            var estadiosGroup = app.MapGroup("/estadios")
-                                   .RequireAuthorization();
+            var estadiosGroup = app.MapGroup("/estadios");
 
             estadiosGroup.MapGet("/", async (IEstadioService estadioService) =>
             {
@@ -26,23 +23,18 @@ namespace WebApi.EndPoints
                 }).ToList();
 
                 return Results.Ok(dtos);
-
             })
             .WithName("GetAllEstadios")
-            .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK)
-            .RequireAuthorization("Solo admin")
-            ;
+            .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK);
 
             estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 Estadio? estadio = await estadioService.ObtenerPorIdAsync(id);
 
-
                 if (estadio == null)
                 {
                     return Results.NotFound();
                 }
-                ;
 
                 EstadioDto estadioDto = new()
                 {
@@ -53,14 +45,10 @@ namespace WebApi.EndPoints
                 };
 
                 return Results.Ok(estadioDto);
-
-
             })
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("Solo admin")
-            ;
+            .Produces(StatusCodes.Status404NotFound);
 
             estadiosGroup.MapPost("/", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
             {
@@ -90,7 +78,6 @@ namespace WebApi.EndPoints
 
             estadiosGroup.MapPut("/", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
-
                 Estadio estadio = new()
                 {
                     Ciudad = estadioReq.Ciudad,
@@ -107,18 +94,15 @@ namespace WebApi.EndPoints
                 }
 
                 return Results.NoContent();
-
             })
             .WithName("UpdateEstadio")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
-            .RequireAuthorization("Solo admin")
-            ;
+            .RequireAuthorization("Solo admin");
 
             estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
             {
-
                 var deleted = await estadioService.EliminarEstadioAsync(id);
 
                 if (!deleted)
@@ -127,14 +111,12 @@ namespace WebApi.EndPoints
                 }
 
                 return Results.NoContent();
-
             })
             .WithName("DeleteEstadio")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status400BadRequest)
-            .RequireAuthorization("Solo admin")
-            ;
+            .RequireAuthorization("Solo admin");
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Eventos;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Core.Services
@@ -14,12 +13,21 @@ namespace Core.Services
         private readonly IEventoRepository _eventoRepository;
         private readonly IEstadioRepository _estadioRepository;
         private readonly IClubRepository _clubRepository;
+        private readonly ISectorRepository _sectorRepository;
+        private readonly ICompraRepository _compraRepository;
 
-        public EventoService(IEventoRepository eventoRepository, IEstadioRepository estadioRepository, IClubRepository clubRepository)
+        public EventoService(
+            IEventoRepository eventoRepository,
+            IEstadioRepository estadioRepository,
+            IClubRepository clubRepository,
+            ISectorRepository sectorRepository,
+            ICompraRepository compraRepository)
         {
             _eventoRepository = eventoRepository;
             _estadioRepository = estadioRepository;
             _clubRepository = clubRepository;
+            _sectorRepository = sectorRepository;
+            _compraRepository = compraRepository;
         }
 
         public async Task<Evento> CrearEventoAsync(Evento evento)
@@ -41,9 +49,40 @@ namespace Core.Services
             return await _eventoRepository.GetAllAsync();
         }
 
+        public async Task<IReadOnlyList<SectorDisponibilidadDto>?> ObtenerDisponibilidadAsync(int eventoId)
+        {
+            var evento = await _eventoRepository.GetOneById(eventoId);
+            if (evento is null)
+            {
+                return null;
+            }
+
+            var sectores = await _sectorRepository.ObtenerPorEstadioAsync(evento.EstadioId);
+            var resultado = new List<SectorDisponibilidadDto>();
+
+            foreach (var sector in sectores)
+            {
+                int vendidas = await _compraRepository.ObtenerCantidadEntradasVendidasAsync(eventoId, sector.SectorId);
+                int stockDisponible = Math.Max(0, sector.CapacidadMaxima - vendidas);
+
+                resultado.Add(new SectorDisponibilidadDto
+                {
+                    SectorId = sector.SectorId,
+                    EstadioId = sector.EstadioId,
+                    Nombre = sector.Nombre,
+                    PrecioBase = sector.PrecioBase,
+                    CapacidadTotal = sector.CapacidadMaxima,
+                    EntradasVendidas = vendidas,
+                    StockDisponible = stockDisponible
+                });
+            }
+
+            return resultado;
+        }
+
         public async Task<bool> ActualizarEventoAsync(Evento evento)
         {
-            await ValidarEventoAsync(evento);
+            await ValidarEventoAsync(evento, esActualizacion: true);
 
             return await _eventoRepository.UpdateAsync(evento);
         }
@@ -65,7 +104,7 @@ namespace Core.Services
             return await _eventoRepository.DeleteAsync(id);
         }
 
-        private async Task ValidarEventoAsync(Evento evento)
+        private async Task ValidarEventoAsync(Evento evento, bool esActualizacion = false)
         {
             if (evento is null)
             {
@@ -75,7 +114,7 @@ namespace Core.Services
             {
                 throw new ArgumentException("El nombre del evento es obligatorio.");
             }
-            if (evento.Fecha <= DateTime.Now)
+            if (!esActualizacion && evento.Fecha <= DateTime.Now)
             {
                 throw new ArgumentException("La fecha del evento debe ser futura.");
             }
