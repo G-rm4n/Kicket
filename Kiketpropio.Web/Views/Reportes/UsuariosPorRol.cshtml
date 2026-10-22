@@ -1,0 +1,80 @@
+@model List<UsuariosPorRol>
+@{
+    ViewData["Title"] = "Reporte de usuarios por perfil";
+}
+
+<h1>Reporte de usuarios por perfil</h1>
+<h2>Cantidad de usuarios registrados y edad promedio segun el perfil asignado</h2>
+
+<div class="tarjetas">
+    <div class="tarjeta">
+        <span>Usuarios registrados</span>
+        <strong>@Model.Sum(r => r.Cantidad)</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Perfiles en uso</span>
+        <strong>@Model.Count</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Perfil mas numeroso</span>
+        <strong>@(Model.Count > 0 ? Model.First().Rol : "-")</strong>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="grafico">
+        <canvas id="graficoUsuarios"></canvas>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Perfil</th>
+            <th>Cantidad</th>
+            <th>Edad promedio</th>
+            <th>Participacion</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var fila in Model)
+        {
+            <tr>
+                <td>@fila.Rol</td>
+                <td>@fila.Cantidad</td>
+                <td>@fila.EdadPromedio</td>
+                <td>@(Model.Sum(r => r.Cantidad) == 0 ? 0 : Math.Round(fila.Cantidad * 100.0 / Model.Sum(r => r.Cantidad), 1)) %</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const etiquetasUsuarios = @Html.Raw(Json.Serialize(Model.Select(r => r.Rol)));
+        const cantidadesUsuarios = @Html.Raw(Json.Serialize(Model.Select(r => r.Cantidad)));
+
+        new Chart(document.getElementById('graficoUsuarios'), {
+            type: 'bar',
+            data: {
+                labels: etiquetasUsuarios,
+                datasets: [{
+                    label: 'Usuarios',
+                    data: cantidadesUsuarios,
+                    backgroundColor: ['#1f4d78', '#1f9d55', '#c0392b', '#6b7884']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Usuarios por perfil' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    </script>
+}

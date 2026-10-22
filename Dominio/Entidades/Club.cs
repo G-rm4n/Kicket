@@ -1,4 +1,4 @@
-﻿
+
 namespace Kiketpropio.Dominio.Entidades
 {
     public class Club
@@ -6,6 +6,12 @@ namespace Kiketpropio.Dominio.Entidades
         public int IdClub { get; set; }
         public string Nombre { get; set; }
         public string Logo_Url { get; set; }
+
+        public Club()
+        {
+            Nombre = string.Empty;
+            Logo_Url = string.Empty;
+        }
 
         public Club(int idClub, string nombre, string logo_Url)
         {

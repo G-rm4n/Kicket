@@ -1,4 +1,4 @@
-﻿using Kiketpropio.Dominio.Entidades;
+using Kiketpropio.Dominio.Entidades;
 
 namespace Kiketpropio.Services.Interfaces
 {
@@ -6,6 +6,7 @@ namespace Kiketpropio.Services.Interfaces
     {
         IEnumerable<Usuario> GetAll();
         Usuario? GetOne(int id);
+        Usuario? GetByEmail(string email);
         Usuario Create(Usuario usuarioInput);
         Usuario? Update(Usuario usuarioInput, int id);
         bool Delete(int id);

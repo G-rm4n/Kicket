@@ -1,0 +1,44 @@
+@model List<EstadiosPorCiudad>
+@{
+    ViewData["Title"] = "Reporte de estadios por ciudad";
+}
+
+<h1>Reporte de estadios por ciudad</h1>
+<h2>Distribucion geografica de los estadios habilitados en el sistema</h2>
+
+<div class="tarjetas">
+    <div class="tarjeta">
+        <span>Estadios habilitados</span>
+        <strong>@Model.Sum(r => r.Cantidad)</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Ciudades alcanzadas</span>
+        <strong>@Model.Count</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Ciudad con mas estadios</span>
+        <strong>@(Model.Count > 0 ? Model.First().Ciudad : "-")</strong>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Ciudad</th>
+            <th>Cantidad</th>
+            <th>Estadios</th>
+            <th>Participacion</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var fila in Model)
+        {
+            <tr>
+                <td>@fila.Ciudad</td>
+                <td>@fila.Cantidad</td>
+                <td>@fila.Estadios</td>
+                <td>@(Model.Sum(r => r.Cantidad) == 0 ? 0 : Math.Round(fila.Cantidad * 100.0 / Model.Sum(r => r.Cantidad), 1)) %</td>
+            </tr>
+        }
+    </tbody>
+</table>

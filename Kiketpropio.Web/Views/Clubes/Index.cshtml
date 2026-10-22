@@ -1,0 +1,47 @@
+@model List<Club>
+@{
+    ViewData["Title"] = "Clubes";
+}
+
+<h1>Clubes</h1>
+
+@if (User.IsInRole("Admin") || User.IsInRole("Vendedor"))
+{
+    <div class="acciones">
+        <a class="boton verde" asp-action="Crear">Nuevo club</a>
+    </div>
+}
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Logo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var club in Model)
+        {
+            <tr>
+                <td>@club.IdClub</td>
+                <td>@club.Nombre</td>
+                <td>@club.Logo_Url</td>
+                <td>
+                    <a asp-action="Detalle" asp-route-id="@club.IdClub">Detalle</a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Vendedor"))
+                    {
+                        <span> | </span>
+                        <a asp-action="Editar" asp-route-id="@club.IdClub">Editar</a>
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <span> | </span>
+                        <a asp-action="Eliminar" asp-route-id="@club.IdClub">Eliminar</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

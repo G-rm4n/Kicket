@@ -1,0 +1,215 @@
+:root {
+    --azul: #15314b;
+    --azul-claro: #1f4d78;
+    --verde: #1f9d55;
+    --rojo: #c0392b;
+    --gris: #f3f5f7;
+    --borde: #d8dee4;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background-color: var(--gris);
+    color: #22272b;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    background-color: var(--azul);
+    color: #ffffff;
+    padding: 12px 28px;
+}
+
+header .marca a {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+header nav {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+header nav a {
+    color: #d8e4ef;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+header nav a:hover {
+    color: #ffffff;
+}
+
+header .sesion {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+}
+
+header .sesion a {
+    color: #ffd6d0;
+    text-decoration: none;
+}
+
+main {
+    max-width: 1080px;
+    margin: 28px auto;
+    padding: 0 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 18px;
+    font-size: 13px;
+    color: #67727c;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+h2 {
+    font-size: 18px;
+    color: var(--azul-claro);
+}
+
+.panel {
+    background-color: #ffffff;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+}
+
+table th {
+    background-color: var(--azul-claro);
+    color: #ffffff;
+    text-align: left;
+    padding: 10px;
+    font-size: 14px;
+}
+
+table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 14px;
+}
+
+table tr:hover td {
+    background-color: #eef3f8;
+}
+
+.boton {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--azul-claro);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.boton.verde {
+    background-color: var(--verde);
+}
+
+.boton.rojo {
+    background-color: var(--rojo);
+}
+
+.boton.gris {
+    background-color: #6b7884;
+}
+
+.acciones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+form .campo {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+    max-width: 420px;
+}
+
+form label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+form input, form select {
+    padding: 8px;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.error {
+    background-color: #fdecea;
+    border: 1px solid #f5c6c2;
+    color: var(--rojo);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.login {
+    max-width: 380px;
+    margin: 60px auto;
+}
+
+.tarjetas {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tarjeta {
+    flex: 1 1 220px;
+    background-color: #ffffff;
+    border: 1px solid var(--borde);
+    border-left: 4px solid var(--azul-claro);
+    border-radius: 6px;
+    padding: 18px;
+}
+
+.tarjeta span {
+    display: block;
+    font-size: 13px;
+    color: #67727c;
+}
+
+.tarjeta strong {
+    font-size: 22px;
+}
+
+.grafico {
+    max-width: 640px;
+    margin: 0 auto;
+}

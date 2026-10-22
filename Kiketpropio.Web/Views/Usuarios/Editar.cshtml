@@ -1,0 +1,53 @@
+@model Usuario
+@{
+    ViewData["Title"] = "Editar usuario";
+}
+
+<div class="panel">
+    <h1>Editar usuario</h1>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="error">@ViewBag.Error</div>
+    }
+
+    <form asp-action="Editar" method="post">
+        <input type="hidden" asp-for="IdUsuario" />
+        <div class="campo">
+            <label asp-for="DNI">DNI</label>
+            <input asp-for="DNI" />
+        </div>
+        <div class="campo">
+            <label asp-for="Nombre">Nombre</label>
+            <input asp-for="Nombre" />
+        </div>
+        <div class="campo">
+            <label asp-for="Apellido">Apellido</label>
+            <input asp-for="Apellido" />
+        </div>
+        <div class="campo">
+            <label asp-for="Email">Email</label>
+            <input asp-for="Email" type="email" />
+        </div>
+        <div class="campo">
+            <label asp-for="Pass">Contraseña</label>
+            <input asp-for="Pass" type="text" />
+        </div>
+        <div class="campo">
+            <label asp-for="FechaNacimiento">Fecha de nacimiento</label>
+            <input asp-for="FechaNacimiento" type="date" />
+        </div>
+        <div class="campo">
+            <label asp-for="Rol">Perfil</label>
+            <select asp-for="Rol">
+                <option value="Admin">Admin</option>
+                <option value="Vendedor">Vendedor</option>
+                <option value="User">User</option>
+            </select>
+        </div>
+        <div class="acciones">
+            <button type="submit" class="boton">Actualizar</button>
+            <a class="boton gris" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

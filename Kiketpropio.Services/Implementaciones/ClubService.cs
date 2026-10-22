@@ -1,4 +1,4 @@
-﻿using Kiketpropio.Dominio.Entidades;
+using Kiketpropio.Dominio.Entidades;
 using Kiketpropio.Services.Interfaces;
 
 namespace Kiketpropio.Services.Implementaciones
@@ -7,10 +7,16 @@ namespace Kiketpropio.Services.Implementaciones
     {
         private readonly List<Club> _clubList = new()
         {
-            new Club(1,"Atletico","URL2"),
-            new Club(2,"Racing","URL1"),
+            new Club(1,"Rosario Central","https://kicket.com.ar/logos/rosario-central.png"),
+            new Club(2,"Newell's Old Boys","https://kicket.com.ar/logos/newells.png"),
+            new Club(3,"River Plate","https://kicket.com.ar/logos/river-plate.png"),
+            new Club(4,"Boca Juniors","https://kicket.com.ar/logos/boca-juniors.png"),
+            new Club(5,"Racing Club","https://kicket.com.ar/logos/racing-club.png"),
+            new Club(6,"Independiente","https://kicket.com.ar/logos/independiente.png"),
+            new Club(7,"San Lorenzo","https://kicket.com.ar/logos/san-lorenzo.png"),
+            new Club(8,"Talleres","https://kicket.com.ar/logos/talleres.png"),
         };
-        private int _NextId = 3;
+        private int _NextId = 9;
 
         private void IncrementNextId()
         {

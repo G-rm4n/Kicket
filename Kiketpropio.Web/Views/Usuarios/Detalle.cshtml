@@ -1,0 +1,14 @@
+@model Usuario
+@{
+    ViewData["Title"] = "Detalle del usuario";
+}
+
+<div class="panel">
+    <h1>@Model.Apellido, @Model.Nombre</h1>
+    <p>Identificador: <strong>@Model.IdUsuario</strong></p>
+    <p>DNI: <strong>@Model.DNI</strong></p>
+    <p>Email: <strong>@Model.Email</strong></p>
+    <p>Fecha de nacimiento: <strong>@Model.FechaNacimiento.ToString("dd/MM/yyyy")</strong></p>
+    <p>Perfil: <strong>@Model.Rol</strong></p>
+    <a class="boton gris" asp-action="Index">Volver</a>
+</div>

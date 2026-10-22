@@ -1,0 +1,44 @@
+@model List<Usuario>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<h1>Usuarios</h1>
+
+<div class="acciones">
+    <a class="boton verde" asp-action="Crear">Nuevo usuario</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>DNI</th>
+            <th>Apellido y nombre</th>
+            <th>Email</th>
+            <th>Nacimiento</th>
+            <th>Perfil</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.IdUsuario</td>
+                <td>@usuario.DNI</td>
+                <td>@usuario.Apellido, @usuario.Nombre</td>
+                <td>@usuario.Email</td>
+                <td>@usuario.FechaNacimiento.ToString("dd/MM/yyyy")</td>
+                <td>@usuario.Rol</td>
+                <td>
+                    <a asp-action="Detalle" asp-route-id="@usuario.IdUsuario">Detalle</a>
+                    <span> | </span>
+                    <a asp-action="Editar" asp-route-id="@usuario.IdUsuario">Editar</a>
+                    <span> | </span>
+                    <a asp-action="Eliminar" asp-route-id="@usuario.IdUsuario">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

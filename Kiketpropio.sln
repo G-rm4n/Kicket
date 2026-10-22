@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.Dominio", "Dominio\K
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.Services", "Kiketpropio.Services\Kicket.Services.csproj", "{D12A8FCF-7BDC-4C8B-8C51-EDF67D31E8B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.Escritorio", "Kiketpropio.Escritorio\Kicket.Escritorio.csproj", "{A182A258-EB58-4025-81B3-586991EFEF97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kicket.Web", "Kiketpropio.Web\Kicket.Web.csproj", "{C86C9C83-48A6-4D40-BB91-D41694B916B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{D12A8FCF-7BDC-4C8B-8C51-EDF67D31E8B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D12A8FCF-7BDC-4C8B-8C51-EDF67D31E8B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D12A8FCF-7BDC-4C8B-8C51-EDF67D31E8B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A182A258-EB58-4025-81B3-586991EFEF97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A182A258-EB58-4025-81B3-586991EFEF97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A182A258-EB58-4025-81B3-586991EFEF97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A182A258-EB58-4025-81B3-586991EFEF97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C86C9C83-48A6-4D40-BB91-D41694B916B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C86C9C83-48A6-4D40-BB91-D41694B916B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C86C9C83-48A6-4D40-BB91-D41694B916B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C86C9C83-48A6-4D40-BB91-D41694B916B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

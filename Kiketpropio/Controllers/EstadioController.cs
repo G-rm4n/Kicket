@@ -1,10 +1,12 @@
-﻿using Kiketpropio.Dominio.Entidades;
+using Kiketpropio.Dominio.Entidades;
 using Kiketpropio.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kiketpropio.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class EstadioController : ControllerBase
     {
@@ -32,6 +34,7 @@ namespace Kiketpropio.API.Controllers
 
         }
 
+        [Authorize(Roles = "Admin,Vendedor")]
         [HttpPost]
         public IActionResult CreateEstadio([FromBody] Estadio estadioInput)
         {
@@ -40,6 +43,7 @@ namespace Kiketpropio.API.Controllers
             return CreatedAtAction(nameof(GetOne), new { id = estadioCreado.IdEstadio }, estadioCreado);
         }
 
+        [Authorize(Roles = "Admin,Vendedor")]
         [HttpPut("{id}")]
         public IActionResult UpdateEstadio([FromBody] Estadio estadioInput, int id)
         {
@@ -52,6 +56,7 @@ namespace Kiketpropio.API.Controllers
             return Ok(resul);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteEstadio(int id)
         {

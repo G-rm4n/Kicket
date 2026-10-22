@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Kiketpropio.Services.Interfaces;
 using Kiketpropio.Dominio.Entidades;
 
 namespace Kiketpropio.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ClubController : ControllerBase
     {
@@ -30,6 +32,7 @@ namespace Kiketpropio.API.Controllers
             return Ok(ClubFounded);
         }
 
+        [Authorize(Roles = "Admin,Vendedor")]
         [HttpPut("{id}")]
         public IActionResult Update([FromBody] Club clubInput, int id)
         {
@@ -42,6 +45,7 @@ namespace Kiketpropio.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin,Vendedor")]
         [HttpPost]
         public IActionResult CreateClub([FromBody] Club clubInput)
         {
@@ -50,6 +54,7 @@ namespace Kiketpropio.API.Controllers
             return CreatedAtAction(nameof(GetOne), new { id = createdClub.IdClub }, createdClub);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteClub(int id)
         {

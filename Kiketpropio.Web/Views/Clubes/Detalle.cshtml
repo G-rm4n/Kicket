@@ -1,0 +1,11 @@
+@model Club
+@{
+    ViewData["Title"] = "Detalle del club";
+}
+
+<div class="panel">
+    <h1>@Model.Nombre</h1>
+    <p>Identificador: <strong>@Model.IdClub</strong></p>
+    <p>Logo: <strong>@Model.Logo_Url</strong></p>
+    <a class="boton gris" asp-action="Index">Volver</a>
+</div>

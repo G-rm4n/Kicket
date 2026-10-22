@@ -1,0 +1,17 @@
+@model Usuario
+@{
+    ViewData["Title"] = "Eliminar usuario";
+}
+
+<div class="panel">
+    <h1>Eliminar usuario</h1>
+    <p>Confirme la baja del usuario <strong>@Model.Apellido, @Model.Nombre</strong> (ID @Model.IdUsuario).</p>
+
+    <form asp-action="Eliminar" method="post">
+        <input type="hidden" name="id" value="@Model.IdUsuario" />
+        <div class="acciones">
+            <button type="submit" class="boton rojo">Eliminar</button>
+            <a class="boton gris" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

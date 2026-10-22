@@ -1,0 +1,17 @@
+@model Estadio
+@{
+    ViewData["Title"] = "Eliminar estadio";
+}
+
+<div class="panel">
+    <h1>Eliminar estadio</h1>
+    <p>Confirme la baja del estadio <strong>@Model.Nombre</strong> (ID @Model.IdEstadio).</p>
+
+    <form asp-action="Eliminar" method="post">
+        <input type="hidden" name="id" value="@Model.IdEstadio" />
+        <div class="acciones">
+            <button type="submit" class="boton rojo">Eliminar</button>
+            <a class="boton gris" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

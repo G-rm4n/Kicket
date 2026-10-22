@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Kicket</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="marca">
+            <a asp-controller="Home" asp-action="Index">Kicket</a>
+        </div>
+        @if (User.Identity is not null && User.Identity.IsAuthenticated)
+        {
+            <nav>
+                <a asp-controller="Clubes" asp-action="Index">Clubes</a>
+                <a asp-controller="Estadios" asp-action="Index">Estadios</a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                }
+                @if (User.IsInRole("Admin") || User.IsInRole("Vendedor"))
+                {
+                    <a asp-controller="Reportes" asp-action="UsuariosPorRol">Usuarios por rol</a>
+                    <a asp-controller="Reportes" asp-action="EstadiosPorCiudad">Estadios por ciudad</a>
+                }
+            </nav>
+            <div class="sesion">
+                <span>@User.Identity.Name</span>
+                <a asp-controller="Cuenta" asp-action="Logout">Cerrar sesion</a>
+            </div>
+        }
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer>
+        <span>Kicket - Sistema de gestion de entradas</span>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

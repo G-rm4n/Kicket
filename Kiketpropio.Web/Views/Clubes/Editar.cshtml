@@ -1,0 +1,29 @@
+@model Club
+@{
+    ViewData["Title"] = "Editar club";
+}
+
+<div class="panel">
+    <h1>Editar club</h1>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="error">@ViewBag.Error</div>
+    }
+
+    <form asp-action="Editar" method="post">
+        <input type="hidden" asp-for="IdClub" />
+        <div class="campo">
+            <label asp-for="Nombre">Nombre</label>
+            <input asp-for="Nombre" />
+        </div>
+        <div class="campo">
+            <label asp-for="Logo_Url">URL del logo</label>
+            <input asp-for="Logo_Url" />
+        </div>
+        <div class="acciones">
+            <button type="submit" class="boton">Actualizar</button>
+            <a class="boton gris" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

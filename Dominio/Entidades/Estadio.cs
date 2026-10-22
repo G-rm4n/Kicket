@@ -1,4 +1,3 @@
-﻿
 
 namespace Kiketpropio.Dominio.Entidades
 {
@@ -9,6 +8,13 @@ namespace Kiketpropio.Dominio.Entidades
         public string Calle { get; set; }
         public int Nro { get; set; }
         public string Ciudad { get; set; }
+
+        public Estadio()
+        {
+            Nombre = string.Empty;
+            Calle = string.Empty;
+            Ciudad = string.Empty;
+        }
 
         public Estadio(int idEstadio, string nombre, string calle, int nro, string ciudad)
         {

@@ -1,0 +1,36 @@
+@model Estadio
+@{
+    ViewData["Title"] = "Nuevo estadio";
+}
+
+<div class="panel">
+    <h1>Nuevo estadio</h1>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="error">@ViewBag.Error</div>
+    }
+
+    <form asp-action="Crear" method="post">
+        <div class="campo">
+            <label asp-for="Nombre">Nombre</label>
+            <input asp-for="Nombre" />
+        </div>
+        <div class="campo">
+            <label asp-for="Calle">Calle</label>
+            <input asp-for="Calle" />
+        </div>
+        <div class="campo">
+            <label asp-for="Nro">Numero</label>
+            <input asp-for="Nro" type="number" min="0" />
+        </div>
+        <div class="campo">
+            <label asp-for="Ciudad">Ciudad</label>
+            <input asp-for="Ciudad" />
+        </div>
+        <div class="acciones">
+            <button type="submit" class="boton verde">Guardar</button>
+            <a class="boton gris" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

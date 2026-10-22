@@ -1,0 +1,26 @@
+@model LoginRequest
+@{
+    ViewData["Title"] = "Iniciar sesion";
+}
+
+<div class="panel login">
+    <h1>Iniciar sesion</h1>
+    <h2>Kicket</h2>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="error">@ViewBag.Error</div>
+    }
+
+    <form asp-action="Login" method="post">
+        <div class="campo">
+            <label asp-for="Email">Email</label>
+            <input asp-for="Email" type="email" autocomplete="username" />
+        </div>
+        <div class="campo">
+            <label asp-for="Pass">Contraseña</label>
+            <input asp-for="Pass" type="password" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="boton">Ingresar</button>
+    </form>
+</div>

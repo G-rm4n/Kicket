@@ -1,0 +1,12 @@
+@model Estadio
+@{
+    ViewData["Title"] = "Detalle del estadio";
+}
+
+<div class="panel">
+    <h1>@Model.Nombre</h1>
+    <p>Identificador: <strong>@Model.IdEstadio</strong></p>
+    <p>Direccion: <strong>@Model.Calle @Model.Nro</strong></p>
+    <p>Ciudad: <strong>@Model.Ciudad</strong></p>
+    <a class="boton gris" asp-action="Index">Volver</a>
+</div>

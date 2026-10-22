@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="panel">
+    <h1>Bienvenido a Kicket</h1>
+    <h2>@User.Identity?.Name</h2>
+    <p>Perfil asignado: <strong>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)</strong></p>
+    <p>Desde el menu superior puede administrar los clubes, los estadios, los usuarios del sistema y consultar los reportes disponibles.</p>
+</div>
+
+<div class="tarjetas">
+    <div class="tarjeta">
+        <span>Clubes</span>
+        <strong>Alta, baja, modificacion y consulta</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Estadios</span>
+        <strong>Alta, baja, modificacion y consulta</strong>
+    </div>
+    <div class="tarjeta">
+        <span>Usuarios</span>
+        <strong>Administracion de perfiles</strong>
+    </div>
+</div>

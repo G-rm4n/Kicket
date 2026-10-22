@@ -1,4 +1,3 @@
-﻿
 
 namespace Kiketpropio.Dominio.Entidades
 {
@@ -12,6 +11,17 @@ namespace Kiketpropio.Dominio.Entidades
         public string Pass { get; set; }
         public DateTime FechaNacimiento { get; set; }
         public string Rol { get; set; }
+
+        public Usuario()
+        {
+            DNI = string.Empty;
+            Nombre = string.Empty;
+            Apellido = string.Empty;
+            Email = string.Empty;
+            Pass = string.Empty;
+            FechaNacimiento = DateTime.Today;
+            Rol = "User";
+        }
 
         public Usuario(int idUsuario, string dNI, string nombre, string apellido, string email, string pass, DateTime fechaNacimiento, string rol)
         {

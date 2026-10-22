@@ -1,4 +1,4 @@
-﻿using Kiketpropio.Dominio.Entidades;
+using Kiketpropio.Dominio.Entidades;
 using Kiketpropio.Services.Interfaces;
 
 namespace Kiketpropio.Services.Implementaciones
@@ -7,10 +7,16 @@ namespace Kiketpropio.Services.Implementaciones
     {
         private readonly List<Estadio> _EstadioList = new()
         {
-            new Estadio(1,"Estadio1","Calle1",3,"Rosario"),
-            new Estadio(2,"Estadio2","Calle2",3,"Rosario")
+            new Estadio(1,"Gigante de Arroyito","Avenida Genova",640,"Rosario"),
+            new Estadio(2,"Marcelo Bielsa","Pasaje Juan B. Justo",3550,"Rosario"),
+            new Estadio(3,"Mas Monumental","Avenida Figueroa Alcorta",7597,"Buenos Aires"),
+            new Estadio(4,"La Bombonera","Brandsen",805,"Buenos Aires"),
+            new Estadio(5,"Pedro Bidegain","Avenida Perito Moreno",1750,"Buenos Aires"),
+            new Estadio(6,"Presidente Peron","Mozart",2500,"Avellaneda"),
+            new Estadio(7,"Libertadores de America","Bochini",751,"Avellaneda"),
+            new Estadio(8,"Mario Alberto Kempes","Avenida Ramon Carcano",1550,"Cordoba")
         };
-        private int _NextId = 3;
+        private int _NextId = 9;
 
         private void IncrementNextId()
         {
