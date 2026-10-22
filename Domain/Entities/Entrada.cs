@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +13,6 @@ namespace Domain.Entities
         public int EventoId { get; set; }
         public int SectorId { get; set; }
         public string? FilaAsiento { get; set; } //puede ser nulo si la entrada es para el sector popular
+        public string CodigoQr { get; set; } = string.Empty;
     }
 }

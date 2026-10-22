@@ -8,6 +8,7 @@ using Kicket.Contracts.Compras;
 using Kicket.Contracts.Eventos;
 using Kicket.Contracts.Sectores;
 using Kicket.Contracts.Usuarios;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.WinForms.Forms
 {
@@ -39,6 +40,9 @@ namespace Kicket.WinForms.Forms
             public string SectorTexto { get; set; } = string.Empty;
             public int Cantidad { get; set; }
             public string MontoTotalTexto { get; set; } = string.Empty;
+            public string MetodoPago { get; set; } = string.Empty;
+            public string PaymentId { get; set; } = string.Empty;
+            public string EstadoPago { get; set; } = string.Empty;
         }
 
         private sealed class EntradaFilaVista
@@ -48,6 +52,7 @@ namespace Kicket.WinForms.Forms
             public string SectorNombre { get; set; } = string.Empty;
             public string TipoSector { get; set; } = string.Empty;
             public string Ubicacion { get; set; } = string.Empty;
+            public string CodigoQr { get; set; } = string.Empty;
         }
 
         public FormCompras(
@@ -177,7 +182,10 @@ namespace Kicket.WinForms.Forms
                     EventoTexto = nombreEvento,
                     SectorTexto = nombreSector,
                     Cantidad = c.Cantidad,
-                    MontoTotalTexto = $"${c.MontoTotal:N2}"
+                    MontoTotalTexto = $"${c.MontoTotal:N2}",
+                    MetodoPago = string.IsNullOrWhiteSpace(c.MetodoPago) ? "No especificado" : c.MetodoPago,
+                    PaymentId = string.IsNullOrWhiteSpace(c.PaymentId) ? "-" : c.PaymentId,
+                    EstadoPago = string.IsNullOrWhiteSpace(c.EstadoPago) ? "Aprobado" : c.EstadoPago
                 };
             }).ToList();
 
@@ -234,11 +242,42 @@ namespace Kicket.WinForms.Forms
                     TipoSector = esPlatea ? "Platea (Numerada)" : "Popular (General)",
                     Ubicacion = string.IsNullOrWhiteSpace(ent.FilaAsiento)
                         ? "Sin numeración (Popular)"
-                        : ent.FilaAsiento
+                        : ent.FilaAsiento,
+                    CodigoQr = ent.CodigoQr
                 };
             }).ToList();
 
             dataGridViewEntradas.DataSource = filasEntradas;
+        }
+
+        private void dataGridViewEntradas_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            MostrarQrDeFila(e.RowIndex);
+        }
+
+        private void btnVerQrEntrada_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewEntradas.CurrentRow is null || dataGridViewEntradas.CurrentRow.Index < 0)
+            {
+                MessageBox.Show("Seleccione una entrada de la grilla inferior para visualizar su código QR.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            MostrarQrDeFila(dataGridViewEntradas.CurrentRow.Index);
+        }
+
+        private void MostrarQrDeFila(int rowIndex)
+        {
+            if (dataGridViewEntradas.DataSource is not List<EntradaFilaVista> entradas || rowIndex >= entradas.Count)
+            {
+                return;
+            }
+
+            var entrada = entradas[rowIndex];
+            using var formQr = Program.ServiceProvider.GetRequiredService<FormTicketQr>();
+            formQr.CargarDatos(entrada.EntradaId, entrada.EventoNombre, entrada.SectorNombre, entrada.Ubicacion, entrada.CodigoQr);
+            formQr.ShowDialog(this);
         }
 
         private async void btnAnularCompra_Click(object sender, EventArgs e)

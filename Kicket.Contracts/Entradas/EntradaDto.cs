@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,5 +15,6 @@ namespace Kicket.Contracts.Entradas
 
         /// <summary>Puede ser nulo si la entrada es para un sector sin asientos numerados (popular).</summary>
         public string? FilaAsiento { get; set; }
+        public string CodigoQr { get; set; } = string.Empty;
     }
 }

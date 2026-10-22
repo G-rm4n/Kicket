@@ -40,6 +40,8 @@ namespace Kicket.WinForms.Forms
             ColumnSector = new DataGridViewTextBoxColumn();
             ColumnCantidad = new DataGridViewTextBoxColumn();
             ColumnMontoTotal = new DataGridViewTextBoxColumn();
+            ColumnMetodoPago = new DataGridViewTextBoxColumn();
+            ColumnPaymentId = new DataGridViewTextBoxColumn();
             labelEntradas = new Label();
             dataGridViewEntradas = new DataGridView();
             ColumnEntradaId = new DataGridViewTextBoxColumn();
@@ -47,7 +49,9 @@ namespace Kicket.WinForms.Forms
             ColumnEntradaSector = new DataGridViewTextBoxColumn();
             ColumnEntradaTipo = new DataGridViewTextBoxColumn();
             ColumnEntradaUbicacion = new DataGridViewTextBoxColumn();
+            ColumnEntradaCodigoQr = new DataGridViewTextBoxColumn();
             labelResumen = new Label();
+            btnVerQrEntrada = new Button();
             btnAnularCompra = new Button();
             groupBoxFiltros.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewCompras).BeginInit();
@@ -191,7 +195,9 @@ namespace Kicket.WinForms.Forms
                 ColumnEvento,
                 ColumnSector,
                 ColumnCantidad,
-                ColumnMontoTotal
+                ColumnMontoTotal,
+                ColumnMetodoPago,
+                ColumnPaymentId
             });
             dataGridViewCompras.Location = new Point(20, 187);
             dataGridViewCompras.MultiSelect = false;
@@ -253,10 +259,26 @@ namespace Kicket.WinForms.Forms
             // ColumnMontoTotal
             // 
             ColumnMontoTotal.DataPropertyName = "MontoTotalTexto";
-            ColumnMontoTotal.FillWeight = 85F;
+            ColumnMontoTotal.FillWeight = 80F;
             ColumnMontoTotal.HeaderText = "Monto Total";
             ColumnMontoTotal.Name = "ColumnMontoTotal";
             ColumnMontoTotal.ReadOnly = true;
+            // 
+            // ColumnMetodoPago
+            // 
+            ColumnMetodoPago.DataPropertyName = "MetodoPago";
+            ColumnMetodoPago.FillWeight = 85F;
+            ColumnMetodoPago.HeaderText = "Medio Pago";
+            ColumnMetodoPago.Name = "ColumnMetodoPago";
+            ColumnMetodoPago.ReadOnly = true;
+            // 
+            // ColumnPaymentId
+            // 
+            ColumnPaymentId.DataPropertyName = "PaymentId";
+            ColumnPaymentId.FillWeight = 95F;
+            ColumnPaymentId.HeaderText = "ID Transacción";
+            ColumnPaymentId.Name = "ColumnPaymentId";
+            ColumnPaymentId.ReadOnly = true;
             // 
             // labelEntradas
             // 
@@ -280,7 +302,8 @@ namespace Kicket.WinForms.Forms
                 ColumnEntradaEvento,
                 ColumnEntradaSector,
                 ColumnEntradaTipo,
-                ColumnEntradaUbicacion
+                ColumnEntradaUbicacion,
+                ColumnEntradaCodigoQr
             });
             dataGridViewEntradas.Location = new Point(20, 445);
             dataGridViewEntradas.MultiSelect = false;
@@ -289,11 +312,12 @@ namespace Kicket.WinForms.Forms
             dataGridViewEntradas.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridViewEntradas.Size = new Size(880, 155);
             dataGridViewEntradas.TabIndex = 5;
+            dataGridViewEntradas.CellDoubleClick += dataGridViewEntradas_CellDoubleClick;
             // 
             // ColumnEntradaId
             // 
             ColumnEntradaId.DataPropertyName = "EntradaId";
-            ColumnEntradaId.FillWeight = 55F;
+            ColumnEntradaId.FillWeight = 50F;
             ColumnEntradaId.HeaderText = "N° Entrada";
             ColumnEntradaId.Name = "ColumnEntradaId";
             ColumnEntradaId.ReadOnly = true;
@@ -301,7 +325,7 @@ namespace Kicket.WinForms.Forms
             // ColumnEntradaEvento
             // 
             ColumnEntradaEvento.DataPropertyName = "EventoNombre";
-            ColumnEntradaEvento.FillWeight = 130F;
+            ColumnEntradaEvento.FillWeight = 110F;
             ColumnEntradaEvento.HeaderText = "Evento";
             ColumnEntradaEvento.Name = "ColumnEntradaEvento";
             ColumnEntradaEvento.ReadOnly = true;
@@ -309,7 +333,7 @@ namespace Kicket.WinForms.Forms
             // ColumnEntradaSector
             // 
             ColumnEntradaSector.DataPropertyName = "SectorNombre";
-            ColumnEntradaSector.FillWeight = 110F;
+            ColumnEntradaSector.FillWeight = 90F;
             ColumnEntradaSector.HeaderText = "Sector";
             ColumnEntradaSector.Name = "ColumnEntradaSector";
             ColumnEntradaSector.ReadOnly = true;
@@ -317,7 +341,7 @@ namespace Kicket.WinForms.Forms
             // ColumnEntradaTipo
             // 
             ColumnEntradaTipo.DataPropertyName = "TipoSector";
-            ColumnEntradaTipo.FillWeight = 90F;
+            ColumnEntradaTipo.FillWeight = 85F;
             ColumnEntradaTipo.HeaderText = "Modalidad";
             ColumnEntradaTipo.Name = "ColumnEntradaTipo";
             ColumnEntradaTipo.ReadOnly = true;
@@ -325,10 +349,18 @@ namespace Kicket.WinForms.Forms
             // ColumnEntradaUbicacion
             // 
             ColumnEntradaUbicacion.DataPropertyName = "Ubicacion";
-            ColumnEntradaUbicacion.FillWeight = 130F;
-            ColumnEntradaUbicacion.HeaderText = "Ubicación / Asiento";
+            ColumnEntradaUbicacion.FillWeight = 100F;
+            ColumnEntradaUbicacion.HeaderText = "Ubicación";
             ColumnEntradaUbicacion.Name = "ColumnEntradaUbicacion";
             ColumnEntradaUbicacion.ReadOnly = true;
+            // 
+            // ColumnEntradaCodigoQr
+            // 
+            ColumnEntradaCodigoQr.DataPropertyName = "CodigoQr";
+            ColumnEntradaCodigoQr.FillWeight = 125F;
+            ColumnEntradaCodigoQr.HeaderText = "Código QR (Doble Clic para Ver)";
+            ColumnEntradaCodigoQr.Name = "ColumnEntradaCodigoQr";
+            ColumnEntradaCodigoQr.ReadOnly = true;
             // 
             // labelResumen
             // 
@@ -340,6 +372,19 @@ namespace Kicket.WinForms.Forms
             labelResumen.TabIndex = 6;
             labelResumen.Text = "Compras: 0 | Total Recaudado: $0,00";
             // 
+            // btnVerQrEntrada
+            // 
+            btnVerQrEntrada.BackColor = Color.FromArgb(46, 125, 50);
+            btnVerQrEntrada.ForeColor = Color.White;
+            btnVerQrEntrada.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnVerQrEntrada.Location = new Point(480, 610);
+            btnVerQrEntrada.Name = "btnVerQrEntrada";
+            btnVerQrEntrada.Size = new Size(205, 35);
+            btnVerQrEntrada.TabIndex = 7;
+            btnVerQrEntrada.Text = "📱 Ver QR de Entrada";
+            btnVerQrEntrada.UseVisualStyleBackColor = false;
+            btnVerQrEntrada.Click += btnVerQrEntrada_Click;
+            // 
             // btnAnularCompra
             // 
             btnAnularCompra.BackColor = Color.Firebrick;
@@ -347,7 +392,7 @@ namespace Kicket.WinForms.Forms
             btnAnularCompra.Location = new Point(700, 610);
             btnAnularCompra.Name = "btnAnularCompra";
             btnAnularCompra.Size = new Size(200, 35);
-            btnAnularCompra.TabIndex = 7;
+            btnAnularCompra.TabIndex = 8;
             btnAnularCompra.Text = "Anular Compra Seleccionada";
             btnAnularCompra.UseVisualStyleBackColor = false;
             btnAnularCompra.Click += btnAnularCompra_Click;
@@ -357,6 +402,7 @@ namespace Kicket.WinForms.Forms
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(920, 660);
+            Controls.Add(btnVerQrEntrada);
             Controls.Add(btnAnularCompra);
             Controls.Add(labelResumen);
             Controls.Add(dataGridViewEntradas);
@@ -402,6 +448,8 @@ namespace Kicket.WinForms.Forms
         private DataGridViewTextBoxColumn ColumnSector = null!;
         private DataGridViewTextBoxColumn ColumnCantidad = null!;
         private DataGridViewTextBoxColumn ColumnMontoTotal = null!;
+        private DataGridViewTextBoxColumn ColumnMetodoPago = null!;
+        private DataGridViewTextBoxColumn ColumnPaymentId = null!;
         private Label labelEntradas = null!;
         private DataGridView dataGridViewEntradas = null!;
         private DataGridViewTextBoxColumn ColumnEntradaId = null!;
@@ -409,7 +457,9 @@ namespace Kicket.WinForms.Forms
         private DataGridViewTextBoxColumn ColumnEntradaSector = null!;
         private DataGridViewTextBoxColumn ColumnEntradaTipo = null!;
         private DataGridViewTextBoxColumn ColumnEntradaUbicacion = null!;
+        private DataGridViewTextBoxColumn ColumnEntradaCodigoQr = null!;
         private Label labelResumen = null!;
+        private Button btnVerQrEntrada = null!;
         private Button btnAnularCompra = null!;
     }
 }

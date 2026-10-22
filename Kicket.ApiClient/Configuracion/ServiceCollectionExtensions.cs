@@ -3,13 +3,15 @@ using Kicket.ApiClient.Clientes;
 using Kicket.ApiClient.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Net.Http;
 
 namespace Kicket.ApiClient.Configuracion
 {
     /// <summary>
     /// Punto de entrada de la capa cliente. El proyecto de escritorio y el web solo llaman a
     /// AddKicketApiClient(...) y ya tienen inyectables IClubApiClient, IAuthApiClient,
-    /// IEventoApiClient, ICompraApiClient, IEntradaApiClient, etc.
+    /// IEventoApiClient, ICompraApiClient, IEntradaApiClient, IPagoApiClient, etc.
     /// </summary>
     public static class ServiceCollectionExtensions
     {
@@ -56,6 +58,7 @@ namespace Kicket.ApiClient.Configuracion
             services.AgregarCliente<IEventoApiClient, EventoApiClient>(opciones);
             services.AgregarCliente<ICompraApiClient, CompraApiClient>(opciones);
             services.AgregarCliente<IEntradaApiClient, EntradaApiClient>(opciones);
+            services.AgregarCliente<IPagoApiClient, PagoApiClient>(opciones);
 
             return services;
         }

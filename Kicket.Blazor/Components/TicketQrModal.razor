@@ -1,0 +1,134 @@
+@using Kicket.Blazor.Core.Services
+@inject IJSRuntime JS
+
+@if (Visible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.65); z-index: 1055;" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Encabezado Estilo Entrada -->
+                <div class="modal-header bg-dark text-white py-3 px-4 border-0">
+                    <div>
+                        <div class="text-uppercase small tracking-wide text-success fw-bold">Kicket Access Pass</div>
+                        <h5 class="modal-title fw-bold mb-0">Entrada Digital #@EntradaId</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" aria-label="Cerrar" @onclick="Cerrar"></button>
+                </div>
+
+                <div class="modal-body p-4 text-center">
+                    <!-- Información del Partido -->
+                    <div class="mb-3 text-start bg-light rounded-3 p-3 border">
+                        <div class="fw-bold fs-5 text-dark mb-1">@EventoNombre</div>
+                        @if (!string.IsNullOrWhiteSpace(FechaTexto))
+                        {
+                            <div class="text-secondary small mb-1">
+                                <span class="fw-semibold">Fecha:</span> @FechaTexto hs
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(EstadioNombre))
+                        {
+                            <div class="text-secondary small mb-1">
+                                <span class="fw-semibold">Estadio:</span> @EstadioNombre
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                            <div>
+                                <span class="small text-muted">Sector:</span>
+                                <div class="fw-bold text-dark">@SectorNombre</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="small text-muted">Ubicación:</span>
+                                <div>
+                                    @if (!string.IsNullOrWhiteSpace(FilaAsiento))
+                                    {
+                                        <span class="badge bg-success fs-6 px-3 py-1">@FilaAsiento</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary fs-6 px-3 py-1">Popular (Sin numerar)</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico del Código QR -->
+                    <div class="my-3 p-3 bg-white d-inline-block rounded-3 border shadow-sm">
+                        @if (!string.IsNullOrWhiteSpace(_qrDataUri))
+                        {
+                            <img src="@_qrDataUri"
+                                 alt="Código QR de Acceso"
+                                 style="width: 220px; height: 220px; display: block;"
+                                 class="img-fluid" />
+                        }
+                        else
+                        {
+                            <div style="width: 220px; height: 220px;" class="d-flex align-items-center justify-content-center text-muted">
+                                Generando código...
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Código Alfanumérico -->
+                    <div class="mt-2 mb-3">
+                        <span class="text-secondary small d-block mb-1">Código de verificación para control de acceso:</span>
+                        <code class="fs-6 px-3 py-2 bg-light border rounded-pill d-inline-block user-select-all fw-bold text-dark">
+                            @CodigoQr
+                        </code>
+                    </div>
+
+                    <div class="alert alert-light border small text-muted mb-0 py-2">
+                        <span class="me-1">ℹ️</span> Presentá este código QR directamente desde tu pantalla o impreso en el molinete de acceso al estadio.
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="Imprimir">
+                        🖨️ Imprimir Ticket
+                    </button>
+                    <button type="button" class="btn btn-dark fw-semibold px-4" @onclick="Cerrar">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public int EntradaId { get; set; }
+    [Parameter] public string EventoNombre { get; set; } = string.Empty;
+    [Parameter] public string FechaTexto { get; set; } = string.Empty;
+    [Parameter] public string EstadioNombre { get; set; } = string.Empty;
+    [Parameter] public string SectorNombre { get; set; } = string.Empty;
+    [Parameter] public string? FilaAsiento { get; set; }
+    [Parameter] public string CodigoQr { get; set; } = string.Empty;
+
+    private string _qrDataUri = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && !string.IsNullOrWhiteSpace(CodigoQr))
+        {
+            _qrDataUri = QrCodeService.GenerarQrSvgDataUri(CodigoQr);
+        }
+        else
+        {
+            _qrDataUri = string.Empty;
+        }
+    }
+
+    private async Task Cerrar()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task Imprimir()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+}

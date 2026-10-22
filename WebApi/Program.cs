@@ -76,6 +76,7 @@ builder.Services.AddScoped<IEventoService, EventoService>();
 builder.Services.AddScoped<ISectorService, SectorService>();
 builder.Services.AddScoped<IEntradaService, EntradaService>();
 builder.Services.AddScoped<ICompraService, CompraService>();
+builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -116,5 +117,6 @@ app.MapUsuarioEndPoints();
 app.MapSectorEndPoints();
 app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
+app.MapPagoEndPoints();
 
 app.Run();

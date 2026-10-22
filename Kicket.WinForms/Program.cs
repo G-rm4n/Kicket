@@ -39,6 +39,7 @@ namespace Kicket.WinForms
             services.AddTransient<FormUsuario>();
             services.AddTransient<FormSectorDetalle>();
             services.AddTransient<FormCompras>();
+            services.AddTransient<FormTicketQr>();
 
             ServiceProvider = services.BuildServiceProvider();
 

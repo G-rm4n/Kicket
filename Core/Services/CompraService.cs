@@ -20,7 +20,14 @@ namespace Core.Services
             _sectorRepository = sectorRepository;
         }
 
-        public async Task<Compra> GenerarCompraAsync(int usuarioId, int eventoId, int sectorId, int cantidad)
+        public async Task<Compra> GenerarCompraAsync(
+            int usuarioId,
+            int eventoId,
+            int sectorId,
+            int cantidad,
+            string? metodoPago = "MercadoPago",
+            string? paymentId = null,
+            string? estadoPago = "Aprobado")
         {
             if (cantidad <= 0)
             {
@@ -57,6 +64,9 @@ namespace Core.Services
                 Cantidad = cantidad,
                 MontoTotal = montoCalculado,
                 FechaCompra = DateTime.Now,
+                MetodoPago = metodoPago ?? "MercadoPago",
+                PaymentId = paymentId,
+                EstadoPago = estadoPago ?? "Aprobado",
                 Entradas = new List<Entrada>()
             };
 
@@ -99,7 +109,8 @@ namespace Core.Services
                 {
                     EventoId = eventoId,
                     SectorId = sectorId,
-                    FilaAsiento = filaAsiento
+                    FilaAsiento = filaAsiento,
+                    CodigoQr = $"KCKT-{Guid.NewGuid():N}".ToUpperInvariant()
                 };
                 nuevaCompra.Entradas.Add(nuevaEntrada);
             }

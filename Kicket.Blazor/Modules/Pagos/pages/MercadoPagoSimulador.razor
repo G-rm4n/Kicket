@@ -1,0 +1,163 @@
+@page "/pago/simulador"
+@inject NavigationManager Nav
+
+<div class="container py-5" style="max-width: 680px; min-height: 85vh;">
+    <!-- Tarjeta Principal del Simulador Mercado Pago -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <!-- Barra de Marca Mercado Pago -->
+        <div class="py-3 px-4 text-white d-flex align-items-center justify-content-between" style="background-color: #009ee3;">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fs-4">🤝</span>
+                <div>
+                    <h5 class="fw-bold mb-0">Mercado Pago</h5>
+                    <small class="opacity-75" style="font-size: 0.75rem;">CHECKOUT PRO &bull; ENTORNO DE PRUEBAS (SANDBOX)</small>
+                </div>
+            </div>
+            <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm">
+                MODO PRUEBA
+            </span>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <!-- Resumen de la Orden -->
+            <div class="bg-light p-4 rounded-4 border mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-uppercase small fw-bold text-muted">Estás pagando en Kicket</span>
+                        <h4 class="fw-bold text-dark mb-1">@EventoNombre</h4>
+                        <div class="text-secondary small">Sector: <strong class="text-dark">@SectorNombre</strong></div>
+                        <div class="text-secondary small">Cantidad: <strong class="text-dark">@Cantidad entrada@(Cantidad > 1 ? "s" : "")</strong></div>
+                    </div>
+                    <div class="text-end">
+                        <span class="small text-muted d-block">Total a Pagar</span>
+                        <span class="fs-3 fw-bolder text-success">$@Monto.ToString("N2")</span>
+                    </div>
+                </div>
+                <div class="small text-muted border-top pt-2 mt-2">
+                    Referencia de Preferencia: <code>@PrefId</code>
+                </div>
+            </div>
+
+            <!-- Selección de Resultado para Simulación -->
+            <div class="mb-4">
+                <label class="form-label fw-bold text-dark mb-2">
+                    Seleccioná el resultado que querés simular en este test:
+                </label>
+
+                <div class="d-flex flex-column gap-3">
+                    <label class="d-flex align-items-center p-3 rounded-3 border cursor-pointer @(_opcionSeleccionada == "approved" ? "border-primary bg-primary-subtle shadow-sm" : "bg-white")"
+                           style="cursor: pointer;">
+                        <input type="radio" name="simResultado" value="approved"
+                               checked="@(_opcionSeleccionada == "approved")"
+                               @onchange="@(() => _opcionSeleccionada = "approved")"
+                               class="form-check-input me-3 fs-5" />
+                        <div>
+                            <div class="fw-bold text-dark">💳 Tarjeta de Prueba &bull; Pago Aprobado (Recomendado)</div>
+                            <small class="text-secondary">Simula un pago exitoso con tarjeta Visa de prueba (4242...). Emite las entradas y los códigos QR.</small>
+                        </div>
+                    </label>
+
+                    <label class="d-flex align-items-center p-3 rounded-3 border cursor-pointer @(_opcionSeleccionada == "rejected" ? "border-danger bg-danger-subtle shadow-sm" : "bg-white")"
+                           style="cursor: pointer;">
+                        <input type="radio" name="simResultado" value="rejected"
+                               checked="@(_opcionSeleccionada == "rejected")"
+                               @onchange="@(() => _opcionSeleccionada = "rejected")"
+                               class="form-check-input me-3 fs-5" />
+                        <div>
+                            <div class="fw-bold text-danger">❌ Pago Rechazado / Fondos Insuficientes</div>
+                            <small class="text-secondary">Simula el rechazo de la operación en Mercado Pago. No emite entradas ni descuenta stock.</small>
+                        </div>
+                    </label>
+
+                    <label class="d-flex align-items-center p-3 rounded-3 border cursor-pointer @(_opcionSeleccionada == "pending" ? "border-warning bg-warning-subtle shadow-sm" : "bg-white")"
+                           style="cursor: pointer;">
+                        <input type="radio" name="simResultado" value="pending"
+                               checked="@(_opcionSeleccionada == "pending")"
+                               @onchange="@(() => _opcionSeleccionada = "pending")"
+                               class="form-check-input me-3 fs-5" />
+                        <div>
+                            <div class="fw-bold text-warning-emphasis">⏳ Pago Pendiente / En Revisión</div>
+                            <small class="text-secondary">Simula un pago que requiere autorización o pago en efectivo en trámite.</small>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-grid gap-2 pt-2">
+                <button class="btn btn-lg fw-bold text-white shadow rounded-pill py-3"
+                        style="background-color: #009ee3;"
+                        @onclick="ProcesarSimulacion">
+                    @if (_opcionSeleccionada == "approved")
+                    {
+                        <span>Pagar con Mercado Pago: $@Monto.ToString("N2")</span>
+                    }
+                    else if (_opcionSeleccionada == "rejected")
+                    {
+                        <span>Simular Pago Rechazado</span>
+                    }
+                    else
+                    {
+                        <span>Simular Pago Pendiente</span>
+                    }
+                </button>
+
+                <button class="btn btn-link text-secondary text-decoration-none mt-2" @onclick="Cancelar">
+                    &larr; Cancelar y volver al evento
+                </button>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light text-center py-3 border-0 small text-muted">
+            Entorno de prueba académico integrado para Kicket &bull; Compatible con credenciales oficiales de Mercado Pago.
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "prefId")]
+    public string PrefId { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "usuarioId")]
+    public int UsuarioId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "eventoId")]
+    public int EventoId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sectorId")]
+    public int SectorId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "cantidad")]
+    public int Cantidad { get; set; }
+
+    [SupplyParameterFromQuery(Name = "monto")]
+    public decimal Monto { get; set; }
+
+    [SupplyParameterFromQuery(Name = "eventoNombre")]
+    public string EventoNombre { get; set; } = "Entrada al Partido";
+
+    [SupplyParameterFromQuery(Name = "sectorNombre")]
+    public string SectorNombre { get; set; } = "Sector Seleccionado";
+
+    private string _opcionSeleccionada = "approved";
+
+    private void ProcesarSimulacion()
+    {
+        string paymentId = $"MP-TEST-{Random.Shared.Next(10000000, 99999999)}";
+        string targetUrl = $"/pago/resultado?status={_opcionSeleccionada}&payment_id={paymentId}&preference_id={PrefId}&usuarioId={UsuarioId}&eventoId={EventoId}&sectorId={SectorId}&cantidad={Cantidad}";
+
+        Nav.NavigateTo(targetUrl);
+    }
+
+    private void Cancelar()
+    {
+        if (EventoId > 0)
+        {
+            Nav.NavigateTo($"/comprar/{EventoId}");
+        }
+        else
+        {
+            Nav.NavigateTo("/eventos");
+        }
+    }
+}

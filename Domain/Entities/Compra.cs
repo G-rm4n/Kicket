@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,12 +10,12 @@ namespace Domain.Entities
     {
         public int CompraId { get; set; }
         public int UsuarioId { get; set; }
-        //se comentan porque no se ve sentido, una compra tendra varias entradas  o una, ellas poseeran los datos del sector y evento
-        //public int EventoId { get; set; }
-        //public int SectorId { get; set; }
         public DateTime FechaCompra { get; set; } = DateTime.Now;
         public int Cantidad { get; set; }
         public decimal MontoTotal { get; set; }
+        public string? MetodoPago { get; set; } = "MercadoPago";
+        public string? PaymentId { get; set; }
+        public string? EstadoPago { get; set; } = "Aprobado";
         public List<Entrada> Entradas { get; set; } = new List<Entrada>();
     }
 }

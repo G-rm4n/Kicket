@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Entradas;
 
@@ -48,7 +48,8 @@ namespace WebApi.EndPoints
                 CompraId = entrada.CompraId,
                 EventoId = entrada.EventoId,
                 SectorId = entrada.SectorId,
-                FilaAsiento = entrada.FilaAsiento
+                FilaAsiento = entrada.FilaAsiento,
+                CodigoQr = entrada.CodigoQr
             };
         }
     }

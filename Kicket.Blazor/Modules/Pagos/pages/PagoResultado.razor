@@ -1,0 +1,350 @@
+@page "/pago/resultado"
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Blazor.Components
+@using Kicket.Blazor.Core.HTTP
+@using Kicket.Blazor.Core.state
+@using Kicket.Contracts.Clubes
+@using Kicket.Contracts.Compras
+@using Kicket.Contracts.Entradas
+@using Kicket.Contracts.Estadios
+@using Kicket.Contracts.Eventos
+@using Kicket.Contracts.Pagos
+@using Kicket.Contracts.Sectores
+@inherits PaginaApi
+@inject IPagoApiClient pagoApi
+@inject IEventoApiClient eventoApi
+@inject ISectorApiClient sectorApi
+@inject IEstadioApiClient estadioApi
+@inject ISesionUsuario sesion
+@inject KicketAuthStateProvider authStateProvider
+@inject NavigationManager Nav
+
+<div class="container py-5" style="max-width: 860px; min-height: 85vh;">
+    @if (_cargando)
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-5">
+            <div class="spinner-border text-primary mx-auto mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+            <h4 class="fw-bold text-dark">Procesando y validando tu pago con Mercado Pago...</h4>
+            <p class="text-secondary mb-0">Estamos emitiendo tus entradas digitales y generando tus códigos QR de acceso.</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="card border-danger shadow rounded-4 p-4 mb-4">
+            <div class="card-body text-center">
+                <div class="fs-1 text-danger mb-2">⚠️</div>
+                <h4 class="fw-bold text-danger">No se pudo completar la emisión de la compra</h4>
+                <p class="text-secondary">@MensajeError</p>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    @if (EventoId > 0)
+                    {
+                        <a href="/comprar/@EventoId" class="btn btn-outline-danger fw-semibold px-4">
+                            Reintentar compra en este evento
+                        </a>
+                    }
+                    <a href="/eventos" class="btn btn-secondary px-4">
+                        Volver a la cartelera
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else if (_esAprobado && _compraConfirmada is not null)
+    {
+        <!-- PAGO APROBADO EXITOSO -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+            <div class="bg-success text-white py-4 px-4 text-center">
+                <div class="fs-1 mb-2">🎉</div>
+                <h3 class="fw-bold mb-1">¡Pago Aprobado con Éxito!</h3>
+                <p class="mb-0 opacity-90">Tu compra fue procesada y confirmada a través de Mercado Pago.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <!-- Tarjeta con Datos de la Transacción -->
+                <div class="bg-light p-4 rounded-4 border mb-4">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary small d-block">ID de Operación</span>
+                            <span class="fw-bold text-dark">#@_compraConfirmada.CompraId</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary small d-block">Mercado Pago ID</span>
+                            <span class="fw-bold text-primary text-truncate d-block" title="@PaymentId">@PaymentId</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary small d-block">Total Abonado</span>
+                            <span class="fw-bolder fs-5 text-success">$@_compraConfirmada.MontoTotal.ToString("N2")</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary small d-block">Fecha y Hora</span>
+                            <span class="fw-semibold text-dark">@_compraConfirmada.FechaCompra.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalle del Evento -->
+                @if (_evento is not null)
+                {
+                    <div class="card border-0 bg-dark text-white rounded-3 p-3 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-success mb-1">@_evento.Fecha.ToString("dddd dd/MM/yyyy - HH:mm") hs</span>
+                                <h5 class="fw-bold mb-0">@_evento.Nombre</h5>
+                                <small class="text-light opacity-75">@_nombreEstadio</small>
+                            </div>
+                            <div class="text-end mt-2 mt-md-0">
+                                <span class="badge bg-light text-dark px-3 py-2 fs-6">Sector: @_nombreSector</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Banner Informativo QR -->
+                <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between p-3 rounded-3 border gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fs-2">🎟️</span>
+                        <div>
+                            <div class="fw-bold text-success-emphasis">Entradas y Códigos QR listos para el ingreso</div>
+                            <div class="small text-muted">Cada entrada posee un código QR único e irrepetible. Presentalo en los molinetes de acceso.</div>
+                        </div>
+                    </div>
+                    @if (_compraConfirmada.Entradas.Count > 0)
+                    {
+                        <button class="btn btn-success fw-bold px-3 shadow-sm" @onclick="() => AbrirQrModal(_compraConfirmada.Entradas[0])">
+                            📱 Ver Primera Entrada QR
+                        </button>
+                    }
+                </div>
+
+                <!-- Tabla de Entradas Emitidas -->
+                <h5 class="fw-bold text-dark mb-3">Tus Entradas Emitidas:</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° Entrada</th>
+                                <th>Evento</th>
+                                <th>Sector</th>
+                                <th>Ubicación Asignada</th>
+                                <th class="text-center">Código QR / Acceso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entrada in _compraConfirmada.Entradas)
+                            {
+                                <tr>
+                                    <td class="fw-bold">#@entrada.EntradaId</td>
+                                    <td>@(_evento?.Nombre ?? $"Evento #{entrada.EventoId}")</td>
+                                    <td>@_nombreSector</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(entrada.FilaAsiento))
+                                        {
+                                            <span class="badge bg-info text-dark px-3 py-2">@entrada.FilaAsiento</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary px-3 py-2">Popular (General)</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3"
+                                                @onclick="() => AbrirQrModal(entrada)">
+                                            <span>📱</span> Ver Ticket QR
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Acciones Finales -->
+                <div class="d-flex flex-wrap gap-3 pt-2">
+                    <a href="/mis-compras" class="btn btn-primary fw-semibold px-4 py-2 rounded-pill">
+                        Ver en Mis Compras
+                    </a>
+                    <a href="/eventos" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                        Explorar más eventos
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else if (_esRechazado)
+    {
+        <!-- PAGO RECHAZADO -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+            <div class="bg-danger text-white py-4 px-4 text-center">
+                <div class="fs-1 mb-2">❌</div>
+                <h3 class="fw-bold mb-1">Pago Rechazado en Mercado Pago</h3>
+                <p class="mb-0 opacity-90">La transacción no pudo completarse satisfactoriamente.</p>
+            </div>
+            <div class="card-body p-4 p-md-5 text-center">
+                <p class="text-secondary fs-5 mb-4">
+                    No se debitó ningún monto de tu cuenta ni se emitieron entradas para esta orden.
+                </p>
+                <div class="alert alert-light border small text-muted mx-auto" style="max-width: 500px;">
+                    Motivo: La entidad emisora o Mercado Pago rechazaron la operación en el entorno de pruebas.
+                </div>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    @if (EventoId > 0)
+                    {
+                        <a href="/comprar/@EventoId" class="btn btn-danger fw-semibold px-4 py-2 rounded-pill">
+                            Intentar Nuevamente
+                        </a>
+                    }
+                    <a href="/eventos" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                        Volver a la cartelera
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- PAGO PENDIENTE -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+            <div class="bg-warning text-dark py-4 px-4 text-center">
+                <div class="fs-1 mb-2">⏳</div>
+                <h3 class="fw-bold mb-1">Pago Pendiente de Acreditación</h3>
+                <p class="mb-0">Tu pago se encuentra en proceso de revisión por parte de Mercado Pago.</p>
+            </div>
+            <div class="card-body p-4 p-md-5 text-center">
+                <p class="text-secondary mb-4">
+                    Apenas se acredite el pago en Mercado Pago, tus entradas digitales con códigos QR se generarán automáticamente y podrás verlas en la sección de <strong>Mis Compras</strong>.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/mis-compras" class="btn btn-warning fw-semibold px-4 py-2 rounded-pill">
+                        Ir a Mis Compras
+                    </a>
+                    <a href="/eventos" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                        Volver a Eventos
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal para ver el Ticket con Código QR -->
+<TicketQrModal @bind-Visible="_modalQrVisible"
+               EntradaId="_entradaModalSeleccionada?.EntradaId ?? 0"
+               EventoNombre="@(_evento?.Nombre ?? string.Empty)"
+               FechaTexto="@(_evento?.Fecha.ToString("dd/MM/yyyy HH:mm") ?? string.Empty)"
+               EstadioNombre="@_nombreEstadio"
+               SectorNombre="@_nombreSector"
+               FilaAsiento="@_entradaModalSeleccionada?.FilaAsiento"
+               CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
+
+@code {
+    [SupplyParameterFromQuery(Name = "status")]
+    public string Status { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "collection_status")]
+    public string CollectionStatus { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "payment_id")]
+    public string PaymentId { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "preference_id")]
+    public string PreferenceId { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "usuarioId")]
+    public int UsuarioId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "eventoId")]
+    public int EventoId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sectorId")]
+    public int SectorId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "cantidad")]
+    public int Cantidad { get; set; }
+
+    private bool _cargando = true;
+    private bool _esAprobado = false;
+    private bool _esRechazado = false;
+
+    private CompraDto? _compraConfirmada;
+    private EventoDto? _evento;
+    private string _nombreSector = string.Empty;
+    private string _nombreEstadio = string.Empty;
+
+    // Estado del modal QR
+    private bool _modalQrVisible = false;
+    private EntradaDto? _entradaModalSeleccionada = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true || !sesion.EstaAutenticado || sesion.Usuario is null)
+        {
+            Nav.NavigateTo("/auth/login");
+            return;
+        }
+
+        string estadoFinal = !string.IsNullOrWhiteSpace(Status) ? Status : CollectionStatus;
+
+        if (string.Equals(estadoFinal, "approved", StringComparison.OrdinalIgnoreCase))
+        {
+            _esAprobado = true;
+            await ConfirmarYGenerarCompraAsync();
+        }
+        else if (string.Equals(estadoFinal, "rejected", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(estadoFinal, "failure", StringComparison.OrdinalIgnoreCase))
+        {
+            _esRechazado = true;
+            _cargando = false;
+        }
+        else
+        {
+            _cargando = false;
+        }
+    }
+
+    private async Task ConfirmarYGenerarCompraAsync()
+    {
+        _cargando = true;
+
+        await SecureExec(async () =>
+        {
+            int usrId = UsuarioId > 0 ? UsuarioId : (sesion.Usuario?.IdUsuario ?? 0);
+            string pid = !string.IsNullOrWhiteSpace(PaymentId) ? PaymentId : $"MP-{Random.Shared.Next(10000000, 99999999)}";
+
+            var confirmRequest = new ConfirmarPagoRequest
+            {
+                UsuarioId = usrId,
+                EventoId = EventoId,
+                SectorId = SectorId,
+                Cantidad = Cantidad > 0 ? Cantidad : 1,
+                PaymentId = pid,
+                PreferenceId = PreferenceId,
+                Status = "approved",
+                MetodoPago = "MercadoPago"
+            };
+
+            _compraConfirmada = await pagoApi.ConfirmarPagoAsync(confirmRequest);
+
+            if (EventoId > 0)
+            {
+                _evento = await eventoApi.GetOneAsync(EventoId);
+                var estadio = await estadioApi.GetOneAsync(_evento.IdEstadio);
+                _nombreEstadio = $"{estadio.Nombre} ({estadio.Ciudad})";
+            }
+
+            if (SectorId > 0)
+            {
+                var sector = await sectorApi.GetOneAsync(SectorId);
+                _nombreSector = sector?.Nombre ?? $"Sector #{SectorId}";
+            }
+        });
+
+        _cargando = false;
+    }
+
+    private void AbrirQrModal(EntradaDto entrada)
+    {
+        _entradaModalSeleccionada = entrada;
+        _modalQrVisible = true;
+    }
+}

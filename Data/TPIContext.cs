@@ -47,6 +47,9 @@ namespace Data
                 c.Property(c => c.FechaCompra);
                 c.Property(c => c.Cantidad);
                 c.Property(c => c.MontoTotal).HasColumnType("decimal(18,2)");
+                c.Property(c => c.MetodoPago).HasMaxLength(50).HasDefaultValue("MercadoPago");
+                c.Property(c => c.PaymentId).HasMaxLength(100);
+                c.Property(c => c.EstadoPago).HasMaxLength(50).HasDefaultValue("Aprobado");
                 c.HasMany<Entrada>(c => c.Entradas).WithOne();
 
                 c.HasData(
@@ -56,7 +59,10 @@ namespace Data
                         UsuarioId = -1,
                         FechaCompra = new DateTime(2024, 11, 20),
                         Cantidad = 2,
-                        MontoTotal = 30000m // (2 entradas de Platea a 15000)
+                        MontoTotal = 30000m, // (2 entradas de Platea a 15000)
+                        MetodoPago = "MercadoPago",
+                        PaymentId = "MP-SEED-12345",
+                        EstadoPago = "Aprobado"
                     }
                 );
 
@@ -70,10 +76,11 @@ namespace Data
                 e.HasOne<Sector>().WithMany().HasForeignKey(e => e.SectorId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne<Compra>().WithMany(c => c.Entradas).HasForeignKey(e => e.CompraId);
                 e.Property(e => e.FilaAsiento);
+                e.Property(e => e.CodigoQr).HasMaxLength(128).IsRequired();
 
                 e.HasData(
-                    new { EntradaId = -1, EventoId = -1, SectorId = -1, CompraId = -1, FilaAsiento = "Fila 5, Asiento 10" },
-                    new { EntradaId = -2, EventoId = -1, SectorId = -1, CompraId = -1, FilaAsiento = "Fila 5, Asiento 11" }
+                    new { EntradaId = -1, EventoId = -1, SectorId = -1, CompraId = -1, FilaAsiento = "Fila 5, Asiento 10", CodigoQr = "KCKT-SEED00000000000000000000001" },
+                    new { EntradaId = -2, EventoId = -1, SectorId = -1, CompraId = -1, FilaAsiento = "Fila 5, Asiento 11", CodigoQr = "KCKT-SEED00000000000000000000002" }
                 );
             });
 

@@ -4,13 +4,16 @@
 @using Kicket.Blazor.Core.state
 @using Kicket.Contracts.Clubes
 @using Kicket.Contracts.Compras
+@using Kicket.Contracts.Entradas
 @using Kicket.Contracts.Estadios
 @using Kicket.Contracts.Eventos
+@using Kicket.Contracts.Pagos
 @inherits PaginaApi
 @inject IEventoApiClient eventoApi
 @inject IClubApiClient clubApi
 @inject IEstadioApiClient estadioApi
 @inject ICompraApiClient compraApi
+@inject IPagoApiClient pagoApi
 @inject ISesionUsuario sesion
 @inject KicketAuthStateProvider authStateProvider
 @inject NavigationManager Nav
@@ -65,25 +68,45 @@
 
         @if (_compraRealizada is not null)
         {
-            <!-- Comprobante de Compra Exitosa -->
+            <!-- Comprobante de Compra Exitosa Directa -->
             <div class="card border-success shadow rounded-4 mb-4">
                 <div class="card-header bg-success text-white py-3 px-4">
                     <h4 class="mb-0 fw-bold">¡Compra Confirmada con Éxito! (Operación #@_compraRealizada.CompraId)</h4>
                 </div>
                 <div class="card-body p-4">
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-secondary small">Fecha de Compra</div>
                             <div class="fw-semibold">@_compraRealizada.FechaCompra.ToString("dd/MM/yyyy HH:mm")</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="text-secondary small">Medio de Pago</div>
+                            <div class="fw-semibold text-primary">@(_compraRealizada.MetodoPago ?? "MercadoPago")</div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="text-secondary small">Cantidad de Entradas</div>
                             <div class="fw-semibold">@_compraRealizada.Cantidad</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-secondary small">Monto Total Abonado</div>
                             <div class="fw-bold fs-5 text-success">$@_compraRealizada.MontoTotal.ToString("N2")</div>
                         </div>
+                    </div>
+
+                    <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between p-3 mt-3 rounded-3 border gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-2">🎟️</span>
+                            <div>
+                                <div class="fw-bold">Tus códigos QR de acceso han sido generados exitosamente.</div>
+                                <div class="small text-muted">Hacé clic en <strong>Ver Ticket QR</strong> en cualquiera de tus entradas para verla en pantalla, guardarla o imprimirla. También estarán disponibles en tu sección de <strong>Mis Compras</strong>.</div>
+                            </div>
+                        </div>
+                        @if (_compraRealizada.Entradas.Count > 0)
+                        {
+                            <button class="btn btn-dark fw-semibold" @onclick="() => AbrirQrModal(_compraRealizada.Entradas[0])">
+                                📱 Ver Primera Entrada
+                            </button>
+                        }
                     </div>
 
                     <h5 class="fw-bold mt-4 mb-3">Detalle de Entradas Emitidas:</h5>
@@ -91,11 +114,12 @@
                         <table class="table table-bordered align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Código Entrada</th>
+                                    <th>N° Entrada</th>
                                     <th>Evento</th>
                                     <th>Sector</th>
                                     <th>Modalidad</th>
                                     <th>Ubicación Asignada</th>
+                                    <th class="text-center">Pase de Acceso (QR)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,13 +146,19 @@
                                                 ? "Sin numeración (Sector Popular)"
                                                 : entrada.FilaAsiento)
                                         </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3"
+                                                    @onclick="() => AbrirQrModal(entrada)">
+                                                <span>📱</span> Ver Ticket QR
+                                            </button>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="d-flex gap-3 mt-4">
+                    <div class="d-flex flex-wrap gap-3 mt-4">
                         <button class="btn btn-success fw-semibold" @onclick="NuevaCompraMismoEvento">
                             Comprar más entradas para este partido
                         </button>
@@ -148,51 +178,49 @@
                 <!-- Columna Izquierda: Sectores y Disponibilidad -->
                 <div class="col-12 col-lg-7">
                     <div class="card border-0 shadow-sm rounded-4 h-100">
-                        <div class="card-header bg-white py-3 px-4 border-bottom">
-                            <h5 class="mb-0 fw-bold">1. Seleccioná el Sector del Estadio</h5>
+                        <div class="card-header bg-white py-3 border-0">
+                            <h5 class="fw-bold mb-0">1. Seleccioná tu Sector</h5>
+                            <small class="text-secondary">Hacé clic sobre el sector deseado para ver el precio y la disponibilidad.</small>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body p-3 p-md-4">
                             @if (_sectoresDisponibles.Count == 0)
                             {
-                                <div class="alert alert-warning mb-0">
-                                    Este estadio no posee sectores configurados todavía.
+                                <div class="alert alert-warning">
+                                    No hay sectores configurados para este estadio o el evento no tiene capacidad disponible.
                                 </div>
                             }
                             else
                             {
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Sector</th>
-                                                <th>Ubicación</th>
+                                                <th>Modalidad</th>
                                                 <th>Precio</th>
                                                 <th>Capacidad</th>
                                                 <th>Vendidas</th>
                                                 <th>Disponibles</th>
-                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var sec in _sectoresDisponibles)
                                             {
                                                 bool seleccionado = _sectorSeleccionado?.SectorId == sec.SectorId;
-                                                <tr class="@(seleccionado ? "table-success" : "")"
-                                                    style="cursor: @(sec.TieneStock ? "pointer" : "not-allowed")"
+                                                <tr class="@(seleccionado ? "table-success border-success" : "") @(!sec.TieneStock ? "opacity-50 text-muted" : "cursor-pointer")"
+                                                    style="cursor: @(sec.TieneStock ? "pointer" : "not-allowed");"
                                                     @onclick="() => SeleccionarSector(sec)">
-                                                    <td class="fw-bold">@sec.Nombre</td>
+                                                    <td>
+                                                        <div class="fw-bold">@sec.Nombre</div>
+                                                    </td>
                                                     <td>
                                                         @if (sec.EsPlatea)
                                                         {
-                                                            <span class="badge bg-info text-dark" title="Se asigna fila y asiento automáticamente">
-                                                                Platea (Numerada)
-                                                            </span>
+                                                            <span class="badge bg-info text-dark">Platea (Numerada)</span>
                                                         }
                                                         else
                                                         {
-                                                            <span class="badge bg-secondary" title="Ingreso general sin numeración">
-                                                                Popular (Sin numerar)
-                                                            </span>
+                                                            <span class="badge bg-secondary">Popular</span>
                                                         }
                                                     </td>
                                                     <td class="fw-semibold">$@sec.PrecioBase.ToString("N2")</td>
@@ -208,14 +236,6 @@
                                                             <span class="badge bg-danger">Agotado</span>
                                                         }
                                                     </td>
-                                                    <td class="text-end">
-                                                        <button class="btn btn-sm @(seleccionado ? "btn-success" : "btn-outline-success")"
-                                                                disabled="@(!sec.TieneStock)"
-                                                                @onclick:stopPropagation="true"
-                                                                @onclick="() => SeleccionarSector(sec)">
-                                                            @(seleccionado ? "Seleccionado" : "Elegir")
-                                                        </button>
-                                                    </td>
                                                 </tr>
                                             }
                                         </tbody>
@@ -226,40 +246,37 @@
                     </div>
                 </div>
 
-                <!-- Columna Derecha: Resumen y Confirmación -->
+                <!-- Columna Derecha: Selección de Cantidad y Pasarela de Pago -->
                 <div class="col-12 col-lg-5">
                     <div class="card border-0 shadow-sm rounded-4 h-100">
-                        <div class="card-header bg-white py-3 px-4 border-bottom">
-                            <h5 class="mb-0 fw-bold">2. Resumen de Compra</h5>
+                        <div class="card-header bg-white py-3 border-0">
+                            <h5 class="fw-bold mb-0">2. Cantidad y Pago</h5>
+                            <small class="text-secondary">Indicá la cantidad de entradas y completá tu pago.</small>
                         </div>
                         <div class="card-body p-4 d-flex flex-column">
                             @if (_sectorSeleccionado is null)
                             {
-                                <div class="text-center text-muted my-auto py-5">
-                                    <p class="mb-0">Seleccioná un sector disponible en la tabla de la izquierda para continuar con tu compra.</p>
+                                <div class="text-center py-5 text-secondary my-auto">
+                                    <div class="fs-1 mb-2">👆</div>
+                                    <p class="mb-0">Por favor, seleccioná un sector disponible de la lista para continuar.</p>
                                 </div>
                             }
                             else
                             {
-                                <div class="mb-3">
-                                    <label class="text-secondary small d-block">Sector Elegido</label>
-                                    <span class="fs-5 fw-bold text-dark">@_sectorSeleccionado.Nombre</span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="text-secondary small d-block">Asignación de Ubicación</label>
-                                    @if (_sectorSeleccionado.EsPlatea)
-                                    {
-                                        <div class="alert alert-info py-2 px-3 small mb-0">
-                                            <strong>Sector Platea:</strong> Se asignará numeración de <strong>Fila y Asiento</strong> de forma automática al confirmar la compra.
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="alert alert-secondary py-2 px-3 small mb-0">
-                                            <strong>Sector Popular:</strong> Entrada general <strong>sin numeración</strong> de asiento.
-                                        </div>
-                                    }
+                                <div class="bg-light p-3 rounded-3 mb-3 border">
+                                    <div class="small text-secondary">Sector Seleccionado</div>
+                                    <div class="fw-bold fs-5 text-dark">@_sectorSeleccionado.Nombre</div>
+                                    <div class="small text-muted mt-1">
+                                        Precio Unitario: <strong>$@_sectorSeleccionado.PrecioBase.ToString("N2")</strong>
+                                    </div>
+                                    <div class="small text-muted">
+                                        Cupo Disponible: <strong>@_sectorSeleccionado.StockDisponible</strong> entradas
+                                    </div>
+                                    <div class="small text-info mt-1">
+                                        @( _sectorSeleccionado.EsPlatea
+                                            ? "ℹ️ Butaca asignada automáticamente de forma correlativa."
+                                            : "ℹ️ Sector Popular general sin numeración." )
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -272,13 +289,11 @@
                                            @bind:event="oninput" />
                                 </div>
 
-                                <hr />
-
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-secondary">Precio unitario:</span>
-                                    <span class="fw-semibold">$@_sectorSeleccionado.PrecioBase.ToString("N2")</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-secondary">Precio Unitario:</span>
+                                    <span>$@_sectorSeleccionado.PrecioBase.ToString("N2")</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-secondary">Cantidad:</span>
                                     <span class="fw-semibold">@CantidadValida</span>
                                 </div>
@@ -287,12 +302,35 @@
                                     <span class="fs-4 fw-bolder text-success">$@MontoTotalCalculado.ToString("N2")</span>
                                 </div>
 
-                                <div class="mt-auto pt-4 d-grid">
-                                    <button class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm"
+                                <div class="mt-auto pt-4 d-grid gap-2">
+                                    <!-- Botón Oficial de Mercado Pago -->
+                                    <button class="btn btn-lg fw-bold text-white shadow-sm rounded-pill py-3 w-100 d-flex align-items-center justify-content-center gap-2"
+                                            style="background: linear-gradient(135deg, #009ee3 0%, #007eb5 100%);"
                                             disabled="@(Procesando || !_sectorSeleccionado.TieneStock)"
-                                            @onclick="ConfirmarCompraAsync">
-                                        @(Procesando ? "Procesando compra..." : "Confirmar y Comprar Entrada")
+                                            @onclick="IniciarPagoConMercadoPagoAsync">
+                                        @if (Procesando)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>Conectando con Mercado Pago...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>🤝 Pagar con Mercado Pago &bull; $@MontoTotalCalculado.ToString("N2")</span>
+                                        }
                                     </button>
+
+                                    <div class="text-center small text-muted">
+                                        🔒 Checkout Seguro &bull; Entorno de Pruebas (Sandbox)
+                                    </div>
+
+                                    <!-- Opción secundaria para compra directa de prueba -->
+                                    <div class="text-center mt-2">
+                                        <button class="btn btn-link btn-sm text-secondary text-decoration-none"
+                                                disabled="@(Procesando || !_sectorSeleccionado.TieneStock)"
+                                                @onclick="ConfirmarCompraAsync">
+                                            o confirmar compra directa (simulación rápida sin pasarela)
+                                        </button>
+                                    </div>
                                 </div>
                             }
                         </div>
@@ -302,6 +340,16 @@
         }
     }
 </div>
+
+<!-- Modal para ver el Ticket con Código QR -->
+<TicketQrModal @bind-Visible="_modalQrVisible"
+               EntradaId="_entradaModalSeleccionada?.EntradaId ?? 0"
+               EventoNombre="@(_evento?.Nombre ?? string.Empty)"
+               FechaTexto="@(_evento?.Fecha.ToString("dd/MM/yyyy HH:mm") ?? string.Empty)"
+               EstadioNombre="@_nombreEstadio"
+               SectorNombre="@ObtenerNombreSector(_entradaModalSeleccionada?.SectorId ?? 0)"
+               FilaAsiento="@_entradaModalSeleccionada?.FilaAsiento"
+               CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
 
 @code {
     [Parameter]
@@ -316,6 +364,10 @@
     private SectorDisponibilidadDto? _sectorSeleccionado;
     private int _cantidad = 1;
     private CompraDto? _compraRealizada;
+
+    // Estado del Modal QR
+    private bool _modalQrVisible = false;
+    private EntradaDto? _entradaModalSeleccionada = null;
 
     private int MaximoPermitido => _sectorSeleccionado is null
         ? 1
@@ -379,6 +431,32 @@
         }
     }
 
+    private async Task IniciarPagoConMercadoPagoAsync()
+    {
+        if (_sectorSeleccionado is null || sesion.Usuario is null) return;
+
+        int cantidadFinal = CantidadValida;
+        var request = new PreferenciaPagoRequest
+        {
+            UsuarioId = sesion.Usuario.IdUsuario,
+            EventoId = EventoId,
+            SectorId = _sectorSeleccionado.SectorId,
+            Cantidad = cantidadFinal
+        };
+
+        await SecureExec(async () =>
+        {
+            var respuesta = await pagoApi.CrearPreferenciaAsync(request);
+            if (!string.IsNullOrWhiteSpace(respuesta.RedirectUrl))
+            {
+                bool esExterna = respuesta.RedirectUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                respuesta.RedirectUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+                Nav.NavigateTo(respuesta.RedirectUrl, forceLoad: esExterna);
+            }
+        });
+    }
+
     private async Task ConfirmarCompraAsync()
     {
         if (_sectorSeleccionado is null || sesion.Usuario is null) return;
@@ -389,7 +467,10 @@
             UsuarioId = sesion.Usuario.IdUsuario,
             EventoId = EventoId,
             SectorId = _sectorSeleccionado.SectorId,
-            Cantidad = cantidadFinal
+            Cantidad = cantidadFinal,
+            MetodoPago = "Directo / Prueba",
+            PaymentId = $"DIRECT-{Guid.NewGuid():N}".Substring(0, 16).ToUpperInvariant(),
+            EstadoPago = "Aprobado"
         };
 
         await SecureExec(async () =>
@@ -405,5 +486,17 @@
         _compraRealizada = null;
         _cantidad = 1;
         _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.TieneStock);
+    }
+
+    private void AbrirQrModal(EntradaDto entrada)
+    {
+        _entradaModalSeleccionada = entrada;
+        _modalQrVisible = true;
+    }
+
+    private string ObtenerNombreSector(int sectorId)
+    {
+        var sec = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == sectorId);
+        return sec?.Nombre ?? $"Sector #{sectorId}";
     }
 }

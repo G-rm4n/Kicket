@@ -59,7 +59,14 @@ namespace WebApi.EndPoints
             {
                 try
                 {
-                    Compra nuevaCompra = await compraService.GenerarCompraAsync(compraReq.UsuarioId, compraReq.EventoId, compraReq.SectorId, compraReq.Cantidad);
+                    Compra nuevaCompra = await compraService.GenerarCompraAsync(
+                        compraReq.UsuarioId,
+                        compraReq.EventoId,
+                        compraReq.SectorId,
+                        compraReq.Cantidad,
+                        compraReq.MetodoPago,
+                        compraReq.PaymentId,
+                        compraReq.EstadoPago);
 
                     CompraDto dto = MapearACompraDto(nuevaCompra);
 
@@ -90,7 +97,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound);
         }
 
-        private static CompraDto MapearACompraDto(Compra compra)
+        public static CompraDto MapearACompraDto(Compra compra)
         {
             return new CompraDto
             {
@@ -99,13 +106,17 @@ namespace WebApi.EndPoints
                 FechaCompra = compra.FechaCompra,
                 Cantidad = compra.Cantidad,
                 MontoTotal = compra.MontoTotal,
+                MetodoPago = compra.MetodoPago ?? "MercadoPago",
+                PaymentId = compra.PaymentId,
+                EstadoPago = compra.EstadoPago ?? "Aprobado",
                 Entradas = compra.Entradas.Select(e => new EntradaDto
                 {
                     EntradaId = e.EntradaId,
                     CompraId = e.CompraId,
                     EventoId = e.EventoId,
                     SectorId = e.SectorId,
-                    FilaAsiento = e.FilaAsiento
+                    FilaAsiento = e.FilaAsiento,
+                    CodigoQr = e.CodigoQr
                 }).ToList()
             };
         }

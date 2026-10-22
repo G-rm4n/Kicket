@@ -1,9 +1,6 @@
-﻿using Kicket.Contracts.Entradas;
+using Kicket.Contracts.Entradas;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Kicket.Contracts.Compras
 {
@@ -14,6 +11,9 @@ namespace Kicket.Contracts.Compras
         public DateTime FechaCompra { get; set; }
         public int Cantidad { get; set; }
         public decimal MontoTotal { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? PaymentId { get; set; }
+        public string? EstadoPago { get; set; }
         public List<EntradaDto> Entradas { get; set; } = new();
     }
 }

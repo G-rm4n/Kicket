@@ -19,5 +19,9 @@ namespace Kicket.Contracts.Compras
 
         [Range(1, 20, ErrorMessage = "La cantidad de entradas debe ser entre 1 y 20.")]
         public int Cantidad { get; set; }
+
+        public string? MetodoPago { get; set; } = "MercadoPago";
+        public string? PaymentId { get; set; }
+        public string? EstadoPago { get; set; } = "Aprobado";
     }
 }

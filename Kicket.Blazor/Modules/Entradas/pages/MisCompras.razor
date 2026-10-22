@@ -3,12 +3,15 @@
 @using Kicket.Blazor.Core.HTTP
 @using Kicket.Blazor.Core.state
 @using Kicket.Contracts.Compras
+@using Kicket.Contracts.Entradas
+@using Kicket.Contracts.Estadios
 @using Kicket.Contracts.Eventos
 @using Kicket.Contracts.Sectores
 @inherits PaginaApi
 @inject ICompraApiClient compraApi
 @inject IEventoApiClient eventoApi
 @inject ISectorApiClient sectorApi
+@inject IEstadioApiClient estadioApi
 @inject ISesionUsuario sesion
 @inject KicketAuthStateProvider authStateProvider
 @inject NavigationManager Nav
@@ -17,7 +20,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="fw-bold text-dark mb-1">Mis Compras y Entradas</h1>
-            <p class="text-secondary mb-0">Consultá el historial de tus compras y las ubicaciones de tus entradas.</p>
+            <p class="text-secondary mb-0">Consultá el historial de tus compras y accedé a tus códigos QR de ingreso.</p>
         </div>
         <a href="/eventos" class="btn btn-success fw-semibold rounded-pill px-4">
             Comprar Nuevas Entradas
@@ -57,10 +60,22 @@
             {
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-dark text-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center">
-                        <div>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
                             <span class="fw-bold">Compra #@compra.CompraId</span>
-                            <span class="text-secondary mx-2">|</span>
+                            <span class="text-secondary">|</span>
                             <span class="small text-light opacity-75">Fecha: @compra.FechaCompra.ToString("dd/MM/yyyy HH:mm")</span>
+                            @if (!string.IsNullOrWhiteSpace(compra.MetodoPago))
+                            {
+                                <span class="badge bg-info text-dark">💳 @compra.MetodoPago</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(compra.PaymentId))
+                            {
+                                <span class="small text-light opacity-75">(Ref: @compra.PaymentId)</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(compra.EstadoPago))
+                            {
+                                <span class="badge bg-success">@compra.EstadoPago</span>
+                            }
                         </div>
                         <div class="fw-bold text-success fs-5">
                             Total: $@compra.MontoTotal.ToString("N2") (@compra.Cantidad entrada@(compra.Cantidad > 1 ? "s" : ""))
@@ -71,11 +86,12 @@
                             <table class="table table-sm table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Código Entrada</th>
+                                        <th>N° Entrada</th>
                                         <th>Evento</th>
                                         <th>Fecha del Partido</th>
                                         <th>Sector</th>
                                         <th>Ubicación Asignada</th>
+                                        <th class="text-center">Pase de Acceso</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -96,6 +112,12 @@
                                                     <span class="badge bg-secondary px-3 py-2">Sin numeración (Popular)</span>
                                                 }
                                             </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-outline-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3"
+                                                        @onclick="() => AbrirQrModal(ent)">
+                                                    <span>📱</span> Ver Ticket QR
+                                                </button>
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>
@@ -108,10 +130,25 @@
     }
 </div>
 
+<!-- Modal para ver el Ticket con Código QR -->
+<TicketQrModal @bind-Visible="_modalQrVisible"
+               EntradaId="_entradaModalSeleccionada?.EntradaId ?? 0"
+               EventoNombre="@ObtenerNombreEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
+               FechaTexto="@ObtenerFechaEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
+               EstadioNombre="@ObtenerNombreEstadioDeEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
+               SectorNombre="@ObtenerNombreSector(_entradaModalSeleccionada?.SectorId ?? 0)"
+               FilaAsiento="@_entradaModalSeleccionada?.FilaAsiento"
+               CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
+
 @code {
     private List<CompraDto> _misCompras = new();
     private Dictionary<int, EventoDto> _eventosMap = new();
     private Dictionary<int, SectorDto> _sectoresMap = new();
+    private Dictionary<int, EstadioDto> _estadiosMap = new();
+
+    // Estado del Modal QR
+    private bool _modalQrVisible = false;
+    private EntradaDto? _entradaModalSeleccionada = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -134,11 +171,19 @@
             var compras = await compraApi.GetByUsuarioIdAsync(sesion.Usuario.IdUsuario);
             var eventos = await eventoApi.GetAllAsync();
             var sectores = await sectorApi.GetAllAsync();
+            var estadios = await estadioApi.GetAllAsync();
 
             _eventosMap = eventos.ToDictionary(e => e.IdEvento);
             _sectoresMap = sectores.ToDictionary(s => s.SectorId);
+            _estadiosMap = estadios.ToDictionary(e => e.IdEstadio);
             _misCompras = compras.OrderByDescending(c => c.FechaCompra).ToList();
         });
+    }
+
+    private void AbrirQrModal(EntradaDto entrada)
+    {
+        _entradaModalSeleccionada = entrada;
+        _modalQrVisible = true;
     }
 
     private string ObtenerNombreEvento(int eventoId) =>
@@ -146,6 +191,15 @@
 
     private string ObtenerFechaEvento(int eventoId) =>
         _eventosMap.TryGetValue(eventoId, out var ev) ? ev.Fecha.ToString("dd/MM/yyyy HH:mm") : "-";
+
+    private string ObtenerNombreEstadioDeEvento(int eventoId)
+    {
+        if (_eventosMap.TryGetValue(eventoId, out var ev) && _estadiosMap.TryGetValue(ev.IdEstadio, out var est))
+        {
+            return $"{est.Nombre} ({est.Ciudad})";
+        }
+        return string.Empty;
+    }
 
     private string ObtenerNombreSector(int sectorId) =>
         _sectoresMap.TryGetValue(sectorId, out var sec) ? sec.Nombre : $"Sector #{sectorId}";
