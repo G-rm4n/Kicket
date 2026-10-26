@@ -5,7 +5,7 @@ Sistema de venta de entradas para espectáculos deportivos. Una API REST concent
 ## Requisitos
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server Express con la instancia `.\SQLEXPRESS` (se puede cambiar en `WebApi/appsettings.json`, clave `ConnectionStrings:Local`)
+- **SQL Server LocalDB**, que viene incluido con Visual Studio. La API está configurada para usar `(localdb)\MSSQLLocalDB` (ver la nota sobre la base de datos más abajo).
 - Windows para la app de escritorio (`net8.0-windows`). La API y la web Blazor corren en cualquier sistema.
 
 ## Estructura
@@ -20,6 +20,18 @@ Sistema de venta de entradas para espectáculos deportivos. Una API REST concent
 | `Kicket.ApiClient` | Cliente HTTP de la API, usado por WinForms y Blazor |
 | `Kicket.WinForms` | Cliente de escritorio |
 | `Kicket.Blazor` | Cliente web |
+
+## Base de datos
+
+La API usa SQL Server y **crea sola la base `kicket`** (con tablas y datos de prueba) la primera vez que se ejecuta. No hace falta crear nada a mano.
+
+Por defecto se conecta a **LocalDB** (`(localdb)\MSSQLLocalDB`), que se instala junto con Visual Studio. Si se prefiere usar **SQL Server Express**, hay que cambiar la cadena de conexión en `WebApi/appsettings.json`, clave `ConnectionStrings:Local`:
+
+```
+Server=.\SQLEXPRESS;Database=kicket;Trusted_Connection=True;TrustServerCertificate=True;
+```
+
+Para cualquier otra instancia de SQL Server, reemplazar el valor de `Server=` por el nombre de esa instancia.
 
 ## Cómo ejecutarlo
 
@@ -71,10 +83,8 @@ Cada entrada comprada tiene su código QR.
 
 ## Problemas frecuentes
 
-- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas, o falla al crear usuarios.** La base se crea una sola vez (`EnsureCreated`) y no se actualiza sola. Borrarla y volver a levantar la API:
+- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas, o falla al crear usuarios.** La base se crea una sola vez (`EnsureCreated`) y no se actualiza sola. Borrarla y volver a levantar la API: El comando se puede ejecutar desde Visual Studio (*Ver > Explorador de objetos de SQL Server*, clic derecho sobre la base `kicket` > *Eliminar*, tildando "Cerrar conexiones existentes") o desde SQL Server Management Studio. Hay que detener la API antes.
 
-  ```sql
-  DROP DATABASE kicket;
-  ```
+- **La API no conecta con la base.** Revisar que la instancia de SQL Server configurada en `WebApi/appsettings.json` exista y esté disponible en la máquina (LocalDB por defecto, o la que se haya indicado). Si aparece un error de conexión al iniciar, la API sigue corriendo pero la base no se crea, y el error queda en su consola.
 
 - **La API no conecta con la base.** Revisar que SQL Server Express esté corriendo y que la cadena de conexión de `WebApi/appsettings.json` coincida con el nombre de tu instancia.
