@@ -28,9 +28,7 @@ namespace Core.Services
         {
             var user = await _usuarios.GetByEmailAsync(mail);
 
-            //Incorporar Hash en la pass al momento de registrar el usuario
-            //despues acordarnos de incorporar la comparacion con Bcrypt.net
-            if (user is null || user.Password != pass) return null;
+            if (user is null || !Contrasenas.Verificar(pass, user.Password)) return null;
 
 
             var (token, expiraEn) = GenerarToken(user);
@@ -71,7 +69,9 @@ namespace Core.Services
             var EmailDupp = await this._usuarios.ExistsEmail(usuario.Email);
 
             if (EmailDupp) throw new ArgumentException("El correo provisto Ya se encuentra en uso");
+            if (string.IsNullOrWhiteSpace(usuario.Password)) throw new ArgumentException("La contraseña es obligatoria.");
 
+            usuario.Password = Contrasenas.Hashear(usuario.Password);
             usuario.Rol = "Cliente";
             usuario.FechaRegistro=DateTime.UtcNow;
 

@@ -26,7 +26,8 @@ namespace WebApi.EndPoints
             })
             .WithName("GetEntrada")
             .Produces<EntradaDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization();
 
             app.MapGet("/entradas/evento/{eventoId}", async (int eventoId, IEntradaService entradaService) =>
             {
@@ -37,7 +38,8 @@ namespace WebApi.EndPoints
                 return Results.Ok(dtos);
             })
             .WithName("GetEntradasPorEvento")
-            .Produces<IEnumerable<EntradaDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<EntradaDto>>(StatusCodes.Status200OK)
+            .RequireAuthorization();
         }
 
         private static EntradaDto MapearAEntradaDto(Entrada entrada)

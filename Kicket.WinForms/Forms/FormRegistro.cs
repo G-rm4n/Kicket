@@ -38,7 +38,7 @@ namespace Kicket.WinForms.Forms
                     Apellido = txtApellido.Text,
                     Nombre = txtNombre.Text,
                     Email = txtEmail.Text,
-                    Pass = txtPassword.Text,/*Posteriormente encriptar*/
+                    Pass = txtPassword.Text,
                     Rol = "Usuario"
                 };
 

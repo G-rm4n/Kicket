@@ -102,7 +102,8 @@ namespace WebApi.EndPoints
             })
             .WithName("AddSector")
             .Produces<SectorDto>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             app.MapPut("/sectores", async (SectorUpdateRequest sectorReq, ISectorService sectorService) =>
             {
@@ -134,7 +135,8 @@ namespace WebApi.EndPoints
             .WithName("UpdateSector")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Produces(StatusCodes.Status400BadRequest)
+            .RequireAuthorization("Solo admin");
 
             app.MapDelete("/sectores/{id}", async (int id, ISectorService sectorService) =>
             {
@@ -157,7 +159,8 @@ namespace WebApi.EndPoints
             .WithName("DeleteSector")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status409Conflict);
+            .Produces(StatusCodes.Status409Conflict)
+            .RequireAuthorization("Solo admin");
         }
     }
 }

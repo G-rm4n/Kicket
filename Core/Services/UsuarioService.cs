@@ -34,9 +34,7 @@ namespace Core.Services
                 usuario.Rol = Roles.Usuario;
             }
 
-            // TODO: la entidad Usuario deja explícito que la password debe
-            // guardarse hasheada (ver comentario en Domain.Entities.Usuario).
-            // Falta integrar un hasher (ej. BCrypt) antes de guardar.
+            usuario.Password = Contrasenas.Hashear(usuario.Password);
             await _usuarioRepository.AddAsync(usuario);
             return usuario;
         }
@@ -50,9 +48,7 @@ namespace Core.Services
 
             var usuario = await _usuarioRepository.GetByEmailAsync(email);
 
-            // TODO: comparar contra el hash una vez que el registro guarde
-            // la password hasheada, en vez de comparar texto plano.
-            if (usuario is null || usuario.Password != password)
+            if (usuario is null || !Contrasenas.Verificar(password, usuario.Password))
             {
                 throw new UnauthorizedAccessException("Email o contraseña incorrectos.");
             }
@@ -73,6 +69,12 @@ namespace Core.Services
         public async Task<bool> ActualizarUsuarioAsync(Usuario usuario)
         {
             ValidarUsuario(usuario);
+
+            // El PUT reenvía el hash guardado cuando no se cambia la clave: no hay que volver a hashearlo.
+            if (!Contrasenas.EsHash(usuario.Password))
+            {
+                usuario.Password = Contrasenas.Hashear(usuario.Password);
+            }
 
             return await _usuarioRepository.UpdateAsync(usuario);
         }

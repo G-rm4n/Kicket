@@ -145,7 +145,7 @@ namespace Data
                 u.Property(u => u.Nombre);
                 u.Property(u => u.Apellido);
                 u.HasIndex(u => u.Email).IsUnique();
-                u.Property(u => u.Password).HasMaxLength(32);
+                u.Property(u => u.Password).HasMaxLength(100); // hash BCrypt = 60 caracteres
                 u.Property(u => u.FechaRegistro);
                 u.Property(u => u.Rol).HasDefaultValue("Usuario");
 
@@ -156,7 +156,7 @@ namespace Data
                         Nombre = "Pepe",
                         Apellido = "Perez",
                         Email = "EmailRaro@gmail.com",
-                        Password = "Has",
+                        Password = "$2b$11$IyiQ5PdqWBqL9tDUJ8Na.eUwzGSa/ZGjLxM.gXc.anaEX8nT46bQG", // BCrypt de "Has"
                         FechaRegistro = new DateTime(2024, 1, 1),
                         Rol = "Admin"
                     }
