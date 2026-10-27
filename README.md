@@ -83,8 +83,12 @@ Cada entrada comprada tiene su código QR.
 
 ## Problemas frecuentes
 
-- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas, o falla al crear usuarios.** La base se crea una sola vez (`EnsureCreated`) y no se actualiza sola. Borrarla y volver a levantar la API: El comando se puede ejecutar desde Visual Studio (*Ver > Explorador de objetos de SQL Server*, clic derecho sobre la base `kicket` > *Eliminar*, tildando "Cerrar conexiones existentes") o desde SQL Server Management Studio. Hay que detener la API antes.
+- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas, o falla al crear usuarios.** La base se crea una sola vez (`EnsureCreated`) y no se actualiza sola. Hay que detener la API, borrar la base y volver a levantar la API:
+
+  ```sql
+  DROP DATABASE kicket;
+  ```
+
+  También se puede borrar desde Visual Studio (*Ver > Explorador de objetos de SQL Server*, clic derecho sobre la base `kicket` > *Eliminar*, tildando "Cerrar conexiones existentes") o desde SQL Server Management Studio.
 
 - **La API no conecta con la base.** Revisar que la instancia de SQL Server configurada en `WebApi/appsettings.json` exista y esté disponible en la máquina (LocalDB por defecto, o la que se haya indicado). Si aparece un error de conexión al iniciar, la API sigue corriendo pero la base no se crea, y el error queda en su consola.
-
-- **La API no conecta con la base.** Revisar que SQL Server Express esté corriendo y que la cadena de conexión de `WebApi/appsettings.json` coincida con el nombre de tu instancia.
