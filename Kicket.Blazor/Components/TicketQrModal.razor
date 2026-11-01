@@ -1,6 +1,7 @@
 @using Kicket.Blazor.Core.Services
 @inject IJSRuntime JS
 
+@* Modal que muestra una entrada como ticket digital: datos del partido, ubicación y código QR. *@
 @if (Visible)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.65); z-index: 1055;" role="dialog">
@@ -39,6 +40,7 @@
                             <div class="text-end">
                                 <span class="small text-muted">Ubicación:</span>
                                 <div>
+                                    @* Si tiene asiento numerado lo muestra; si no, es popular. *@
                                     @if (!string.IsNullOrWhiteSpace(FilaAsiento))
                                     {
                                         <span class="badge bg-success fs-6 px-3 py-1">@FilaAsiento</span>
@@ -54,6 +56,7 @@
 
                     <!-- Gráfico del Código QR -->
                     <div class="my-3 p-3 bg-white d-inline-block rounded-3 border shadow-sm">
+                        @* Imagen QR generada a partir del código de la entrada. *@
                         @if (!string.IsNullOrWhiteSpace(_qrDataUri))
                         {
                             <img src="@_qrDataUri"
@@ -96,9 +99,11 @@
 }
 
 @code {
+    // Si el modal está visible (soporta @bind-Visible).
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
 
+    // Datos de la entrada a mostrar.
     [Parameter] public int EntradaId { get; set; }
     [Parameter] public string EventoNombre { get; set; } = string.Empty;
     [Parameter] public string FechaTexto { get; set; } = string.Empty;
@@ -107,8 +112,10 @@
     [Parameter] public string? FilaAsiento { get; set; }
     [Parameter] public string CodigoQr { get; set; } = string.Empty;
 
+    // Imagen QR ya generada (data URI).
     private string _qrDataUri = string.Empty;
 
+    // Cada vez que cambian los parámetros: si el modal está visible genera el QR; si no, lo limpia.
     protected override void OnParametersSet()
     {
         if (Visible && !string.IsNullOrWhiteSpace(CodigoQr))
@@ -121,12 +128,14 @@
         }
     }
 
+    // Cierra el modal y avisa al padre.
     private async Task Cerrar()
     {
         Visible = false;
         await VisibleChanged.InvokeAsync(false);
     }
 
+    // Abre el diálogo de impresión del navegador (JavaScript window.print).
     private async Task Imprimir()
     {
         await JS.InvokeVoidAsync("window.print");

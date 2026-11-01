@@ -5,6 +5,7 @@ namespace Core.Services
     /// </summary>
     internal static class Contrasenas
     {
+        // Devuelve el hash BCrypt de una contraseña en texto plano.
         public static string Hashear(string plana) => BCrypt.Net.BCrypt.HashPassword(plana);
 
         // shortcut: se detecta "ya es hash" por formato ($2x$ + 60 chars); sirve para no re-hashear

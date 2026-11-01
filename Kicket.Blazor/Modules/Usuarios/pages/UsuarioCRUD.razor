@@ -1,3 +1,4 @@
+@* Pantalla de administración de usuarios (ruta /admin/usuarios): lista y borrado. Solo para Admin (PaginaProtegida). *@
 @page "/admin/usuarios"
 @using Kicket.Blazor.Core.Auth
 @using Kicket.ApiClient.Abstracciones
@@ -6,11 +7,13 @@
 @inherits PaginaProtegida
 @inject IUsuarioApiClient usuarioApi
 
+@* Click fuera de la tabla deselecciona el usuario. *@
 <div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsUsuarioSelected = false; this.IdUsuario = 0; }">
     <h1>
         Gestionar Usuarios
     </h1>
     <div @onclick:stopPropagation="true" class="p-3">
+        @* Tabla con los usuarios; click en una fila la selecciona. *@
         <GenericTable TItem="UsuarioDto" DatosTabla="Usuarios ?? Enumerable.Empty<UsuarioDto>()"
                       OnClick="SelectFila"
                       FilaSeleccionada="@(u=>u.IdUsuario==this.IdUsuario)">
@@ -30,11 +33,13 @@
         </GenericTable>
     </div>
 
+    @* Botones de borrar (habilitado solo con un usuario seleccionado) y refrescar. *@
     <div class="d-flex justify-content-end flex-row gap-4 w-100">
         <button class="btn btn-danger text-white" disabled="@(!IsUsuarioSelected)" @onclick="EliminarUsuario">Borrar Usuario</button>
         <button class="btn bg-secondary text-white" @onclick="CargarUsuariosAsync">Refrescar</button>
     </div>
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger mt-3">
@@ -44,26 +49,33 @@
 </div>
 
 @code {
+    // Títulos de las columnas de la tabla.
     public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Apellido", "Email", "Rol"];
 
+    // Usuarios cargados desde la API.
     public IEnumerable<UsuarioDto>? Usuarios { get; set; }
 
+    // Indica si hay un usuario seleccionado.
     public bool IsUsuarioSelected { get; set; } = false;
 
+    // Id del usuario seleccionado.
     public int IdUsuario { get; set; }
 
+    // Al abrir la página: controla permisos (base) y carga los usuarios.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         await CargarUsuariosAsync();
     }
 
+    // Marca la fila clickeada como seleccionada.
     private void SelectFila(UsuarioDto usuario)
     {
         this.IdUsuario = usuario.IdUsuario;
         this.IsUsuarioSelected = true;
     }
 
+    // Pide todos los usuarios a la API.
     public async Task CargarUsuariosAsync()
     {
         await this.SecureExec(async () =>
@@ -72,6 +84,7 @@
         });
     }
 
+    // Borra el usuario seleccionado y recarga la lista.
     public async Task EliminarUsuario()
     {
         await this.SecureExec(async () =>

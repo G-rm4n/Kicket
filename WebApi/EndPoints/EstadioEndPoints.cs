@@ -4,12 +4,16 @@ using Kicket.Contracts.Estadios;
 
 namespace WebApi.EndPoints
 {
+    // Endpoints REST de estadios: listar y consultar son públicos; el resto requiere rol Admin.
     public static class EstadioEndPoints
     {
+        // Registra todas las rutas /estadios.
         public static void MapEstadioEndPoints(this WebApplication app)
         {
+            // Agrupa las rutas bajo /estadios.
             var estadiosGroup = app.MapGroup("/estadios");
 
+            // GET /estadios: lista todos los estadios como DTO.
             estadiosGroup.MapGet("/", async (IEstadioService estadioService) =>
             {
                 var estadios = await estadioService.ObtenerTodosAsync();
@@ -27,6 +31,7 @@ namespace WebApi.EndPoints
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK);
 
+            // GET /estadios/{id}: devuelve un estadio o 404.
             estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 Estadio? estadio = await estadioService.ObtenerPorIdAsync(id);
@@ -50,6 +55,7 @@ namespace WebApi.EndPoints
             .Produces<EstadioDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+            // POST /estadios: crea un estadio (solo Admin) y responde 201.
             estadiosGroup.MapPost("/", async (EstadioRequest estadioReq, IEstadioService estadioService) =>
             {
                 Estadio estadio = new()
@@ -76,6 +82,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // PUT /estadios: modifica un estadio (solo Admin); el id va en el cuerpo. 204 o 404.
             estadiosGroup.MapPut("/", async (EstadioUpdateRequest estadioReq, IEstadioService estadioService) =>
             {
                 Estadio estadio = new()
@@ -101,6 +108,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // DELETE /estadios/{id}: borra un estadio (solo Admin). 204 o 404.
             estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 var deleted = await estadioService.EliminarEstadioAsync(id);

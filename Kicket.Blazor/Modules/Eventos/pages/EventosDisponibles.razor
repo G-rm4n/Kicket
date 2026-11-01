@@ -1,3 +1,4 @@
+@* Página pública con los próximos eventos a la venta (ruta /eventos). *@
 @page "/eventos"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Blazor.Core.HTTP
@@ -20,6 +21,7 @@
             <p class="text-secondary mb-0">Seleccioná un partido para elegir tu sector y comprar tus entradas.</p>
         </div>
         <div class="mt-3 mt-md-0 d-flex gap-2">
+            @* El link a "Mis Entradas" solo aparece si hay sesión. *@
             @if (sesion.EstaAutenticado)
             {
                 <a href="/mis-compras" class="btn btn-outline-success fw-semibold">
@@ -32,6 +34,7 @@
         </div>
     </div>
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger shadow-sm">
@@ -39,6 +42,7 @@
         </div>
     }
 
+    @* Mientras carga muestra un spinner; si no hay eventos, un aviso; si hay, una tarjeta por evento. *@
     @if (Procesando)
     {
         <div class="text-center py-5">
@@ -56,6 +60,7 @@
     else
     {
         <div class="row g-4">
+            @* Tarjeta de cada evento: fecha, ciudad, clubes, estadio y botón de comprar. *@
             @foreach (var ev in _eventosDisponibles)
             {
                 <div class="col-12 col-md-6 col-lg-4">
@@ -110,16 +115,19 @@
 </div>
 
 @code {
+    // Eventos a mostrar y diccionarios de clubes y estadios (por id) para mostrar nombres.
     private List<EventoDto> _eventosDisponibles = new();
     private Dictionary<int, ClubDto> _clubes = new();
     private Dictionary<int, EstadioDto> _estadios = new();
 
+    // Al abrir la página: recupera la sesión (si la hay) y carga los datos.
     protected override async Task OnInitializedAsync()
     {
         await authStateProvider.GetAuthenticationStateAsync();
         await CargarDatosAsync();
     }
 
+    // Trae eventos, clubes y estadios de la API y se queda solo con los eventos no cancelados y futuros, ordenados por fecha.
     private async Task CargarDatosAsync()
     {
         await SecureExec(async () =>
@@ -138,20 +146,25 @@
         });
     }
 
+    // Nombre del club por id (o "Club #id" si no se encuentra).
     private string ObtenerNombreClub(int clubId) =>
         _clubes.TryGetValue(clubId, out var club) ? club.Nombre : $"Club #{clubId}";
 
+    // Abreviatura del club por id (o "CLUB").
     private string ObtenerAbreviaturaClub(int clubId) =>
         _clubes.TryGetValue(clubId, out var club) && !string.IsNullOrWhiteSpace(club.Abreviatura)
             ? club.Abreviatura
             : "CLUB";
 
+    // Nombre y dirección del estadio por id.
     private string ObtenerNombreEstadio(int estadioId) =>
         _estadios.TryGetValue(estadioId, out var est) ? $"{est.Nombre} ({est.Direccion})" : $"Estadio #{estadioId}";
 
+    // Ciudad del estadio por id.
     private string ObtenerCiudadEstadio(int estadioId) =>
         _estadios.TryGetValue(estadioId, out var est) ? est.Ciudad : string.Empty;
 
+    // Si no hay sesión manda al login; si hay, va a la página de compra del evento.
     private async Task IrAComprar(int eventoId)
     {
         var authState = await authStateProvider.GetAuthenticationStateAsync();

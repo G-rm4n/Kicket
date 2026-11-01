@@ -4,13 +4,17 @@ using Kicket.Contracts.Usuarios;
 
 namespace WebApi.EndPoints
 {
+    // Endpoints REST de usuarios. El grupo exige login y cada ruta además exige rol Admin.
     public static class UsuarioEndPoints
     {
+        // Registra todas las rutas /usuarios.
         public static void MapUsuarioEndPoints(this WebApplication app)
         {
+            // Prefijo /usuarios y autorización obligatoria.
             var usuariosGroup = app.MapGroup("/usuarios")
                                    .RequireAuthorization();
 
+            // GET /usuarios: lista todos los usuarios como DTO (sin contraseña).
             usuariosGroup.MapGet("/", async (IUsuarioService usuarioService) =>
             {
                 var usuarios = await usuarioService.ObtenerTodosAsync();
@@ -30,6 +34,7 @@ namespace WebApi.EndPoints
             .Produces<IEnumerable<UsuarioDto>>(StatusCodes.Status200OK)
             .RequireAuthorization("Solo admin");
 
+            // GET /usuarios/{id}: devuelve un usuario o 404.
             usuariosGroup.MapGet("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
                 Usuario? usuario = await usuarioService.ObtenerPorIdAsync(id);
@@ -55,6 +60,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .RequireAuthorization("Solo admin");
 
+            // POST /usuarios: crea un usuario (solo Admin); si no viene rol usa "Usuario". Responde 201.
             usuariosGroup.MapPost("/", async (UsuarioRequest usuarioReq, IUsuarioService usuarioService) =>
             {
                 Usuario usuario = new()
@@ -65,6 +71,7 @@ namespace WebApi.EndPoints
                     Password = usuarioReq.Pass,
                     Rol = string.IsNullOrWhiteSpace(usuarioReq.Rol) ? Roles.Usuario : usuarioReq.Rol
                 };
+                // El servicio valida, controla email repetido (409) y hashea la contraseña.
                 Usuario newUsuario = await usuarioService.RegistrarUsuarioAsync(usuario);
 
                 UsuarioDto dto = new()
@@ -82,8 +89,10 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // PUT /usuarios: modifica un usuario (solo Admin). Si la contraseña o el rol vienen vacíos, conserva los actuales.
             usuariosGroup.MapPut("/", async (UsuarioUpdateRequest usuarioReq, IUsuarioService usuarioService) =>
             {
+                // Busca el usuario actual para poder conservar contraseña y rol.
                 var existente = await usuarioService.ObtenerPorIdAsync(usuarioReq.IdUsuario);
                 if (existente is null)
                 {
@@ -100,6 +109,7 @@ namespace WebApi.EndPoints
                     Rol = string.IsNullOrWhiteSpace(usuarioReq.Rol) ? existente.Rol : usuarioReq.Rol
                 };
 
+                // Actualiza; 204 si sale bien, 404 si no existe.
                 var found = await usuarioService.ActualizarUsuarioAsync(usuario);
                 if (!found)
                 {
@@ -113,6 +123,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // DELETE /usuarios/{id}: borra un usuario (solo Admin). 204 o 404.
             usuariosGroup.MapDelete("/{id}", async (int id, IUsuarioService usuarioService) =>
             {
                 var deleted = await usuarioService.EliminarUsuarioAsync(id);

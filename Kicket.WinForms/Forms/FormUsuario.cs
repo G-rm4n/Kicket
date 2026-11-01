@@ -6,26 +6,32 @@ using Kicket.Contracts.Usuarios;
 
 namespace Kicket.WinForms.Forms
 {
+    // ABM de usuarios: lista, alta, modificación y baja usando la API.
     public partial class FormUsuario : Form
     {
+        // Cliente HTTP de usuarios y el id del usuario seleccionado (null si no hay).
         private readonly IUsuarioApiClient _usuarioApiClient;
         private int? _usuarioIdSeleccionado = null;
 
+        // Constructor: recibe el cliente por inyección y carga el combo de roles.
         public FormUsuario(IUsuarioApiClient usuarioApiClient)
         {
             InitializeComponent();
             _usuarioApiClient = usuarioApiClient;
 
+            // Opciones del combo de roles: Cliente, Usuario y Admin.
             comboBoxRol.DataSource = new[] { Roles.Cliente, Roles.Usuario, Roles.Admin };
             comboBoxRol.SelectedIndex = 0;
         }
 
+        // Al cargar: usa las columnas del diseñador y carga los usuarios.
         private async void FormUsuario_Load(object sender, EventArgs e)
         {
             dataGridViewUsuarios.AutoGenerateColumns = false;
             await CargarUsuarios();
         }
 
+        // Pide los usuarios a la API, los muestra en la grilla y limpia el formulario.
         private async Task CargarUsuarios()
         {
             try
@@ -40,6 +46,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Al hacer click en una fila, guarda el id y copia los datos a los campos (la contraseña queda vacía).
         private void dataGridViewUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
@@ -50,6 +57,7 @@ namespace Kicket.WinForms.Forms
                 textBoxNombre.Text = fila.Cells[1].Value?.ToString();
                 textBoxApellido.Text = fila.Cells[2].Value?.ToString();
                 textBoxEmail.Text = fila.Cells[3].Value?.ToString();
+                // Si el rol de la fila está en el combo, lo selecciona.
                 string? rolFila = fila.Cells[4].Value?.ToString();
                 if (!string.IsNullOrWhiteSpace(rolFila) && comboBoxRol.Items.Contains(rolFila))
                 {
@@ -59,11 +67,13 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Botón limpiar.
         private void buttonLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
         }
 
+        // Vacía los campos, vuelve el rol al primero y quita la selección.
         private void LimpiarFormulario()
         {
             textBoxNombre.Clear();
@@ -74,8 +84,10 @@ namespace Kicket.WinForms.Forms
             _usuarioIdSeleccionado = null;
         }
 
+        // Crea un usuario nuevo con los datos de los campos.
         private async void buttonGuardar_Click(object sender, EventArgs e)
         {
+            // Validación manual: nombre, email y contraseña obligatorios.
             if (string.IsNullOrWhiteSpace(textBoxNombre.Text) || string.IsNullOrWhiteSpace(textBoxEmail.Text))
             {
                 MessageBox.Show("Nombre y Email son campos obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -88,6 +100,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de alta con el rol elegido en el combo.
             var nuevoUsuario = new UsuarioRequest
             {
                 Nombre = textBoxNombre.Text.Trim(),
@@ -99,6 +112,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // POST /usuarios, avisa y recarga la grilla.
                 await _usuarioApiClient.CreateAsync(nuevoUsuario);
                 MessageBox.Show("Usuario guardado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 await CargarUsuarios();
@@ -109,6 +123,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Modifica el usuario seleccionado.
         private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (_usuarioIdSeleccionado == null)
@@ -117,6 +132,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Si la contraseña está vacía se manda null: la API conserva la contraseña actual.
             var usuarioModificado = new UsuarioUpdateRequest
             {
                 IdUsuario = _usuarioIdSeleccionado.Value,
@@ -129,6 +145,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // PUT /usuarios, avisa y recarga la grilla.
                 await _usuarioApiClient.UpdateAsync(usuarioModificado);
                 MessageBox.Show("Usuario actualizado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 await CargarUsuarios();
@@ -139,6 +156,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Elimina el usuario seleccionado, previa confirmación.
         private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (_usuarioIdSeleccionado == null)
@@ -158,6 +176,7 @@ namespace Kicket.WinForms.Forms
             {
                 try
                 {
+                    // DELETE /usuarios/{id}, avisa y recarga la grilla.
                     await _usuarioApiClient.DeleteAsync(_usuarioIdSeleccionado.Value);
                     MessageBox.Show("Usuario eliminado.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await CargarUsuarios();

@@ -12,13 +12,16 @@ namespace Kicket.ApiClient.Http
     /// </summary>
     public abstract class ApiClientBase
     {
+        // HttpClient con el que se hacen todas las requests.
         protected readonly HttpClient Http;
 
+        // Opciones de JSON: no distingue mayúsculas/minúsculas en los nombres de propiedades.
         protected static readonly JsonSerializerOptions JsonOpciones = new()
         {
             PropertyNameCaseInsensitive = true
         };
 
+        // Constructor: guarda el HttpClient que le pasa el cliente concreto.
         protected ApiClientBase(HttpClient http)
         {
             Http = http;
@@ -43,16 +46,22 @@ namespace Kicket.ApiClient.Http
         protected Task DeleteAsync(string ruta, CancellationToken ct = default) =>
             SinCuerpoAsync(() => new HttpRequestMessage(HttpMethod.Delete, ruta), ct);
 
+        // Arma una request con el objeto serializado a JSON como cuerpo.
         private static HttpRequestMessage Crear(HttpMethod metodo, string ruta, object cuerpo) =>
             new(metodo, ruta) { Content = JsonContent.Create(cuerpo, options: JsonOpciones) };
 
+        // Ejecuta la request, verifica que la respuesta sea exitosa y deserializa el JSON a T.
         private async Task<T> LeerCuerpoAsync<T>(Func<HttpRequestMessage> fabrica, CancellationToken ct)
         {
+            // Envía la request.
             using var respuesta = await EjecutarAsync(fabrica, ct);
+            // Si el estado no es 2xx, tira ApiException.
             await GarantizarExitoAsync(respuesta, ct);
 
+            // Convierte el cuerpo JSON al tipo pedido.
             var resultado = await respuesta.Content.ReadFromJsonAsync<T>(JsonOpciones, ct);
 
+            // Si la API respondió OK pero sin datos, también es un error.
             if (resultado is null)
                 throw new ApiException(
                     respuesta.StatusCode,
@@ -61,6 +70,7 @@ namespace Kicket.ApiClient.Http
             return resultado;
         }
 
+        // Ejecuta la request y solo verifica que haya salido bien (no lee cuerpo).
         private async Task SinCuerpoAsync(Func<HttpRequestMessage> fabrica, CancellationToken ct)
         {
             using var respuesta = await EjecutarAsync(fabrica, ct);
@@ -73,9 +83,11 @@ namespace Kicket.ApiClient.Http
         {
             try
             {
+                // Crea la request con la fábrica y la envía.
                 using var request = fabrica();
                 return await Http.SendAsync(request, ct);
             }
+            // Timeout: la API no respondió a tiempo.
             catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
             {
                 throw new ApiException(
@@ -84,6 +96,7 @@ namespace Kicket.ApiClient.Http
                     esFalloDeConexion: true,
                     inner: ex);
             }
+            // Error de red: la API no está levantada o la URL es incorrecta.
             catch (HttpRequestException ex)
             {
                 throw new ApiException(
@@ -99,6 +112,7 @@ namespace Kicket.ApiClient.Http
         {
             if (respuesta.IsSuccessStatusCode) return;
 
+            // Lee el cuerpo de error e intenta interpretarlo como ApiError.
             var cuerpo = await respuesta.Content.ReadAsStringAsync(ct);
             ApiError? error = null;
 
@@ -109,6 +123,7 @@ namespace Kicket.ApiClient.Http
                 catch (JsonException) { /* se usa el cuerpo crudo como mensaje */ }
             }
 
+            // Arma y tira la excepción con el mejor mensaje disponible.
             throw ApiException.DesdeRespuesta(respuesta.StatusCode, error, cuerpo);
         }
     }

@@ -1,3 +1,5 @@
+@* Página de compra de entradas de un evento (ruta /comprar/{EventoId}): elegir sector y cantidad, *@
+@* y pagar con Mercado Pago (o el simulador) o hacer una compra directa de prueba. *@
 @page "/comprar/{EventoId:int}"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Blazor.Core.HTTP
@@ -25,6 +27,7 @@
         </a>
     </div>
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger shadow-sm">
@@ -32,6 +35,7 @@
         </div>
     }
 
+    @* Mientras carga el evento muestra un spinner. *@
     @if (_evento is null && Procesando)
     {
         <div class="text-center py-5">
@@ -66,6 +70,7 @@
             </div>
         </div>
 
+        @* Si ya se hizo una compra directa, se muestra el comprobante con las entradas emitidas. *@
         @if (_compraRealizada is not null)
         {
             <!-- Comprobante de Compra Exitosa Directa -->
@@ -123,6 +128,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @* Una fila por entrada: sector, si es platea o popular, ubicación y botón para ver el QR. *@
                                 @foreach (var entrada in _compraRealizada.Entradas)
                                 {
                                     var sectorInfo = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == entrada.SectorId);
@@ -172,6 +178,7 @@
                 </div>
             </div>
         }
+        @* Si todavía no compró: a la izquierda los sectores, a la derecha la cantidad y el pago. *@
         else
         {
             <div class="row g-4">
@@ -204,6 +211,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            @* Fila de cada sector; se resalta el seleccionado y los agotados no se pueden elegir. *@
                                             @foreach (var sec in _sectoresDisponibles)
                                             {
                                                 bool seleccionado = _sectorSeleccionado?.SectorId == sec.SectorId;
@@ -254,6 +262,7 @@
                             <small class="text-secondary">Indicá la cantidad de entradas y completá tu pago.</small>
                         </div>
                         <div class="card-body p-4 d-flex flex-column">
+                            @* Sin sector elegido se pide que elija uno; con sector, se muestra el resumen y los botones de pago. *@
                             @if (_sectorSeleccionado is null)
                             {
                                 <div class="text-center py-5 text-secondary my-auto">
@@ -281,6 +290,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Cantidad de Entradas (Máx. @MaximoPermitido)</label>
+                                    @* La cantidad se actualiza mientras se escribe (oninput); va de 1 al máximo permitido. *@
                                     <input type="number"
                                            class="form-control form-control-lg"
                                            min="1"
@@ -304,6 +314,7 @@
 
                                 <div class="mt-auto pt-4 d-grid gap-2">
                                     <!-- Botón Oficial de Mercado Pago -->
+                                    @* Botón principal: inicia el pago con Mercado Pago. *@
                                     <button class="btn btn-lg fw-bold text-white shadow-sm rounded-pill py-3 w-100 d-flex align-items-center justify-content-center gap-2"
                                             style="background: linear-gradient(135deg, #009ee3 0%, #007eb5 100%);"
                                             disabled="@(Procesando || !_sectorSeleccionado.TieneStock)"
@@ -325,6 +336,7 @@
 
                                     <!-- Opción secundaria para compra directa de prueba -->
                                     <div class="text-center mt-2">
+                                        @* Botón secundario: compra directa sin pasarela (POST /compras). *@
                                         <button class="btn btn-link btn-sm text-secondary text-decoration-none"
                                                 disabled="@(Procesando || !_sectorSeleccionado.TieneStock)"
                                                 @onclick="ConfirmarCompraAsync">
@@ -352,14 +364,17 @@
                CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
 
 @code {
+    // Id del evento que llega en la URL.
     [Parameter]
     public int EventoId { get; set; }
 
+    // Datos del evento y nombres para mostrar.
     private EventoDto? _evento;
     private string _nombreLocal = string.Empty;
     private string _nombreVisitante = string.Empty;
     private string _nombreEstadio = string.Empty;
 
+    // Sectores con su disponibilidad, sector elegido, cantidad y compra realizada.
     private List<SectorDisponibilidadDto> _sectoresDisponibles = new();
     private SectorDisponibilidadDto? _sectorSeleccionado;
     private int _cantidad = 1;
@@ -369,16 +384,20 @@
     private bool _modalQrVisible = false;
     private EntradaDto? _entradaModalSeleccionada = null;
 
+    // Máximo de entradas que se pueden pedir: hasta 20 y nunca más que el stock disponible.
     private int MaximoPermitido => _sectorSeleccionado is null
         ? 1
         : Math.Min(20, Math.Max(1, _sectorSeleccionado.StockDisponible));
 
+    // Cantidad limitada entre 1 y el máximo permitido.
     private int CantidadValida => Math.Clamp(_cantidad, 1, MaximoPermitido);
 
+    // Total a pagar: precio del sector por la cantidad válida.
     private decimal MontoTotalCalculado => _sectorSeleccionado is null
         ? 0m
         : _sectorSeleccionado.PrecioBase * CantidadValida;
 
+    // Al abrir la página: exige sesión y carga el evento con su disponibilidad.
     protected override async Task OnInitializedAsync()
     {
         var authState = await authStateProvider.GetAuthenticationStateAsync();
@@ -391,6 +410,7 @@
         await CargarEventoYDisponibilidadAsync();
     }
 
+    // Trae el evento, los clubes, el estadio y la disponibilidad por sector; arma los nombres para mostrar.
     private async Task CargarEventoYDisponibilidadAsync()
     {
         await SecureExec(async () =>
@@ -403,9 +423,11 @@
             _nombreVisitante = clubes.FirstOrDefault(c => c.ClubId == _evento.IdEquipoVisitante)?.Nombre ?? $"Club #{_evento.IdEquipoVisitante}";
             _nombreEstadio = $"{estadio.Nombre} - {estadio.Direccion}, {estadio.Ciudad}";
 
+            // Disponibilidad (stock por sector) del evento.
             var disp = await eventoApi.GetDisponibilidadAsync(EventoId);
             _sectoresDisponibles = disp.ToList();
 
+            // Mantiene el sector elegido si sigue con stock; si no, elige el primero con stock.
             if (_sectorSeleccionado is not null)
             {
                 _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == _sectorSeleccionado.SectorId && s.TieneStock);
@@ -417,6 +439,7 @@
         });
     }
 
+    // Selecciona un sector (solo si tiene stock) y ajusta la cantidad al rango permitido.
     private void SeleccionarSector(SectorDisponibilidadDto sector)
     {
         if (!sector.TieneStock) return;
@@ -431,6 +454,8 @@
         }
     }
 
+    // Pide a la API la preferencia de pago y redirige a la URL que devuelve
+    // (si es externa, como Mercado Pago real, recarga la página completa).
     private async Task IniciarPagoConMercadoPagoAsync()
     {
         if (_sectorSeleccionado is null || sesion.Usuario is null) return;
@@ -457,6 +482,7 @@
         });
     }
 
+    // Compra directa de prueba: llama a POST /compras con un id de pago inventado y actualiza la disponibilidad.
     private async Task ConfirmarCompraAsync()
     {
         if (_sectorSeleccionado is null || sesion.Usuario is null) return;
@@ -481,6 +507,7 @@
         });
     }
 
+    // Limpia la compra hecha para poder comprar de nuevo en el mismo evento.
     private void NuevaCompraMismoEvento()
     {
         _compraRealizada = null;
@@ -488,12 +515,14 @@
         _sectorSeleccionado = _sectoresDisponibles.FirstOrDefault(s => s.TieneStock);
     }
 
+    // Abre el modal del QR con la entrada elegida.
     private void AbrirQrModal(EntradaDto entrada)
     {
         _entradaModalSeleccionada = entrada;
         _modalQrVisible = true;
     }
 
+    // Nombre del sector por id.
     private string ObtenerNombreSector(int sectorId)
     {
         var sec = _sectoresDisponibles.FirstOrDefault(s => s.SectorId == sectorId);

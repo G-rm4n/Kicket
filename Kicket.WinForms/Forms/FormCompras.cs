@@ -12,25 +12,32 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.WinForms.Forms
 {
+    // Pantalla de compras del administrador: lista todas las compras con filtros, muestra sus entradas,
+    // permite ver el QR de cada entrada y anular (borrar) una compra.
     public partial class FormCompras : Form
     {
+        // Clientes HTTP necesarios (inyectados).
         private readonly ICompraApiClient _compraApiClient;
         private readonly IEventoApiClient _eventoApiClient;
         private readonly IUsuarioApiClient _usuarioApiClient;
         private readonly ISectorApiClient _sectorApiClient;
 
+        // Todas las compras traídas de la API y diccionarios (por id) para mostrar nombres.
         private IReadOnlyList<CompraDto> _todasLasCompras = Array.Empty<CompraDto>();
         private Dictionary<int, EventoDto> _eventosMap = new();
         private Dictionary<int, UsuarioDto> _usuariosMap = new();
         private Dictionary<int, SectorDto> _sectoresMap = new();
+        // Id de la compra seleccionada en la grilla superior.
         private int? _compraIdSeleccionada = null;
 
+        // Ítem del combo de filtro por evento (IdEvento null = "Todos").
         private sealed class EventoFiltroItem
         {
             public int? IdEvento { get; set; }
             public string Descripcion { get; set; } = string.Empty;
         }
 
+        // Fila "lista para mostrar" de la grilla de compras (textos ya formateados).
         private sealed class CompraFilaVista
         {
             public int CompraId { get; set; }
@@ -45,6 +52,7 @@ namespace Kicket.WinForms.Forms
             public string EstadoPago { get; set; } = string.Empty;
         }
 
+        // Fila "lista para mostrar" de la grilla de entradas.
         private sealed class EntradaFilaVista
         {
             public int EntradaId { get; set; }
@@ -55,6 +63,7 @@ namespace Kicket.WinForms.Forms
             public string CodigoQr { get; set; } = string.Empty;
         }
 
+        // Constructor: recibe los clientes HTTP por inyección.
         public FormCompras(
             ICompraApiClient compraApiClient,
             IEventoApiClient eventoApiClient,
@@ -68,6 +77,7 @@ namespace Kicket.WinForms.Forms
             _sectorApiClient = sectorApiClient;
         }
 
+        // Al cargar: configura las grillas, pone el rango de fechas del último mes y carga los datos.
         private async void FormCompras_Load(object sender, EventArgs e)
         {
             dataGridViewCompras.AutoGenerateColumns = false;
@@ -78,6 +88,7 @@ namespace Kicket.WinForms.Forms
             await CargarDatosCompletosAsync();
         }
 
+        // Trae eventos, usuarios, sectores y compras; arma los diccionarios y el combo de eventos, y muestra la grilla.
         private async Task CargarDatosCompletosAsync()
         {
             try
@@ -91,6 +102,7 @@ namespace Kicket.WinForms.Forms
                 _usuariosMap = usuarios.ToDictionary(u => u.IdUsuario);
                 _sectoresMap = sectores.ToDictionary(s => s.SectorId);
 
+                // El combo arranca con la opción "Todos los Eventos" y después un ítem por evento.
                 var itemsFiltro = new List<EventoFiltroItem>
                 {
                     new EventoFiltroItem { IdEvento = null, Descripcion = "-- Todos los Eventos --" }
@@ -113,17 +125,20 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Habilita o deshabilita los selectores de fecha según el checkbox.
         private void checkBoxFiltrarFecha_CheckedChanged(object sender, EventArgs e)
         {
             dateTimePickerDesde.Enabled = checkBoxFiltrarFecha.Checked;
             dateTimePickerHasta.Enabled = checkBoxFiltrarFecha.Checked;
         }
 
+        // Aplica los filtros elegidos.
         private void btnFiltrar_Click(object sender, EventArgs e)
         {
             AplicarFiltrosYMostrar();
         }
 
+        // Quita los filtros y recarga todo desde la API.
         private async void btnRefrescar_Click(object sender, EventArgs e)
         {
             checkBoxFiltrarFecha.Checked = false;
@@ -134,16 +149,19 @@ namespace Kicket.WinForms.Forms
             await CargarDatosCompletosAsync();
         }
 
+        // Filtra las compras en memoria (por evento y/o rango de fechas) y las muestra en la grilla con el resumen.
         private void AplicarFiltrosYMostrar()
         {
             IEnumerable<CompraDto> filtradas = _todasLasCompras;
 
+            // Filtro por evento: compras que tengan alguna entrada de ese evento.
             if (comboBoxFiltroEvento.SelectedItem is EventoFiltroItem itemEvento && itemEvento.IdEvento.HasValue)
             {
                 int idEventoBuscado = itemEvento.IdEvento.Value;
                 filtradas = filtradas.Where(c => c.Entradas.Any(ent => ent.EventoId == idEventoBuscado));
             }
 
+            // Filtro por fecha: desde el inicio del día "desde" hasta el final del día "hasta".
             if (checkBoxFiltrarFecha.Checked)
             {
                 DateTime desde = dateTimePickerDesde.Value.Date;
@@ -153,6 +171,7 @@ namespace Kicket.WinForms.Forms
 
             var listaFiltrada = filtradas.OrderByDescending(c => c.FechaCompra).ToList();
 
+            // Convierte cada compra en una fila con textos legibles (evento y sector de la primera entrada, usuario, monto...).
             var filasCompras = listaFiltrada.Select(c =>
             {
                 var primeraEntrada = c.Entradas.FirstOrDefault();
@@ -189,20 +208,24 @@ namespace Kicket.WinForms.Forms
                 };
             }).ToList();
 
+            // Muestra las compras y limpia la grilla de entradas y la selección.
             dataGridViewCompras.DataSource = filasCompras;
             dataGridViewEntradas.DataSource = null;
             _compraIdSeleccionada = null;
 
+            // Resumen: cantidad de compras, entradas vendidas y total recaudado.
             decimal totalRecaudado = listaFiltrada.Sum(c => c.MontoTotal);
             int totalEntradas = listaFiltrada.Sum(c => c.Cantidad);
             labelResumen.Text = $"Compras: {listaFiltrada.Count} | Entradas Vendidas: {totalEntradas} | Total Recaudado: ${totalRecaudado:N2}";
 
+            // Si hay compras, muestra las entradas de la primera.
             if (filasCompras.Count > 0)
             {
                 MostrarEntradasDeCompra(filasCompras[0].CompraId);
             }
         }
 
+        // Al hacer click en una compra, muestra sus entradas.
         private void dataGridViewCompras_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
@@ -212,6 +235,7 @@ namespace Kicket.WinForms.Forms
             MostrarEntradasDeCompra(compraId);
         }
 
+        // Busca la compra y llena la grilla de entradas con sus datos legibles.
         private void MostrarEntradasDeCompra(int compraId)
         {
             _compraIdSeleccionada = compraId;
@@ -250,12 +274,14 @@ namespace Kicket.WinForms.Forms
             dataGridViewEntradas.DataSource = filasEntradas;
         }
 
+        // Doble click en una entrada: muestra su QR.
         private void dataGridViewEntradas_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
             MostrarQrDeFila(e.RowIndex);
         }
 
+        // Botón "Ver QR": muestra el QR de la entrada seleccionada.
         private void btnVerQrEntrada_Click(object sender, EventArgs e)
         {
             if (dataGridViewEntradas.CurrentRow is null || dataGridViewEntradas.CurrentRow.Index < 0)
@@ -267,6 +293,7 @@ namespace Kicket.WinForms.Forms
             MostrarQrDeFila(dataGridViewEntradas.CurrentRow.Index);
         }
 
+        // Abre el formulario del ticket QR con los datos de la entrada de esa fila.
         private void MostrarQrDeFila(int rowIndex)
         {
             if (dataGridViewEntradas.DataSource is not List<EntradaFilaVista> entradas || rowIndex >= entradas.Count)
@@ -280,6 +307,7 @@ namespace Kicket.WinForms.Forms
             formQr.ShowDialog(this);
         }
 
+        // Anula la compra seleccionada (DELETE /compras/{id}), previa confirmación, y recarga los datos.
         private async void btnAnularCompra_Click(object sender, EventArgs e)
         {
             if (_compraIdSeleccionada is null)

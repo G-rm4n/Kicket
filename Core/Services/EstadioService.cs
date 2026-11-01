@@ -8,15 +8,18 @@ using System.Threading.Tasks;
 
 namespace Core.Services
 {
+    // Lógica de negocio de estadios: valida los datos y delega en el repositorio.
     public class EstadioService : IEstadioService
     {
         private readonly IEstadioRepository _estadioRepository;
 
+        // Recibe el repositorio de estadios por inyección de dependencias.
         public EstadioService(IEstadioRepository estadioRepository)
         {
             _estadioRepository = estadioRepository;
         }
 
+        // Valida el estadio y lo guarda.
         public async Task<Estadio> CrearEstadioAsync(Estadio estadio)
         {
             ValidarEstadio(estadio);
@@ -25,16 +28,19 @@ namespace Core.Services
             return estadio;
         }
 
+        // Devuelve un estadio por id.
         public async Task<Estadio?> ObtenerPorIdAsync(int id)
         {
             return await _estadioRepository.GetByIdAsync(id);
         }
 
+        // Devuelve todos los estadios.
         public async Task<IEnumerable<Estadio>> ObtenerTodosAsync()
         {
             return await _estadioRepository.GetAllAsync();
         }
 
+        // Valida el estadio y lo actualiza.
         public async Task<bool> ActualizarEstadioAsync(Estadio estadio)
         {
             ValidarEstadio(estadio);
@@ -42,11 +48,13 @@ namespace Core.Services
             return await _estadioRepository.UpdateAsync(estadio);
         }
 
+        // Elimina el estadio. Si tiene sectores, la BD lo impide (FK Restrict).
         public async Task<bool> EliminarEstadioAsync(int id)
         {
             return await _estadioRepository.DeleteAsync(id);
         }
 
+        // Reglas: no nulo, y nombre, dirección y ciudad obligatorios (si no, ArgumentException → 400).
         private static void ValidarEstadio(Estadio estadio)
         {
             if (estadio is null)

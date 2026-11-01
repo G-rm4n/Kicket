@@ -1,4 +1,5 @@
-﻿@page "/auth/login"
+﻿@* Página de inicio de sesión (ruta /auth/login). *@
+@page "/auth/login"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.ApiClient.Http
 @using Kicket.Blazor.Core.session;
@@ -26,6 +27,7 @@
         <div class="col-12 col-md-6 d-flex align-items-center justify-content-center flex-column p-4 p-md-5">
             <div class="w-100" style="max-width: 450px;">
 
+                @* Muestra el error de la API (por ejemplo, credenciales incorrectas). *@
                 @if (!string.IsNullOrEmpty(MensajeError))
                 {
                     <div class="alert alert-danger text-center shadow-sm">
@@ -40,6 +42,7 @@
                     INGRESAR A MI CUENTA
                 </h2>
 
+                @* Formulario de login; al enviarlo llama a EnviarCredenciales. *@
                 <LoginForm submit="EnviarCredenciales"></LoginForm>
             </div>
         </div>
@@ -48,6 +51,7 @@
 
 @code {
 
+    // Hace el login en la API, avisa que cambió el estado de autenticación y vuelve al inicio.
     private async Task EnviarCredenciales(LoginRequest loginData)
     {
         await this.SecureExec(async () =>

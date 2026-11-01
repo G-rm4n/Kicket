@@ -1,3 +1,4 @@
+@* Pantalla de administración de clubes (ruta /Admin/Clubs): listar, crear, editar y borrar. Solo Admin. *@
 @page "/Admin/Clubs"
 @using Kicket.Contracts.Clubes
 @using Kicket.ApiClient.Abstracciones
@@ -5,11 +6,13 @@
 @layout AdminLayout
 @inject IClubApiClient clubClient
 
+@* Click fuera de la tabla deselecciona el club. *@
 <div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsClubSelected = false; this.IdClub = -7; }">
     <h1>
         Gestionar Clubes
     </h1>
         <div @onclick:stopPropagation="true" class="p-3">
+            @* Tabla de clubes; click en una fila la selecciona. *@
             <GenericTable TItem="ClubDto" DatosTabla="clubs ?? Enumerable.Empty<ClubDto>()"
                           OnClick="SelectFila"
                           FilaSeleccionada="@(c=>c.ClubId==this.IdClub)">
@@ -28,12 +31,14 @@
             </GenericTable>
         </div>
 
+            @* Botones de acción: borrar y editar se habilitan solo con un club seleccionado. *@
             <div class="d-flex justify-content-end flex-row gap-4 w-100">
                 <button class="btn btn-danger text-white" disabled="@(!IsClubSelected)" @onclick="EliminarClub">Borrar Club</button>
                 <button class="btn bg-primary text-white" disabled="@(!IsClubSelected)" @onclick="AbrirModalEdicion">Editar Club</button>
                 <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Club</button>
                 <button class="btn bg-secondary text-white" @onclick="CargarClubesAsync">Refrescar</button>
             </div>
+    @* Modal de edición: aparece con los datos del club seleccionado. *@
     @if (this.ShowModalEdicion && clubEditando is not null)
     {
         <GenericModalForm TOjb="ClubUpdateRequest" Obj="clubEditando" Titulo="Editar Club" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
@@ -59,6 +64,7 @@
         </GenericModalForm>
     }
 
+    @* Modal de creación de un club nuevo. *@
     @if (this.ShowModalCreacion && nuevoClub is not null)
     {
         <GenericModalForm TOjb="ClubRequest" Obj="nuevoClub" Titulo="Crear Club" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoClub">
@@ -84,6 +90,7 @@
         </GenericModalForm>
     }
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger mt-3">
@@ -93,32 +100,40 @@
 </div>
 
 @code {
+    // Títulos de las columnas de la tabla.
     public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Descripción", "Abreviatura"];
 
+    // Clubes cargados desde la API.
     public IEnumerable<ClubDto>? clubs { get; set; }
 
+    // Flags de selección y de qué modal está abierto.
     public bool IsClubSelected { get; set; } = false;
     public bool ShowModalEdicion { get; set; } = false;
     public bool ShowModalConfirmacion { get; set; } = false;
     public bool ShowModalCreacion { get; set; } = false;
 
+    // Id del club seleccionado.
     public int IdClub { get; set; }
 
+    // Objetos que se editan en los modales de edición y creación.
     public ClubUpdateRequest? clubEditando { get; set; }
     public ClubRequest? nuevoClub { get; set; }
 
+    // Al abrir la página: controla permisos (base) y carga los clubes.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         await CargarClubesAsync();
     }
 
+    // Marca la fila clickeada como seleccionada.
     private void SelectFila(ClubDto clubSelected)
     {
         this.IdClub = clubSelected.ClubId;
         IsClubSelected = true;
     }
 
+    // Pide todos los clubes a la API.
     public async Task CargarClubesAsync()
     {
         await this.SecureExec(async () =>
@@ -127,6 +142,7 @@
         });
     }
 
+    // Copia los datos del club seleccionado a un ClubUpdateRequest y abre el modal de edición.
     public void AbrirModalEdicion()
     {
         if (clubs is null) return;
@@ -143,21 +159,25 @@
         this.ShowModalEdicion = true;
     }
 
+    // Cierra el modal de edición.
     public void CerrarModalEdicion()
     {
         this.ShowModalEdicion = false;
     }
+    // Cierra el modal de creación.
     public void CerrarModalCreacion()
     {
         this.ShowModalCreacion = false;
     }
 
+    // Abre el modal de creación con un club vacío.
     public void AbrirModalCreacion()
     {
         this.nuevoClub = new();
         this.ShowModalCreacion = true;
     }
 
+    // Envía el club nuevo a la API, cierra el modal y recarga la lista.
     public async Task EnviarNuevoClub()
     {
         if (nuevoClub is null) return;
@@ -170,6 +190,7 @@
         await this.CargarClubesAsync();
     }
 
+    // Envía el club editado a la API, cierra el modal y recarga la lista.
     public async Task EnviarEditado()
     {
         if (clubEditando is null) return;
@@ -182,6 +203,7 @@
         await this.CargarClubesAsync();
     }
 
+    // Borra el club seleccionado y recarga la lista.
     public async Task EliminarClub()
     {
         await this.SecureExec(async () => await clubClient.DeleteAsync(this.IdClub));

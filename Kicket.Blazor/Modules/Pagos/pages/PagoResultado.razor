@@ -1,3 +1,5 @@
+@* Página de retorno del pago (ruta /pago/resultado): según el estado que llega en la URL confirma la compra *@
+@* en la API y muestra las entradas (aprobado), o muestra el aviso de rechazado o pendiente. *@
 @page "/pago/resultado"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Blazor.Components
@@ -20,6 +22,7 @@
 @inject NavigationManager Nav
 
 <div class="container py-5" style="max-width: 860px; min-height: 85vh;">
+    @* Mientras se confirma el pago se muestra un spinner. *@
     @if (_cargando)
     {
         <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-5">
@@ -28,6 +31,7 @@
             <p class="text-secondary mb-0">Estamos emitiendo tus entradas digitales y generando tus códigos QR de acceso.</p>
         </div>
     }
+    @* Si la confirmación falló, se muestra el error con opción de reintentar. *@
     else if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="card border-danger shadow rounded-4 p-4 mb-4">
@@ -49,6 +53,7 @@
             </div>
         </div>
     }
+    @* Pago aprobado: datos de la operación, del evento y tabla con las entradas emitidas. *@
     else if (_esAprobado && _compraConfirmada is not null)
     {
         <!-- PAGO APROBADO EXITOSO -->
@@ -130,6 +135,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @* Una fila por entrada emitida, con su ubicación y botón para ver el QR. *@
                             @foreach (var entrada in _compraConfirmada.Entradas)
                             {
                                 <tr>
@@ -170,6 +176,7 @@
             </div>
         </div>
     }
+    @* Pago rechazado: no se emiten entradas. *@
     else if (_esRechazado)
     {
         <!-- PAGO RECHAZADO -->
@@ -200,6 +207,7 @@
             </div>
         </div>
     }
+    @* Cualquier otro estado se trata como pendiente. *@
     else
     {
         <!-- PAGO PENDIENTE -->
@@ -237,6 +245,7 @@
                CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
 
 @code {
+    // Datos que llegan por la URL desde Mercado Pago o desde el simulador.
     [SupplyParameterFromQuery(Name = "status")]
     public string Status { get; set; } = string.Empty;
 
@@ -261,10 +270,12 @@
     [SupplyParameterFromQuery(Name = "cantidad")]
     public int Cantidad { get; set; }
 
+    // Estado de la pantalla: cargando, aprobado o rechazado.
     private bool _cargando = true;
     private bool _esAprobado = false;
     private bool _esRechazado = false;
 
+    // Compra confirmada y datos para mostrar (evento, sector, estadio).
     private CompraDto? _compraConfirmada;
     private EventoDto? _evento;
     private string _nombreSector = string.Empty;
@@ -274,6 +285,7 @@
     private bool _modalQrVisible = false;
     private EntradaDto? _entradaModalSeleccionada = null;
 
+    // Al abrir la página: exige sesión, toma el estado del pago y actúa según sea aprobado, rechazado o pendiente.
     protected override async Task OnInitializedAsync()
     {
         var authState = await authStateProvider.GetAuthenticationStateAsync();
@@ -283,34 +295,41 @@
             return;
         }
 
+        // El estado puede venir como "status" o como "collection_status".
         string estadoFinal = !string.IsNullOrWhiteSpace(Status) ? Status : CollectionStatus;
 
+        // Aprobado: confirma en la API y genera la compra.
         if (string.Equals(estadoFinal, "approved", StringComparison.OrdinalIgnoreCase))
         {
             _esAprobado = true;
             await ConfirmarYGenerarCompraAsync();
         }
+        // Rechazado o fallido: solo muestra el aviso.
         else if (string.Equals(estadoFinal, "rejected", StringComparison.OrdinalIgnoreCase) ||
                  string.Equals(estadoFinal, "failure", StringComparison.OrdinalIgnoreCase))
         {
             _esRechazado = true;
             _cargando = false;
         }
+        // Pendiente u otro: solo muestra el aviso.
         else
         {
             _cargando = false;
         }
     }
 
+    // Confirma el pago en la API (que genera la compra y las entradas) y después trae los datos del evento, estadio y sector.
     private async Task ConfirmarYGenerarCompraAsync()
     {
         _cargando = true;
 
         await SecureExec(async () =>
         {
+            // Usa el usuario de la URL o, si no viene, el de la sesión; si no hay id de pago inventa uno "MP-...".
             int usrId = UsuarioId > 0 ? UsuarioId : (sesion.Usuario?.IdUsuario ?? 0);
             string pid = !string.IsNullOrWhiteSpace(PaymentId) ? PaymentId : $"MP-{Random.Shared.Next(10000000, 99999999)}";
 
+            // Arma el pedido de confirmación con los datos de la compra.
             var confirmRequest = new ConfirmarPagoRequest
             {
                 UsuarioId = usrId,
@@ -323,8 +342,10 @@
                 MetodoPago = "MercadoPago"
             };
 
+            // POST /pagos/confirmar: la API valida el pago y devuelve la compra con sus entradas.
             _compraConfirmada = await pagoApi.ConfirmarPagoAsync(confirmRequest);
 
+            // Trae el evento y su estadio para mostrar los nombres.
             if (EventoId > 0)
             {
                 _evento = await eventoApi.GetOneAsync(EventoId);
@@ -332,6 +353,7 @@
                 _nombreEstadio = $"{estadio.Nombre} ({estadio.Ciudad})";
             }
 
+            // Trae el sector para mostrar su nombre.
             if (SectorId > 0)
             {
                 var sector = await sectorApi.GetOneAsync(SectorId);
@@ -342,6 +364,7 @@
         _cargando = false;
     }
 
+    // Abre el modal del QR con la entrada elegida.
     private void AbrirQrModal(EntradaDto entrada)
     {
         _entradaModalSeleccionada = entrada;

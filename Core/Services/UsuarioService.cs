@@ -9,36 +9,43 @@ using System.Threading.Tasks;
 
 namespace Core.Services
 {
+    // Lógica de negocio de usuarios: registro, login, edición y baja.
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
 
+        // Recibe el repositorio de usuarios por inyección de dependencias.
         public UsuarioService(IUsuarioRepository usuarioRepository)
         {
             _usuarioRepository = usuarioRepository;
         }
 
+        // Registra un usuario: valida datos, controla email repetido, pone fecha y rol por defecto y hashea la contraseña.
         public async Task<Usuario> RegistrarUsuarioAsync(Usuario usuario)
         {
             ValidarUsuario(usuario);
 
+            // Si el email ya existe tira InvalidOperationException (el handler global responde 409).
             bool emailYaRegistrado = await _usuarioRepository.ExistsEmail(usuario.Email);
             if (emailYaRegistrado)
             {
                 throw new InvalidOperationException("Ya existe un usuario registrado con ese email.");
             }
 
+            // Fecha de alta y rol "Usuario" si no vino ninguno.
             usuario.FechaRegistro = DateTime.Now;
             if (string.IsNullOrWhiteSpace(usuario.Rol))
             {
                 usuario.Rol = Roles.Usuario;
             }
 
+            // Guarda la contraseña hasheada, nunca en texto plano.
             usuario.Password = Contrasenas.Hashear(usuario.Password);
             await _usuarioRepository.AddAsync(usuario);
             return usuario;
         }
 
+        // Login: email y contraseña obligatorios; si no coinciden tira UnauthorizedAccessException (401).
         public async Task<Usuario> LoginAsync(string email, string password)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -56,16 +63,19 @@ namespace Core.Services
             return usuario;
         }
 
+        // Devuelve un usuario por id.
         public async Task<Usuario?> ObtenerPorIdAsync(int id)
         {
             return await _usuarioRepository.GetByIdAsync(id);
         }
 
+        // Devuelve todos los usuarios.
         public async Task<IEnumerable<Usuario>> ObtenerTodosAsync()
         {
             return await _usuarioRepository.GetAllAsync();
         }
 
+        // Valida y actualiza el usuario; solo hashea la contraseña si es nueva (no un hash ya existente).
         public async Task<bool> ActualizarUsuarioAsync(Usuario usuario)
         {
             ValidarUsuario(usuario);
@@ -79,11 +89,13 @@ namespace Core.Services
             return await _usuarioRepository.UpdateAsync(usuario);
         }
 
+        // Elimina un usuario (y en cascada sus compras y entradas).
         public async Task<bool> EliminarUsuarioAsync(int id)
         {
             return await _usuarioRepository.DeleteAsync(id);
         }
 
+        // Reglas: no nulo, nombre, apellido y contraseña obligatorios, y email con "@".
         private static void ValidarUsuario(Usuario usuario)
         {
             if (usuario is null)

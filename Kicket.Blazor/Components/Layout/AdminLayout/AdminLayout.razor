@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@* Layout del panel de administración: menú lateral (Clubs, Estadios, Usuarios), barra superior y contenido. *@
+@inherits LayoutComponentBase
 @using Kicket.Blazor.Core.session
 @using Kicket.Blazor.Core.state
 @inject BlazorSesionUsuario session
@@ -16,6 +17,7 @@
             <span class="fs-5 fw-bolder text-secondary">Menú Principal</span>
         </div>
 
+        @* Links a las pantallas de administración. *@
         <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
                 <NavLink href="admin/Clubs" class="nav-link text-dark" Match="NavLinkMatch.All">
@@ -37,6 +39,7 @@
         <hr />
 
         <div class="mb-4">
+            @* Botón para cerrar la sesión. *@
             <button type="button" class="btn btn-primary" @onclick="cerrarSesion">Cerrar sesion</button>
         </div>
     </aside>
@@ -47,6 +50,7 @@
         <NavBar></NavBar>
 
         <main class="container-fluid mt-4 overflow-auto px-4 h-100">
+            @* Acá se dibuja la página de administración actual. *@
             @Body
         </main>
     </div>
@@ -55,6 +59,7 @@
 
 @code {
 
+    // Cierra la sesión, avisa el cambio de estado y manda al login.
     public void cerrarSesion()
     {
         session.Cerrar();

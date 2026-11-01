@@ -13,17 +13,23 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services
 {
+    // Servicio de autenticación: verifica credenciales y genera el token JWT.
     public class AuthService : IAuthService
     {
+        // Configuración de la app (de acá se leen Jwt:Key, Jwt:Issuer y Jwt:Audience).
         IConfiguration _configuracion;
+        // Repositorio para buscar y guardar usuarios.
         IUsuarioRepository _usuarios;
 
+        // Recibe la configuración y el repositorio de usuarios por inyección de dependencias.
         public AuthService(IConfiguration configuracion, IUsuarioRepository usuarios)
         {
             this._configuracion = configuracion;
             this._usuarios = usuarios;
         }
 
+        // Login: busca al usuario por email y verifica la contraseña contra el hash BCrypt.
+        // Si falla devuelve null; si sale bien genera el token y lo devuelve junto con el usuario.
         public async Task<(string, DateTime, Usuario)?> Login(string mail, string pass)
         {
             var user = await _usuarios.GetByEmailAsync(mail);
@@ -31,12 +37,15 @@ namespace Core.Services
             if (user is null || !Contrasenas.Verificar(pass, user.Password)) return null;
 
 
+            // Genera el JWT para el usuario y lo devuelve con su fecha de vencimiento.
             var (token, expiraEn) = GenerarToken(user);
             return (token, expiraEn, user);
         }
 
+        // Arma el token JWT firmado con HMAC-SHA256 y vencimiento de 2 horas.
         private (string, DateTime) GenerarToken(Usuario usuario)
         {
+            // Claims del token: id del usuario (sub), email, rol y un id único del token (jti).
             var payloadInfo = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.IdUsuario.ToString()),
@@ -45,9 +54,11 @@ namespace Core.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
+            // Clave secreta (Jwt:Key) con la que se firma el token.
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuracion["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            // Datos del token: identidad, vencimiento, emisor, audiencia y credenciales de firma.
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(payloadInfo),
@@ -57,6 +68,7 @@ namespace Core.Services
                 SigningCredentials = creds
             };
 
+            // Crea el token y lo convierte a texto (el string que viaja en el header Authorization).
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
@@ -64,6 +76,8 @@ namespace Core.Services
         }
 
 
+        // Registro: rechaza emails repetidos y contraseñas vacías, hashea la contraseña,
+        // asigna el rol "Cliente" y la fecha de alta, y guarda el usuario.
         public async Task RegistrarUsuario(Usuario usuario)
         {
             var EmailDupp = await this._usuarios.ExistsEmail(usuario.Email);

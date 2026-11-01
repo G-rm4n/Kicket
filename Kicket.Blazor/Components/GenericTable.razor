@@ -1,4 +1,5 @@
-﻿@typeparam TItem
+﻿@* Tabla genérica: recibe la lista de datos, las cabeceras y cómo dibujar cada fila. *@
+@typeparam TItem
 
 <table class="table table-hover">
     <thead>
@@ -8,10 +9,12 @@
     </thead>
     <tbody>
         @if(DatosTabla is not null){
+        @* Una fila por cada elemento; se resalta si es la seleccionada. *@
         @foreach(var item in DatosTabla)
         {
                 string claseSeleccion = FilaSeleccionada != null && FilaSeleccionada(item) ? "table-active table" : "";
 
+            @* Click selecciona la fila; doble click dispara OnDoubleClick. *@
             <tr class="@claseSeleccion" @ondblclick="()=>OnDoubleClick.InvokeAsync(item)" @onclick="()=>OnClick.InvokeAsync(item)" style="cursor:pointer">
                 @if (fila != null)
                 {
@@ -27,21 +30,27 @@
     </tbody>
 </table>
 @code {
+    // Datos a mostrar.
     [Parameter]
     public IEnumerable<TItem> DatosTabla { get; set; } = Enumerable.Empty<TItem>();
 
+    // Cabeceras de la tabla (<th>).
     [Parameter]
     public RenderFragment? Cabeceras { get; set; }
 
+    // Plantilla de cada fila.
     [Parameter]
     public RenderFragment<TItem>? fila { get; set; }
 
+    // Evento al hacer doble click en una fila.
     [Parameter]
     public EventCallback<TItem> OnDoubleClick{ get; set; }
 
+    // Evento al hacer click en una fila.
     [Parameter]
     public EventCallback<TItem> OnClick{ get; set; }
 
+    // Función que dice si una fila está seleccionada (para resaltarla).
     [Parameter]
     public Func<TItem, bool>? FilaSeleccionada { get; set; }
 

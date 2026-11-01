@@ -9,31 +9,37 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Implementaciones
 {
+    // Implementación del repositorio de estadios usando EF Core.
     public class EstadioRepository:IEstadioRepository
     {
         private readonly TPIContext context;
 
+        // Recibe el DbContext por inyección de dependencias.
         public EstadioRepository(TPIContext context)
         {
             this.context = context;
         }
 
+        // Busca un estadio por id.
         public async Task<Estadio?> GetByIdAsync(int id)
         {
             return await context.Estadios.FirstOrDefaultAsync(e => e.EstadioId == id);
         }
 
+        // Trae todos los estadios.
         public async Task<IEnumerable<Estadio>> GetAllAsync()
         {
             return await context.Estadios.ToListAsync();
         }
 
+        // Agrega un estadio y guarda.
         public async Task AddAsync(Estadio estadio)
         {
             context.Estadios.Add(estadio);
             await context.SaveChangesAsync();
         }
 
+        // Busca el estadio; si existe lo borra y devuelve true; si no, false.
         public async Task<bool> DeleteAsync(int id)
         {
             var estadioFound = await context.Estadios.FirstOrDefaultAsync(e => e.EstadioId == id);
@@ -46,6 +52,7 @@ namespace Data.Implementaciones
             return false;
         }
 
+        // Busca el estadio existente, copia dirección, ciudad y nombre, y guarda. False si no existe.
         public async Task<bool> UpdateAsync(Estadio estadio)
         {
             var estadioFound = await context.Estadios.FirstOrDefaultAsync(e => e.EstadioId == estadio.EstadioId);

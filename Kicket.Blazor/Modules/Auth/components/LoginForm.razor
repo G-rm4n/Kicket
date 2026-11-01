@@ -3,6 +3,7 @@
 @using Kicket.Contracts.Auth
 
 
+@* Formulario de login: email y contraseña validados con las Data Annotations de LoginRequest. *@
 <div class="kicket-form-container">
 <EditForm Model="@loginData" OnValidSubmit="EnviarDatos" FormName="LoginForm">
     <DataAnnotationsValidator />
@@ -38,12 +39,15 @@
 </div>
 
 @code {
+    // Evento que recibe la página padre con los datos del login.
     [Parameter]
     public EventCallback<LoginRequest> submit { get; set; }
 
+    // Datos que el usuario va completando en el formulario.
     [SupplyParameterFromForm]
     private LoginRequest loginData { get; set; } = new();
 
+    // Si el formulario es válido, le pasa los datos a la página padre.
     public async Task EnviarDatos()
     {
         await submit.InvokeAsync(loginData);

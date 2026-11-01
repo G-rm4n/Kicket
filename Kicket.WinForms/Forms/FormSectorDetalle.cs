@@ -6,12 +6,15 @@ using Kicket.Contracts.Sectores;
 
 namespace Kicket.WinForms.Forms
 {
+    // Formulario maestro-detalle: ABM de los sectores de un estadio.
     public partial class FormSectorDetalle : Form
     {
+        // Cliente HTTP de sectores, estadio actual y sector seleccionado (null si no hay).
         private readonly ISectorApiClient _sectorApiClient;
         private int _estadioId;
         private int? _sectorIdSeleccionado;
 
+        // Constructor: recibe el cliente de sectores por inyección.
         public FormSectorDetalle(ISectorApiClient sectorApiClient)
         {
             InitializeComponent();
@@ -29,6 +32,7 @@ namespace Kicket.WinForms.Forms
             Text = $"Sectores - {nombreEstadio}";
         }
 
+        // Cuando el formulario ya se mostró: usa las columnas del diseñador y carga los sectores.
         protected override async void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -36,6 +40,7 @@ namespace Kicket.WinForms.Forms
             await CargarSectores();
         }
 
+        // Pide a la API los sectores del estadio y los muestra en la grilla.
         private async Task CargarSectores()
         {
             try
@@ -50,6 +55,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Al hacer click en una fila, guarda el id y copia los datos a los campos.
         private void dataGridSectores_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
@@ -64,11 +70,13 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Botón limpiar.
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
         }
 
+        // Vacía los campos y quita la selección.
         private void LimpiarFormulario()
         {
             textBoxNombre.Clear();
@@ -77,6 +85,7 @@ namespace Kicket.WinForms.Forms
             _sectorIdSeleccionado = null;
         }
 
+        // Crea un sector nuevo para el estadio actual.
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
             if (!ValidarCampos(out int capacidadMaxima, out decimal precioBase))
@@ -84,6 +93,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de alta con los valores ya validados.
             var nuevoSector = new SectorRequest
             {
                 EstadioId = _estadioId,
@@ -94,6 +104,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // POST /sectores y recarga la grilla.
                 await _sectorApiClient.CreateAsync(nuevoSector);
                 await CargarSectores();
             }
@@ -103,6 +114,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Modifica el sector seleccionado.
         private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (_sectorIdSeleccionado is null)
@@ -116,6 +128,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de modificación con el id seleccionado.
             var sectorModificado = new SectorUpdateRequest
             {
                 SectorId = _sectorIdSeleccionado.Value,
@@ -127,6 +140,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // PUT /sectores y recarga la grilla.
                 await _sectorApiClient.UpdateAsync(sectorModificado);
                 await CargarSectores();
             }
@@ -136,6 +150,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Elimina el sector seleccionado, previa confirmación.
         private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (_sectorIdSeleccionado is null) return;
@@ -146,6 +161,7 @@ namespace Kicket.WinForms.Forms
             {
                 try
                 {
+                    // DELETE /sectores/{id} y recarga la grilla.
                     await _sectorApiClient.DeleteAsync(_sectorIdSeleccionado.Value);
                     await CargarSectores();
                 }
@@ -157,11 +173,14 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Cierra el formulario.
         private void buttonCerrar_Click(object sender, EventArgs e)
         {
             Close();
         }
 
+        // Validación manual: nombre obligatorio, capacidad entera mayor a cero y precio decimal mayor a cero.
+        // Devuelve los valores convertidos por parámetros out.
         private bool ValidarCampos(out int capacidadMaxima, out decimal precioBase)
         {
             capacidadMaxima = 0;

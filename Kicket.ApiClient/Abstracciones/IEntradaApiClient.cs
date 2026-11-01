@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Kicket.ApiClient.Abstracciones
 {
+    // Interfaz "contenedora": la que se usa de verdad es la IEntradaApiClient anidada de abajo.
     public interface IEntradaApiClient
     {
         /// <summary>
@@ -15,7 +16,9 @@ namespace Kicket.ApiClient.Abstracciones
         /// </summary>
         public interface IEntradaApiClient
         {
+            // GET /entradas/{id}: trae una entrada.
             Task<EntradaDto> GetOneAsync(int id, CancellationToken ct = default);
+            // GET /entradas/evento/{id}: entradas de un evento.
             Task<IReadOnlyList<EntradaDto>> GetPorEventoAsync(int eventoId, CancellationToken ct = default);
         }
     }

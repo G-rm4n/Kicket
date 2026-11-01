@@ -4,8 +4,10 @@ using Domain.Entities;
 
 namespace Data
 {
+    // DbContext de Entity Framework Core: mapea las entidades del dominio a tablas de SQL Server.
     public class TPIContext : DbContext
     {
+        // Cada DbSet representa una tabla de la base de datos.
         public DbSet<Compra> Compras { get; set; }
         public DbSet<Entrada> Entradas { get; set; }
         public DbSet<Club> Clubs { get; set; }
@@ -14,16 +16,20 @@ namespace Data
         public DbSet<Sector> Sectores { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
+        // Constructor: recibe las opciones (cadena de conexión) por inyección de dependencias
+        // y crea la base de datos si no existe (EnsureCreated, sin migraciones).
         public TPIContext(DbContextOptions<TPIContext> options) : base(options)
         {
             this.Database.EnsureCreated();
         }
 
+        // Configura el modelo: claves, relaciones, tamaños, valores por defecto y datos iniciales (seed).
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
 
+            // --- Club: PK autoincremental, largos máximos y 2 clubes de ejemplo (ids negativos).
             modelBuilder.Entity<Club>((c) =>
             {
                 c.HasKey(c => c.ClubId);
@@ -39,6 +45,7 @@ namespace Data
             });
 
 
+            // --- Compra: PK, FK a Usuario (borrado en cascada por defecto), decimales, defaults y 1 compra de ejemplo.
             modelBuilder.Entity<Compra>((c) =>
             {
                 c.HasKey(c => c.CompraId);
@@ -68,6 +75,8 @@ namespace Data
 
             });
 
+            // --- Entrada: PK, FK a Evento y Sector con Restrict (no se pueden borrar si tienen entradas),
+            // FK a Compra (cascada), QR obligatorio y 2 entradas de ejemplo.
             modelBuilder.Entity<Entrada>(e =>
             {
                 e.HasKey(e => e.EntradaId);
@@ -84,6 +93,7 @@ namespace Data
                 );
             });
 
+            // --- Estadio: PK y 1 estadio de ejemplo.
             modelBuilder.Entity<Estadio>(e =>
             {
                 e.HasKey(e => e.EstadioId);
@@ -97,6 +107,8 @@ namespace Data
                 );
             });
 
+            // --- Evento: PK, FK a Estadio (cascada), FK a club local y visitante (Restrict),
+            // EstaCancelado = false por defecto y 1 evento de ejemplo.
             modelBuilder.Entity<Evento>(e =>
             {
                 e.HasKey(e => e.IdEvento);
@@ -122,6 +134,7 @@ namespace Data
                 );
             });
 
+            // --- Sector: PK, precio decimal, FK a Estadio (Restrict) y 2 sectores de ejemplo.
             modelBuilder.Entity<Sector>(s =>
             {
                 s.HasKey(s => s.SectorId);
@@ -138,6 +151,8 @@ namespace Data
                 );
             });
 
+            // --- Usuario: PK, email único (índice), hash de 100 caracteres, rol por defecto
+            // "Usuario" y un administrador inicial (EmailRaro@gmail.com / Has).
             modelBuilder.Entity<Usuario>(u =>
             {
                 u.HasKey(u => u.IdUsuario);

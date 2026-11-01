@@ -11,8 +11,10 @@ namespace WebApi.EndPoints
     /// </summary>
     public static class EntradaEndPoints
     {
+        // Registra las rutas de consulta de entradas (requieren estar logueado).
         public static void MapEntradaEndPoints(this WebApplication app)
         {
+            // GET /entradas/{id}: devuelve una entrada o 404.
             app.MapGet("/entradas/{id}", async (int id, IEntradaService entradaService) =>
             {
                 Entrada? entrada = await entradaService.ObtenerPorIdAsync(id);
@@ -29,6 +31,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status404NotFound)
             .RequireAuthorization();
 
+            // GET /entradas/evento/{id}: lista las entradas vendidas para un evento.
             app.MapGet("/entradas/evento/{eventoId}", async (int eventoId, IEntradaService entradaService) =>
             {
                 var entradas = await entradaService.ObtenerPorEventoAsync(eventoId);
@@ -42,6 +45,7 @@ namespace WebApi.EndPoints
             .RequireAuthorization();
         }
 
+        // Convierte una Entrada a EntradaDto.
         private static EntradaDto MapearAEntradaDto(Entrada entrada)
         {
             return new EntradaDto

@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@* Documento HTML raíz de la app Blazor: carga estilos y el script de Blazor. *@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="Kicket.Blazor.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    @* HeadOutlet y Routes usan render interactivo en servidor, sin prerenderizado. *@
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 </head>
 

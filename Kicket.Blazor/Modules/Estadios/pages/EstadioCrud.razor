@@ -1,3 +1,4 @@
+@* Pantalla de administración de estadios (ruta /admin/Estadios): listar, crear, editar y borrar. Solo Admin. *@
 @page "/admin/Estadios"
 @using Kicket.Contracts.Estadios
 @using Kicket.ApiClient.Abstracciones
@@ -5,11 +6,13 @@
 @inherits PaginaProtegida
 @inject IEstadioApiClient estadioApi
 
+@* Click fuera de la tabla deselecciona el estadio. *@
 <div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsEstadioSelected = false; this.IdEstadio = 0; }">
     <h1>
         Gestionar Estadios
     </h1>
     <div @onclick:stopPropagation="true" class="p-3">
+        @* Tabla de estadios; click en una fila la selecciona. *@
         <GenericTable TItem="EstadioDto" DatosTabla="estadios ?? Enumerable.Empty<EstadioDto>()"
                       OnClick="SelectFila"
                       FilaSeleccionada="@(e=>e.IdEstadio==this.IdEstadio)">
@@ -28,12 +31,14 @@
         </GenericTable>
     </div>
 
+    @* Botones de acción: borrar y editar se habilitan solo con un estadio seleccionado. *@
     <div class="d-flex justify-content-end flex-row gap-4 w-100">
         <button class="btn btn-danger text-white" disabled="@(!IsEstadioSelected)" @onclick="EliminarEstadio">Borrar Estadio</button>
         <button class="btn bg-primary text-white" disabled="@(!IsEstadioSelected)" @onclick="AbrirModalEdicion">Editar Estadio</button>
         <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Estadio</button>
         <button class="btn bg-secondary text-white" @onclick="CargarEstadiosAsync">Refrescar</button>
     </div>
+    @* Modal de edición del estadio seleccionado. *@
     @if (this.ShowModalEdicion && EstadioEditando is not null)
     {
         <GenericModalForm TOjb="EstadioUpdateRequest" Obj="EstadioEditando" Titulo="Editar estadio" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
@@ -59,6 +64,7 @@
         </GenericModalForm>
     }
 
+    @* Modal de creación de un estadio nuevo. *@
     @if (this.ShowModalCreacion && NuevoEstadio is not null)
     {
         <GenericModalForm TOjb="EstadioRequest" Obj="NuevoEstadio" Titulo="Crear Estadio" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoEstadio">
@@ -84,6 +90,7 @@
         </GenericModalForm>
     }
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger mt-3">
@@ -93,32 +100,40 @@
 </div>
 
 @code {
+    // Títulos de las columnas de la tabla.
     public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Ciudad", "Dirección"];
 
+    // Estadios cargados desde la API.
     public IEnumerable<EstadioDto>? estadios { get; set; }
 
+    // Flags de selección y de qué modal está abierto.
     public bool IsEstadioSelected { get; set; } = false;
     public bool ShowModalEdicion { get; set; } = false;
     public bool ShowModalConfirmacion { get; set; } = false;
     public bool ShowModalCreacion { get; set; } = false;
 
+    // Id del estadio seleccionado.
     public int IdEstadio { get; set; }
 
+    // Objetos que se editan en los modales de edición y creación.
     public EstadioUpdateRequest? EstadioEditando { get; set; }
     public EstadioRequest? NuevoEstadio { get; set; }
 
+    // Al abrir la página: controla permisos (base) y carga los estadios.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         await CargarEstadiosAsync();
     }
 
+    // Marca la fila clickeada como seleccionada.
     private void SelectFila(EstadioDto estadioSelected)
     {
         this.IdEstadio = estadioSelected.IdEstadio;
         this.IsEstadioSelected = true;
     }
 
+    // Pide todos los estadios a la API.
     public async Task CargarEstadiosAsync()
     {
         await this.SecureExec(async () =>
@@ -127,6 +142,7 @@
         });
     }
 
+    // Copia los datos del estadio seleccionado a un EstadioUpdateRequest y abre el modal de edición.
     public void AbrirModalEdicion()
     {
         if (estadios is null) return;
@@ -143,21 +159,25 @@
         this.ShowModalEdicion = true;
     }
 
+    // Cierra el modal de edición.
     public void CerrarModalEdicion()
     {
         this.ShowModalEdicion = false;
     }
+    // Cierra el modal de creación.
     public void CerrarModalCreacion()
     {
         this.ShowModalCreacion = false;
     }
 
+    // Abre el modal de creación con un estadio vacío.
     public void AbrirModalCreacion()
     {
         this.NuevoEstadio = new();
         this.ShowModalCreacion = true;
     }
 
+    // Envía el estadio nuevo a la API, cierra el modal y recarga la lista.
     public async Task EnviarNuevoEstadio()
     {
         if (NuevoEstadio is null) return;
@@ -170,6 +190,7 @@
         await this.CargarEstadiosAsync();
     }
 
+    // Envía el estadio editado a la API, cierra el modal y recarga la lista.
     public async Task EnviarEditado()
     {
         if (EstadioEditando is null) return;
@@ -183,6 +204,7 @@
         await this.CargarEstadiosAsync();
     }
 
+    // Borra el estadio seleccionado y recarga la lista.
     public async Task EliminarEstadio()
     {
         await this.SecureExec(async () => await estadioApi.DeleteAsync(this.IdEstadio));

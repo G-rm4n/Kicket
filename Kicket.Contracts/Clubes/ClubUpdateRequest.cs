@@ -8,6 +8,7 @@ namespace Kicket.Contracts.Clubes
     /// </summary>
     public class ClubUpdateRequest : ClubRequest
     {
+        // Id del club a modificar.
         [Required(ErrorMessage = "El id del club es obligatorio.")]
         public int IdClub { get; set; }
     }

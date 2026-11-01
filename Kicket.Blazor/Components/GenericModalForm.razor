@@ -1,4 +1,5 @@
-﻿@typeparam TOjb
+﻿@* Ventana modal genérica con un formulario: recibe el título, el objeto a editar y el contenido del formulario. *@
+@typeparam TOjb
 
 <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);">
     <div class="modal-dialog">
@@ -7,9 +8,11 @@
                 <h5 class="modal-title">@Titulo</h5>
                 <button type="button" class="btn-close" @onclick="Cerrar"></button>
             </div>
+            @* EditForm valida con las Data Annotations del objeto y, si es válido, llama a Enviar. *@
             <EditForm Model="Obj" OnValidSubmit="Enviar">
                 <DataAnnotationsValidator></DataAnnotationsValidator>
             <div class="modal-body">
+                @* Dibuja los campos que le pasa la página que usa el modal. *@
                 @if(CuerpoForm is not null && this.Obj is not null){
                     @CuerpoForm!(Obj!) 
                 }
@@ -24,22 +27,29 @@
 </div>
 
 @code {
+    // Título del modal.
     [Parameter]
     public string Titulo { get; set; } = "Fromulario";
+    // Contenido del formulario (los campos), recibe el objeto a editar.
     [Parameter]
     public RenderFragment<TOjb>? CuerpoForm{ get; set; }
+    // Objeto que se está editando.
     [Parameter]
     public TOjb Obj { get; set; } = default!;
+    // Evento que se dispara al confirmar el formulario.
     [Parameter]
     public EventCallback<TOjb> Onsubmit { get; set; }
+    // Evento que se dispara al cerrar el modal.
     [Parameter]
     public EventCallback OnCerrar{ get; set; }
 
+    // Avisa a la página padre que se cerró el modal.
     public async Task Cerrar()
     {
         await OnCerrar.InvokeAsync();
     }
 
+    // Avisa a la página padre que se confirmó, pasándole el objeto.
     public async Task Enviar()
     {
         await Onsubmit.InvokeAsync(this.Obj);

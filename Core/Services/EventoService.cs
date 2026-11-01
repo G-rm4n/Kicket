@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Core.Services
 {
+    // Lógica de negocio de eventos: valida datos, calcula disponibilidad y maneja la cancelación.
     public class EventoService : IEventoService
     {
         private readonly IEventoRepository _eventoRepository;
@@ -16,6 +17,7 @@ namespace Core.Services
         private readonly ISectorRepository _sectorRepository;
         private readonly ICompraRepository _compraRepository;
 
+        // Recibe los repositorios necesarios por inyección de dependencias.
         public EventoService(
             IEventoRepository eventoRepository,
             IEstadioRepository estadioRepository,
@@ -30,6 +32,7 @@ namespace Core.Services
             _compraRepository = compraRepository;
         }
 
+        // Valida el evento, lo marca como no cancelado y lo guarda.
         public async Task<Evento> CrearEventoAsync(Evento evento)
         {
             await ValidarEventoAsync(evento);
@@ -39,27 +42,33 @@ namespace Core.Services
             return evento;
         }
 
+        // Devuelve un evento por id.
         public async Task<Evento?> ObtenerPorIdAsync(int id)
         {
             return await _eventoRepository.GetOneById(id);
         }
 
+        // Devuelve todos los eventos.
         public async Task<IEnumerable<Evento>> ObtenerTodosAsync()
         {
             return await _eventoRepository.GetAllAsync();
         }
 
+        // Calcula la disponibilidad de cada sector del estadio del evento.
         public async Task<IReadOnlyList<SectorDisponibilidadDto>?> ObtenerDisponibilidadAsync(int eventoId)
         {
+            // Si el evento no existe devuelve null (el endpoint responde 404).
             var evento = await _eventoRepository.GetOneById(eventoId);
             if (evento is null)
             {
                 return null;
             }
 
+            // Trae los sectores del estadio donde se juega el evento.
             var sectores = await _sectorRepository.ObtenerPorEstadioAsync(evento.EstadioId);
             var resultado = new List<SectorDisponibilidadDto>();
 
+            // Por cada sector: cuenta las vendidas y calcula el stock (nunca negativo).
             foreach (var sector in sectores)
             {
                 int vendidas = await _compraRepository.ObtenerCantidadEntradasVendidasAsync(eventoId, sector.SectorId);
@@ -80,6 +89,7 @@ namespace Core.Services
             return resultado;
         }
 
+        // Valida (sin exigir fecha futura) y actualiza el evento.
         public async Task<bool> ActualizarEventoAsync(Evento evento)
         {
             await ValidarEventoAsync(evento, esActualizacion: true);
@@ -87,6 +97,7 @@ namespace Core.Services
             return await _eventoRepository.UpdateAsync(evento);
         }
 
+        // Cancela el evento: no lo borra, solo pone EstaCancelado = true.
         public async Task<bool> CancelarEventoAsync(int id)
         {
             var evento = await _eventoRepository.GetOneById(id);
@@ -99,11 +110,14 @@ namespace Core.Services
             return await _eventoRepository.UpdateAsync(evento);
         }
 
+        // Elimina el evento (si tiene entradas vendidas, la BD lo impide).
         public async Task<bool> EliminarEventoAsync(int id)
         {
             return await _eventoRepository.DeleteAsync(id);
         }
 
+        // Reglas: no nulo, nombre obligatorio, fecha futura (solo al crear), local distinto del visitante,
+        // y estadio, club local y club visitante tienen que existir en la BD.
         private async Task ValidarEventoAsync(Evento evento, bool esActualizacion = false)
         {
             if (evento is null)

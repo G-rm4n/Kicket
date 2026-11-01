@@ -6,19 +6,24 @@ namespace Kicket.Contracts.Eventos
     /// <summary>Datos para dar de alta un evento (POST /eventos).</summary>
     public class EventoRequest
     {
+        // Nombre: obligatorio, entre 2 y 150 caracteres.
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         [StringLength(150, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 150 caracteres.")]
         public string Nombre { get; set; } = string.Empty;
 
+        // Fecha del partido (la API exige que sea futura al crear).
         [Required(ErrorMessage = "La fecha es obligatoria.")]
         public DateTime Fecha { get; set; }
 
+        // Estadio donde se juega.
         [Required(ErrorMessage = "El estadio es obligatorio.")]
         public int EstadioId { get; set; }
 
+        // Club local.
         [Required(ErrorMessage = "El club local es obligatorio.")]
         public int ClubLocalId { get; set; }
 
+        // Club visitante (tiene que ser distinto del local).
         [Required(ErrorMessage = "El club visitante es obligatorio.")]
         public int ClubVisitanteId { get; set; }
     }

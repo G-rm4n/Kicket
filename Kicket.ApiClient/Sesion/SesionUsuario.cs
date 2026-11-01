@@ -10,19 +10,25 @@ namespace Kicket.ApiClient.Sesion
     /// </summary>
     public class SesionUsuario : ISesionUsuario
     {
+        // Objeto para bloquear y que dos hilos no modifiquen la sesión a la vez.
         private readonly object _lock = new();
 
+        // Datos de la sesión actual (solo se cambian desde esta clase).
         public string? Token { get; private set; }
         public UsuarioDto? Usuario { get; private set; }
         public DateTime? ExpiraEn { get; private set; }
 
+        // Rol del usuario logueado (null si no hay sesión).
         public string? Rol => Usuario?.Rol;
 
+        // Hay sesión si hay token y todavía no venció.
         public bool EstaAutenticado =>
             !string.IsNullOrWhiteSpace(Token) && ExpiraEn > DateTime.UtcNow;
 
+        // Evento que avisa a los formularios cuando se inicia o cierra la sesión.
         public event EventHandler? SesionCambiada;
 
+        // Inicia la sesión guardando token, usuario y vencimiento, y avisa con el evento.
         public void Iniciar(LoginResponse respuesta)
         {
             ArgumentNullException.ThrowIfNull(respuesta);
@@ -37,6 +43,7 @@ namespace Kicket.ApiClient.Sesion
             SesionCambiada?.Invoke(this, EventArgs.Empty);
         }
 
+        // Cierra la sesión borrando todos los datos, y avisa con el evento.
         public void Cerrar()
         {
             lock (_lock)
@@ -49,6 +56,7 @@ namespace Kicket.ApiClient.Sesion
             SesionCambiada?.Invoke(this, EventArgs.Empty);
         }
 
+        // Compara el rol del usuario logueado con el pedido (sin importar mayúsculas).
         public bool TieneRol(string rol) =>
             EstaAutenticado && string.Equals(Rol, rol, StringComparison.OrdinalIgnoreCase);
     }

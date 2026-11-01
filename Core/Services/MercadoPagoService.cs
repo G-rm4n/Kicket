@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Core.Services
 {
+    // Servicio de pagos: crea la preferencia en Mercado Pago o, si no hay token válido, usa un simulador local.
     public class MercadoPagoService : IMercadoPagoService
     {
         private readonly IConfiguration _configuration;
@@ -20,6 +21,7 @@ namespace Core.Services
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly ILogger<MercadoPagoService> _logger;
 
+        // Recibe la configuración, los repositorios y el logger por inyección de dependencias.
         public MercadoPagoService(
             IConfiguration configuration,
             IEventoRepository eventoRepository,
@@ -36,19 +38,24 @@ namespace Core.Services
             _logger = logger;
         }
 
+        // Crea una preferencia de pago para comprar entradas.
+        // Hace las mismas validaciones que la compra, calcula el monto y decide entre Mercado Pago real o simulador.
         public async Task<PreferenciaPagoResponse> CrearPreferenciaAsync(PreferenciaPagoRequest request, string baseUrlRetorno)
         {
+            // Validación: cantidad mayor a cero.
             if (request.Cantidad <= 0)
             {
                 throw new ArgumentException("La cantidad de entradas debe ser mayor a cero.");
             }
 
+            // Validación: el evento existe y está disponible.
             var evento = await _eventoRepository.GetOneById(request.EventoId);
             if (evento == null || !evento.EstaDisponible())
             {
                 throw new ArgumentException("El evento seleccionado no existe o no se encuentra disponible.");
             }
 
+            // Validación: el sector existe y es del mismo estadio que el evento.
             var sector = await _sectorRepository.ObtenerSectorPorIdAsync(request.SectorId);
             if (sector == null)
             {
@@ -60,6 +67,7 @@ namespace Core.Services
                 throw new ArgumentException("El sector seleccionado no pertenece al estadio donde se disputa el evento.");
             }
 
+            // Validación de stock disponible en el sector.
             int entradasVendidas = await _compraRepository.ObtenerCantidadEntradasVendidasAsync(request.EventoId, request.SectorId);
             int capacidadRestante = sector.CapacidadMaxima - entradasVendidas;
 
@@ -68,14 +76,17 @@ namespace Core.Services
                 throw new ArgumentException($"Stock insuficiente. Solo quedan {capacidadRestante} lugares en este sector.");
             }
 
+            // Calcula el total y lee el Access Token de Mercado Pago desde la configuración.
             decimal montoTotal = sector.PrecioBase * request.Cantidad;
             string token = _configuration["MercadoPago:AccessToken"] ?? string.Empty;
 
+            // El token es válido solo si empieza con "TEST-" y no es el texto de ejemplo del appsettings.
             bool tokenValido = !string.IsNullOrWhiteSpace(token)
                                && token.StartsWith("TEST-", StringComparison.OrdinalIgnoreCase)
                                && !token.Contains("TU_ACCESS_TOKEN", StringComparison.OrdinalIgnoreCase)
                                && !token.Contains("PROPORCIONAR", StringComparison.OrdinalIgnoreCase);
 
+            // Con token válido intenta crear la preferencia real con el SDK de Mercado Pago.
             if (tokenValido)
             {
                 try
@@ -84,9 +95,11 @@ namespace Core.Services
 
                     var client = new PreferenceClient();
 
+                    // Parámetros que vuelven en la URL de retorno para poder generar la compra después.
                     string baseClean = baseUrlRetorno.TrimEnd('/');
                     string callbackParams = $"eventoId={request.EventoId}&sectorId={request.SectorId}&cantidad={request.Cantidad}&usuarioId={request.UsuarioId}";
 
+                    // Arma la preferencia: el ítem a cobrar, las URLs de retorno (aprobado/rechazado/pendiente) y una referencia externa.
                     var preferenceRequest = new PreferenceRequest
                     {
                         Items = new List<PreferenceItemRequest>
@@ -111,6 +124,7 @@ namespace Core.Services
                         BinaryMode = true
                     };
 
+                    // Llama a la API de Mercado Pago y devuelve la URL de pago (sandbox si existe).
                     var preference = await client.CreateAsync(preferenceRequest);
 
                     return new PreferenciaPagoResponse
@@ -127,6 +141,7 @@ namespace Core.Services
                         SectorId = request.SectorId
                     };
                 }
+                // Si falla la API real, lo registra en el log y sigue con el simulador.
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "No se pudo crear la preferencia con la API oficial de Mercado Pago. Se activa el Simulador Sandbox de respaldo.");
@@ -134,6 +149,7 @@ namespace Core.Services
             }
 
             // Modo Simulador Sandbox Local de Mercado Pago
+            // Genera un id de preferencia simulado y la URL de la página del simulador con todos los datos.
             string simPrefId = $"SIM-MP-{Guid.NewGuid():N}".ToUpperInvariant();
             string simRedirect = $"/pago/simulador?prefId={simPrefId}&usuarioId={request.UsuarioId}&eventoId={request.EventoId}&sectorId={request.SectorId}&cantidad={request.Cantidad}&monto={montoTotal}&eventoNombre={Uri.EscapeDataString(evento.Nombre)}&sectorNombre={Uri.EscapeDataString(sector.Nombre)}";
 
@@ -152,8 +168,10 @@ namespace Core.Services
             };
         }
 
+        // Decide si un pago está aprobado.
         public async Task<bool> ValidarPagoAprobadoAsync(string paymentId)
         {
+            // Sin id de pago no hay aprobación.
             if (string.IsNullOrWhiteSpace(paymentId))
             {
                 return false;
@@ -168,6 +186,7 @@ namespace Core.Services
             }
 
             // Si es un ID numérico real de Mercado Pago y hay token configurado
+            // Con id numérico y token, consulta el estado real a Mercado Pago; si la consulta falla lo da por válido.
             string token = _configuration["MercadoPago:AccessToken"] ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(token) && long.TryParse(paymentId, out long numericId))
             {
@@ -185,6 +204,7 @@ namespace Core.Services
                 }
             }
 
+            // En cualquier otro caso lo da por aprobado (validación permisiva, pensada para pruebas).
             return true;
         }
     }

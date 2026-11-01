@@ -6,8 +6,11 @@ namespace Kicket.Contracts.Common
     /// </summary>
     public class ApiError
     {
+        // Código HTTP del error (400, 401, 404, 409, 500...).
         public int Status { get; set; }
+        // Título corto del error.
         public string Title { get; set; } = string.Empty;
+        // Detalle del error para mostrar al usuario.
         public string? Detail { get; set; }
 
         /// <summary>Errores de validacion por campo. Clave = nombre de la propiedad.</summary>

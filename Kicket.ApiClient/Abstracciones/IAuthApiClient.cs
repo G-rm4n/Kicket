@@ -12,6 +12,7 @@ namespace Kicket.ApiClient.Abstracciones
         /// </summary>
         Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct = default);
 
+        // Registra un usuario nuevo llamando a POST /auth/register.
         Task<RegisterResponse> RegistAsync(UsuarioRequest request, CancellationToken ct = default);
 
         /// <summary>Cierra la sesion local. El token JWT es sin estado, no hay nada que avisarle a la API.</summary>

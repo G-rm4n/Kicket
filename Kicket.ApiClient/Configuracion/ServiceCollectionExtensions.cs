@@ -19,6 +19,7 @@ namespace Kicket.ApiClient.Configuracion
         public static IServiceCollection AddKicketApiClient(
             this IServiceCollection services, IConfiguration configuration)
         {
+            // Crea las opciones y las completa con los valores de appsettings.
             var opciones = new KicketApiOptions();
             configuration.GetSection(KicketApiOptions.SeccionConfig).Bind(opciones);
 
@@ -29,15 +30,18 @@ namespace Kicket.ApiClient.Configuracion
         public static IServiceCollection AddKicketApiClient(
             this IServiceCollection services, Action<KicketApiOptions> configurar)
         {
+            // Crea las opciones y deja que el que llama las complete.
             var opciones = new KicketApiOptions();
             configurar(opciones);
 
             return services.AddKicketApiClient(opciones);
         }
 
+        // Registro real: valida la URL, registra opciones, el handler del token y todos los clientes.
         private static IServiceCollection AddKicketApiClient(
             this IServiceCollection services, KicketApiOptions opciones)
         {
+            // Sin URL base no se puede hablar con la API.
             if (string.IsNullOrWhiteSpace(opciones.BaseUrl))
                 throw new InvalidOperationException(
                     "Falta configurar KicketApi:BaseUrl con la URL de la API.");
@@ -46,10 +50,13 @@ namespace Kicket.ApiClient.Configuracion
             if (!opciones.BaseUrl.EndsWith('/'))
                 opciones.BaseUrl += "/";
 
+            // Las opciones se registran como Singleton (una sola instancia para toda la app).
             services.AddSingleton(opciones);
 
+            // El handler que agrega el token se registra como Transient (uno nuevo cada vez que se pide).
             services.AddTransient<AuthTokenHandler>();
 
+            // Registra cada cliente tipado con su interfaz.
             services.AgregarCliente<IClubApiClient, ClubApiClient>(opciones);
             services.AgregarCliente<IEstadioApiClient, EstadioApiClient>(opciones);
             services.AgregarCliente<ISectorApiClient, SectorApiClient>(opciones);
@@ -63,6 +70,8 @@ namespace Kicket.ApiClient.Configuracion
             return services;
         }
 
+        // Registra un cliente como Scoped: le arma un HttpClient con el AuthTokenHandler,
+        // la URL base y el timeout, y crea la instancia del cliente pasándole ese HttpClient.
         private static void AgregarCliente<TInterfaz, TImpl>(
             this IServiceCollection services, KicketApiOptions opciones)
             where TInterfaz : class
@@ -70,16 +79,19 @@ namespace Kicket.ApiClient.Configuracion
         {
             services.AddScoped<TInterfaz, TImpl>(sp =>
             {
+                // Pide el handler del token y le encadena el handler HTTP real.
                 var handler = sp.GetRequiredService<AuthTokenHandler>();
 
                 handler.InnerHandler = new HttpClientHandler();
 
+                // HttpClient con la URL base y el timeout configurados.
                 var httpClient = new HttpClient(handler)
                 {
                     BaseAddress = new Uri(opciones.BaseUrl),
                     Timeout = TimeSpan.FromSeconds(opciones.TimeoutSegundos)
                 };
 
+                // Crea el cliente concreto resolviendo el resto de sus dependencias desde el contenedor.
                 return ActivatorUtilities.CreateInstance<TImpl>(sp, httpClient);
             });
         }

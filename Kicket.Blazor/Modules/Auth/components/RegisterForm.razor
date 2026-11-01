@@ -3,10 +3,12 @@
 @using Kicket.Contracts.Usuarios
 
 
+@* Formulario de registro: nombre, apellido, email y contraseña, validados con UsuarioRequest. *@
 <div class="kicket-form-container">
     <EditForm Model="@RegistroData" OnValidSubmit="@EnviarDatos" FormName="RegisterForm">
         <DataAnnotationsValidator />
 
+        @* Nombre *@
         <div class="mb-3">
             <div class="input-icon-wrapper">
                 <!-- Ícono de usuario genérico -->
@@ -45,8 +47,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
 
+                @* El tipo del input cambia entre texto y password para mostrar u ocultar la contraseña. *@
                 <InputText type=@(IsPasswordRevealed?"text":"password") id="Pass" class="form-control kicket-input pl-icon pr-icon" placeholder="Ingresar contraseña" @bind-Value="RegistroData.Pass" />
 
+                @* Ícono del ojo: al hacer click alterna mostrar/ocultar la contraseña. *@
                 <svg class="icon-right" fill="none" stroke="currentColor" viewBox="0 0 24 24" @onclick="@(()=> IsPasswordRevealed=!IsPasswordRevealed)">
                     @if (!IsPasswordRevealed)
                     {
@@ -68,12 +72,16 @@
     </EditForm>
 </div>
 @code {
+    // Indica si la contraseña se muestra en texto plano.
     private bool IsPasswordRevealed { get; set; } = false;
+    // Evento que recibe la página padre con los datos del registro.
     [Parameter]
     public EventCallback<UsuarioRequest> submit { get; set; }
+    // Datos del formulario; el rol arranca en "Cliente".
     [SupplyParameterFromForm]
     private UsuarioRequest RegistroData { get; set; } = new(){Rol="Cliente"};
 
+    // Si el formulario es válido, le pasa los datos a la página padre.
     public async Task EnviarDatos()
     {
         await submit.InvokeAsync(RegistroData);

@@ -11,17 +11,21 @@ using Kicket.Contracts.Eventos;
 
 namespace Kicket.WinForms.Forms
 {
+    // ABM de eventos: lista, alta, modificación (incluye cancelar), baja y consulta de disponibilidad.
     public partial class FormEvento : Form
     {
+        // Clientes HTTP necesarios (inyectados).
         private readonly IEventoApiClient _eventoApiClient;
         private readonly IClubApiClient _clubApiClient;
         private readonly IEstadioApiClient _estadioApiClient;
 
+        // Catálogos y eventos cargados desde la API, y el id del evento seleccionado.
         private IReadOnlyList<ClubDto> _clubes = Array.Empty<ClubDto>();
         private IReadOnlyList<EstadioDto> _estadios = Array.Empty<EstadioDto>();
         private IReadOnlyList<EventoDto> _eventos = Array.Empty<EventoDto>();
         private int? _eventoIdSeleccionado = null;
 
+        // Fila "lista para mostrar" de la grilla (nombres en lugar de ids).
         private sealed class EventoFilaVista
         {
             public int IdEvento { get; set; }
@@ -33,6 +37,7 @@ namespace Kicket.WinForms.Forms
             public string EstadoTexto { get; set; } = string.Empty;
         }
 
+        // Constructor: recibe los clientes HTTP por inyección.
         public FormEvento(
             IEventoApiClient eventoApiClient,
             IClubApiClient clubApiClient,
@@ -44,6 +49,7 @@ namespace Kicket.WinForms.Forms
             _estadioApiClient = estadioApiClient;
         }
 
+        // Al cargar: configura la grilla, propone una fecha a 7 días y carga catálogos y eventos.
         private async void FormEvento_Load(object sender, EventArgs e)
         {
             dataGridViewEventos.AutoGenerateColumns = false;
@@ -51,6 +57,7 @@ namespace Kicket.WinForms.Forms
             await CargarCatalogosYEventosAsync();
         }
 
+        // Carga estadios y clubes en los combos y después los eventos.
         private async Task CargarCatalogosYEventosAsync()
         {
             try
@@ -79,12 +86,14 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Trae los eventos, los convierte en filas con nombres y estado (Cancelado/Disponible/Finalizado) y los muestra.
         private async Task CargarEventosAsync()
         {
             try
             {
                 _eventos = await _eventoApiClient.GetAllAsync();
 
+                // Diccionarios id → texto para mostrar nombres en lugar de ids.
                 var estadiosMap = _estadios.ToDictionary(e => e.IdEstadio, e => $"{e.Nombre} ({e.Ciudad})");
                 var clubesMap = _clubes.ToDictionary(c => c.ClubId, c => $"{c.Nombre} ({c.Abreviatura})");
 
@@ -113,6 +122,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Al hacer click en una fila, carga los datos del evento en los controles.
         private void dataGridViewEventos_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
@@ -131,11 +141,13 @@ namespace Kicket.WinForms.Forms
             checkBoxCancelado.Checked = evento.EstaCancelado;
         }
 
+        // Botón limpiar.
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
         }
 
+        // Vacía los campos y deja seleccionados valores por defecto (visitante distinto del local).
         private void LimpiarFormulario()
         {
             _eventoIdSeleccionado = null;
@@ -147,6 +159,8 @@ namespace Kicket.WinForms.Forms
             if (comboBoxClubVisitante.Items.Count > 1) comboBoxClubVisitante.SelectedIndex = 1;
         }
 
+        // Validación manual: nombre obligatorio, estadio y clubes elegidos, y local distinto del visitante.
+        // Devuelve los ids elegidos por parámetros out.
         private bool ValidarSeleccion(out int estadioId, out int clubLocalId, out int clubVisitanteId)
         {
             estadioId = 0;
@@ -189,6 +203,7 @@ namespace Kicket.WinForms.Forms
             return true;
         }
 
+        // Crea un evento nuevo (la fecha tiene que ser futura).
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
             if (!ValidarSeleccion(out int estadioId, out int clubLocalId, out int clubVisitanteId))
@@ -202,6 +217,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de alta.
             var request = new EventoRequest
             {
                 Nombre = textBoxNombre.Text.Trim(),
@@ -211,6 +227,7 @@ namespace Kicket.WinForms.Forms
                 ClubVisitanteId = clubVisitanteId
             };
 
+            // POST /eventos, avisa y recarga la grilla.
             try
             {
                 await _eventoApiClient.CreateAsync(request);
@@ -223,6 +240,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Modifica el evento seleccionado (incluido el estado cancelado).
         private async void btnModificar_Click(object sender, EventArgs e)
         {
             if (_eventoIdSeleccionado is null)
@@ -236,6 +254,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de modificación con el id y el checkbox de cancelado.
             var request = new EventoUpdateRequest
             {
                 IdEvento = _eventoIdSeleccionado.Value,
@@ -247,6 +266,7 @@ namespace Kicket.WinForms.Forms
                 EstaCancelado = checkBoxCancelado.Checked
             };
 
+            // PUT /eventos, avisa y recarga la grilla.
             try
             {
                 await _eventoApiClient.UpdateAsync(request);
@@ -259,6 +279,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Elimina el evento seleccionado, previa confirmación.
         private async void btnEliminar_Click(object sender, EventArgs e)
         {
             if (_eventoIdSeleccionado is null)
@@ -277,6 +298,7 @@ namespace Kicket.WinForms.Forms
             {
                 try
                 {
+                    // DELETE /eventos/{id}, avisa y recarga la grilla. Si tiene entradas vendidas, la API devuelve error.
                     await _eventoApiClient.DeleteAsync(_eventoIdSeleccionado.Value);
                     MessageBox.Show("Evento eliminado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await CargarEventosAsync();
@@ -288,6 +310,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Consulta la disponibilidad del evento y la muestra por sector en un mensaje.
         private async void btnVerDisponibilidad_Click(object sender, EventArgs e)
         {
             if (_eventoIdSeleccionado is null)
@@ -298,6 +321,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // GET /eventos/{id}/disponibilidad.
                 var disponibilidad = await _eventoApiClient.GetDisponibilidadAsync(_eventoIdSeleccionado.Value);
                 if (disponibilidad.Count == 0)
                 {
@@ -305,6 +329,7 @@ namespace Kicket.WinForms.Forms
                     return;
                 }
 
+                // Arma el texto con precio, capacidad, vendidas y disponibles de cada sector.
                 var sb = new StringBuilder();
                 sb.AppendLine($"Disponibilidad para '{textBoxNombre.Text}':");
                 sb.AppendLine(new string('-', 55));

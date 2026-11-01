@@ -1,3 +1,4 @@
+@* Página "Mis Compras" (ruta /mis-compras): historial de compras del usuario logueado y acceso al QR de cada entrada. *@
 @page "/mis-compras"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Blazor.Core.HTTP
@@ -27,6 +28,7 @@
         </a>
     </div>
 
+    @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
         <div class="alert alert-danger shadow-sm">
@@ -34,6 +36,7 @@
         </div>
     }
 
+    @* Mientras carga muestra un spinner; si no hay compras, un aviso; si hay, una tarjeta por compra. *@
     @if (Procesando)
     {
         <div class="text-center py-5">
@@ -56,6 +59,7 @@
     else
     {
         <div class="d-flex flex-column gap-4">
+            @* Tarjeta de cada compra: encabezado con datos del pago y tabla con sus entradas. *@
             @foreach (var compra in _misCompras)
             {
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
@@ -95,6 +99,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @* Una fila por entrada, con botón para ver su QR. *@
                                     @foreach (var ent in compra.Entradas)
                                     {
                                         <tr>
@@ -103,6 +108,7 @@
                                             <td>@ObtenerFechaEvento(ent.EventoId)</td>
                                             <td>@ObtenerNombreSector(ent.SectorId)</td>
                                             <td>
+                                                @* Ubicación: asiento numerado (platea) o "sin numeración" (popular). *@
                                                 @if (!string.IsNullOrWhiteSpace(ent.FilaAsiento))
                                                 {
                                                     <span class="badge bg-info text-dark px-3 py-2">@ent.FilaAsiento</span>
@@ -141,6 +147,7 @@
                CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
 
 @code {
+    // Compras del usuario y diccionarios (por id) de eventos, sectores y estadios para mostrar nombres.
     private List<CompraDto> _misCompras = new();
     private Dictionary<int, EventoDto> _eventosMap = new();
     private Dictionary<int, SectorDto> _sectoresMap = new();
@@ -150,6 +157,7 @@
     private bool _modalQrVisible = false;
     private EntradaDto? _entradaModalSeleccionada = null;
 
+    // Al abrir la página: si no hay sesión manda al login; si hay, carga las compras.
     protected override async Task OnInitializedAsync()
     {
         var authState = await authStateProvider.GetAuthenticationStateAsync();
@@ -162,6 +170,7 @@
         await CargarComprasAsync();
     }
 
+    // Trae las compras del usuario y los catálogos de eventos, sectores y estadios; ordena las compras de la más nueva a la más vieja.
     private async Task CargarComprasAsync()
     {
         if (sesion.Usuario is null) return;
@@ -180,18 +189,22 @@
         });
     }
 
+    // Abre el modal del QR con la entrada elegida.
     private void AbrirQrModal(EntradaDto entrada)
     {
         _entradaModalSeleccionada = entrada;
         _modalQrVisible = true;
     }
 
+    // Nombre del evento por id.
     private string ObtenerNombreEvento(int eventoId) =>
         _eventosMap.TryGetValue(eventoId, out var ev) ? ev.Nombre : $"Evento #{eventoId}";
 
+    // Fecha del evento por id, con formato dd/MM/yyyy HH:mm.
     private string ObtenerFechaEvento(int eventoId) =>
         _eventosMap.TryGetValue(eventoId, out var ev) ? ev.Fecha.ToString("dd/MM/yyyy HH:mm") : "-";
 
+    // Nombre y ciudad del estadio donde se juega el evento.
     private string ObtenerNombreEstadioDeEvento(int eventoId)
     {
         if (_eventosMap.TryGetValue(eventoId, out var ev) && _estadiosMap.TryGetValue(ev.IdEstadio, out var est))
@@ -201,6 +214,7 @@
         return string.Empty;
     }
 
+    // Nombre del sector por id.
     private string ObtenerNombreSector(int sectorId) =>
         _sectoresMap.TryGetValue(sectorId, out var sec) ? sec.Nombre : $"Sector #{sectorId}";
 }

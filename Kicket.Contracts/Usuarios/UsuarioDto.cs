@@ -6,12 +6,18 @@ namespace Kicket.Contracts.Usuarios
     /// </summary>
     public class UsuarioDto
     {
+        // Id del usuario.
         public int IdUsuario { get; set; }
+        // Nombre.
         public string Nombre { get; set; } = string.Empty;
+        // Apellido.
         public string Apellido { get; set; } = string.Empty;
+        // Email.
         public string Email { get; set; } = string.Empty;
+        // Rol del usuario.
         public string Rol { get; set; } = Roles.Usuario;
 
+        // Nombre armado "Apellido, Nombre" para mostrar en grillas.
         public string NombreCompleto => $"{Apellido}, {Nombre}";
     }
 }

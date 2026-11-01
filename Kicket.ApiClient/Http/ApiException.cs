@@ -9,6 +9,7 @@ namespace Kicket.ApiClient.Http
     /// </summary>
     public class ApiException : Exception
     {
+        // Código HTTP que devolvió la API.
         public HttpStatusCode StatusCode { get; }
 
         /// <summary>Errores de validacion por campo, si la API los devolvio.</summary>
@@ -17,6 +18,7 @@ namespace Kicket.ApiClient.Http
         /// <summary>True cuando la API no respondio (servicio caido, sin red, timeout).</summary>
         public bool EsFalloDeConexion { get; }
 
+        // Constructor: guarda el código, el mensaje, los errores por campo y si fue un fallo de conexión.
         public ApiException(
             HttpStatusCode statusCode,
             string mensaje,
@@ -30,6 +32,7 @@ namespace Kicket.ApiClient.Http
             EsFalloDeConexion = esFalloDeConexion;
         }
 
+        // Atajos para preguntar el tipo de error: 404, 401, 403 o errores de validación.
         public bool NoEncontrado => StatusCode == HttpStatusCode.NotFound;
         public bool NoAutenticado => StatusCode == HttpStatusCode.Unauthorized;
         public bool SinPermisos => StatusCode == HttpStatusCode.Forbidden;
@@ -38,12 +41,16 @@ namespace Kicket.ApiClient.Http
         /// <summary>Mensaje + detalle de cada campo invalido, listo para un MessageBox.</summary>
         public string MensajeCompleto()
         {
+            // Si no hay errores por campo, alcanza con el mensaje principal.
             if (!HayErroresDeValidacion) return Message;
 
+            // Junta los mensajes de cada campo (sin repetir) y los agrega como lista.
             var detalle = Errores.SelectMany(e => e.Value).Distinct();
             return Message + Environment.NewLine + string.Join(Environment.NewLine, detalle.Select(d => "- " + d));
         }
 
+        // Arma la excepción a partir de la respuesta: usa Detail, si no Title, si no el cuerpo crudo
+        // o un mensaje por defecto según el código HTTP.
         internal static ApiException DesdeRespuesta(HttpStatusCode status, ApiError? error, string? cuerpoCrudo)
         {
             var mensaje = error?.Detail
@@ -53,6 +60,7 @@ namespace Kicket.ApiClient.Http
             return new ApiException(status, mensaje, error?.Errors);
         }
 
+        // Mensajes legibles para los códigos HTTP más comunes.
         private static string MensajePorDefecto(HttpStatusCode status) => status switch
         {
             HttpStatusCode.Unauthorized => "Tu sesion no es valida o expiro. Volve a iniciar sesion.",

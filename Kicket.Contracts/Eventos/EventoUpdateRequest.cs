@@ -5,6 +5,7 @@ namespace Kicket.Contracts.Eventos
     /// <summary>Datos para modificar un evento. El id va en el cuerpo (PUT /eventos).</summary>
     public class EventoUpdateRequest : EventoRequest
     {
+        // Id del evento a modificar.
         [Required(ErrorMessage = "El id del evento es obligatorio.")]
         public int IdEvento { get; set; }
 

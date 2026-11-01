@@ -1,10 +1,13 @@
 ﻿
+@* Router de la app: busca la página que corresponde a la URL y la muestra con DefaultLayout. *@
+@* CascadingAuthenticationState comparte el estado de login con todos los componentes. *@
 <CascadingAuthenticationState>
     <Router AppAssembly="typeof(Program).Assembly">
         <Found Context="routeData">
             <RouteView RouteData="routeData" DefaultLayout="typeof(DefaultLayout)"></RouteView>
             <FocusOnNavigate RouteData="routeData" Selector="h1" />
         </Found>
+        @* Si la URL no corresponde a ninguna página se muestra este 404. *@
         <NotFound>
             <PageTitle>Página no encontrada</PageTitle>
             <LayoutView Layout="@typeof(DefaultLayout)">

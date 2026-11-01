@@ -6,23 +6,28 @@ using Kicket.Contracts.Clubes;
 
 namespace Kicket.WinForms.Forms
 {
+    // ABM de clubes: lista, alta, modificación y baja usando la API.
     public partial class FormClub : Form
     {
+        // Cliente HTTP de clubes y el id del club seleccionado en la grilla (null si no hay).
         private readonly IClubApiClient _clubApiClient;
         private int? _clubIdSeleccionado = null;
 
+        // Constructor: recibe el cliente de clubes por inyección.
         public FormClub(IClubApiClient clubApiClient)
         {
             InitializeComponent();
             _clubApiClient = clubApiClient;
         }
 
+        // Al cargar: usa las columnas definidas en el diseñador y carga los clubes.
         private async void FormClub_Load(object sender, EventArgs e)
         {
             dataGridClubes.AutoGenerateColumns = false;
             await CargarClubes();
         }
 
+        // Pide los clubes a la API, los muestra en la grilla y limpia el formulario.
         private async Task CargarClubes()
         {
             try
@@ -37,11 +42,13 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Botón limpiar.
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
         }
 
+        // Vacía los campos y quita la selección.
         private void LimpiarFormulario()
         {
             textBoxNombreClub.Clear();
@@ -50,6 +57,7 @@ namespace Kicket.WinForms.Forms
             _clubIdSeleccionado = null;
         }
 
+        // Al hacer click en una fila, guarda el id y copia los datos a los campos.
         private void dataGridClubes_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
@@ -62,14 +70,17 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Crea un club nuevo con los datos de los campos.
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
+            // Validación manual: nombre y abreviatura obligatorios.
             if (string.IsNullOrWhiteSpace(textBoxNombreClub.Text) || string.IsNullOrWhiteSpace(textBoxAbreviatura.Text))
             {
                 MessageBox.Show("Nombre y Abreviatura son obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            // Si la descripción está vacía, usa el nombre como descripción (la API la exige).
             var nuevoClub = new ClubRequest
             {
                 Nombre = textBoxNombreClub.Text.Trim(),
@@ -81,6 +92,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // POST /clubes y recarga la grilla.
                 await _clubApiClient.CreateAsync(nuevoClub);
                 await CargarClubes();
             }
@@ -90,8 +102,10 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Modifica el club seleccionado.
         private async void buttonModificar_Click(object sender, EventArgs e)
         {
+            // Tiene que haber un club seleccionado.
             if (_clubIdSeleccionado == null)
             {
                 MessageBox.Show("Seleccione un club de la lista primero.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -104,6 +118,7 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // Arma el pedido de modificación con el id del club seleccionado.
             var clubModificado = new ClubUpdateRequest
             {
                 IdClub = _clubIdSeleccionado.Value,
@@ -116,6 +131,7 @@ namespace Kicket.WinForms.Forms
 
             try
             {
+                // PUT /clubes y recarga la grilla.
                 await _clubApiClient.UpdateAsync(clubModificado);
                 await CargarClubes();
             }
@@ -125,6 +141,7 @@ namespace Kicket.WinForms.Forms
             }
         }
 
+        // Elimina el club seleccionado, previa confirmación.
         private async void buttonEliminar_Click(object sender, EventArgs e)
         {
             if (_clubIdSeleccionado == null)
@@ -139,6 +156,7 @@ namespace Kicket.WinForms.Forms
             {
                 try
                 {
+                    // DELETE /clubes/{id} y recarga la grilla. Si tiene eventos, la API devuelve error.
                     await _clubApiClient.DeleteAsync(_clubIdSeleccionado.Value);
                     await CargarClubes();
                 }

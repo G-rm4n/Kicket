@@ -6,6 +6,7 @@
 @inject ISesionUsuario sesion
 @implements IDisposable
 
+@* Barra de navegación superior: logo, link a eventos y botones según el estado de sesión. *@
 <nav class="navbar bg-light navbar-light container-fluid shadow-sm px-4 py-2">
     <div class="d-flex flex-row gap-3 align-items-center">
         <div>
@@ -25,15 +26,18 @@
         </NavLink>
     </div>
 
+    @* En las páginas de login y registro no se muestran los botones de sesión. *@
     @if (!EsRutaAuth)
     {
         <div class="container-button d-flex flex-row gap-3 align-items-center">
             <AuthorizeView>
+                @* Mientras se averigua si hay sesión, muestra un spinner. *@
                 <Authorizing>
                     <div class="spinner-border spinner-border-sm text-secondary" role="status">
                         <span>Cargando...</span>
                     </div>
                 </Authorizing>
+                @* Sin sesión: botones de registrarse e iniciar sesión. *@
                 <NotAuthorized>
                     <NavLink href="/auth/registro">
                         <button class="btn bg-primary text-white">Registrarse</button>
@@ -42,6 +46,7 @@
                         <button class="btn bg-secondary text-white">Iniciar Sesión</button>
                     </NavLink>
                 </NotAuthorized>
+                @* Con sesión: saludo, "Mis Entradas", "Panel Admin" (solo admin) y cerrar sesión. *@
                 <Authorized>
                     <span class="text-secondary small d-none d-md-inline">
                         Hola, <strong>@(sesion.Usuario?.Nombre ?? context.User.Identity?.Name)</strong>
@@ -68,35 +73,43 @@
 </nav>
 
 @code {
+    // true si la página actual es la de login o registro.
     private bool EsRutaAuth => Nav.Uri.Contains("/auth/login", StringComparison.OrdinalIgnoreCase) ||
                                Nav.Uri.Contains("/auth/registro", StringComparison.OrdinalIgnoreCase);
 
+    // true si la página actual es del panel de administración.
     private bool EstoyEnAdmin => Nav.Uri.Contains("/Admin", StringComparison.OrdinalIgnoreCase);
 
+    // Indica si el usuario logueado es administrador.
     private bool _esAdmin;
 
+    // Al iniciar: se suscribe a los cambios de URL y calcula si es admin.
     protected override async Task OnInitializedAsync()
     {
         Nav.LocationChanged += OnLocationChanged;
         _esAdmin = await EsAdminAsync();
     }
 
+    // Al destruirse el componente, se desuscribe del evento (evita pérdidas de memoria).
     public void Dispose()
     {
         Nav.LocationChanged -= OnLocationChanged;
     }
 
+    // Cada vez que cambia la URL, recalcula el estado.
     public void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _ = ActualizarEstadoAsync();
     }
 
+    // Recalcula si es admin y redibuja la barra.
     private async Task ActualizarEstadoAsync()
     {
         _esAdmin = await EsAdminAsync();
         await InvokeAsync(StateHasChanged);
     }
 
+    // Consulta el estado de autenticación y devuelve true si el usuario tiene rol Admin.
     private async Task<bool> EsAdminAsync()
     {
         var authState = await prov.GetAuthenticationStateAsync();
@@ -104,6 +117,7 @@
         return user.Identity != null && user.Identity.IsAuthenticated && user.IsInRole("Admin");
     }
 
+    // Cierra la sesión, avisa el cambio y vuelve al inicio.
     private void CerrarSesion()
     {
         sesion.Cerrar();

@@ -5,10 +5,13 @@ using Kicket.Contracts.Eventos;
 
 namespace WebApi.EndPoints
 {
+    // Endpoints REST de eventos: consultas públicas; alta, edición y baja solo para Admin.
     public static class EventoEndPoints
     {
+        // Registra todas las rutas /eventos.
         public static void MapEventoEndPoints(this WebApplication app)
         {
+            // GET /eventos: lista todos los eventos como DTO.
             app.MapGet("/eventos", async (IEventoService eventoService) =>
             {
                 var eventos = await eventoService.ObtenerTodosAsync();
@@ -29,6 +32,7 @@ namespace WebApi.EndPoints
             .WithName("GetAllEventos")
             .Produces<IEnumerable<EventoDto>>(StatusCodes.Status200OK);
 
+            // GET /eventos/{id}: devuelve un evento o 404.
             app.MapGet("/eventos/{id}", async (int id, IEventoService eventoService) =>
             {
                 Evento? evento = await eventoService.ObtenerPorIdAsync(id);
@@ -55,6 +59,7 @@ namespace WebApi.EndPoints
             .Produces<EventoDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+            // GET /eventos/{id}/disponibilidad: stock y precio de cada sector para el evento (404 si no existe).
             app.MapGet("/eventos/{id}/disponibilidad", async (int id, IEventoService eventoService) =>
             {
                 var disponibilidad = await eventoService.ObtenerDisponibilidadAsync(id);
@@ -75,8 +80,10 @@ namespace WebApi.EndPoints
             .Produces<IReadOnlyList<SectorDisponibilidadDto>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+            // POST /eventos: crea un evento (solo Admin). 201 si sale bien, 400 si falla una validación.
             app.MapPost("/eventos", async (EventoRequest eventoReq, IEventoService eventoService) =>
             {
+                // Convierte el request en la entidad Evento.
                 Evento evento = new()
                 {
                     Nombre = eventoReq.Nombre,
@@ -88,6 +95,7 @@ namespace WebApi.EndPoints
 
                 try
                 {
+                    // El servicio valida (fecha futura, clubes distintos, estadio y clubes existentes) y guarda.
                     Evento nuevoEvento = await eventoService.CrearEventoAsync(evento);
 
                     EventoDto dto = new()
@@ -113,6 +121,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // PUT /eventos: modifica un evento (solo Admin), incluido si está cancelado. 204, 404 o 400.
             app.MapPut("/eventos", async (EventoUpdateRequest eventoReq, IEventoService eventoService) =>
             {
                 Evento evento = new()
@@ -148,6 +157,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // DELETE /eventos/{id}: borra un evento (solo Admin). 204 o 404.
             app.MapDelete("/eventos/{id}", async (int id, IEventoService eventoService) =>
             {
                 var deleted = await eventoService.EliminarEventoAsync(id);

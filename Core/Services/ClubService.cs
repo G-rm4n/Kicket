@@ -8,15 +8,18 @@ using System.Threading.Tasks;
 
 namespace Core.Services
 {
+    // Lógica de negocio de clubes: valida los datos y delega en el repositorio.
     public class ClubService : IClubService
     {
         private readonly IClubRepository _clubRepository;
 
+        // Recibe el repositorio de clubes por inyección de dependencias.
         public ClubService(IClubRepository clubRepository)
         {
             _clubRepository = clubRepository;
         }
 
+        // Valida el club y lo guarda.
         public async Task<Club> CrearClubAsync(Club club)
         {
             ValidarClub(club);
@@ -25,16 +28,19 @@ namespace Core.Services
             return club;
         }
 
+        // Devuelve un club por id.
         public async Task<Club?> ObtenerPorIdAsync(int id)
         {
             return await _clubRepository.GetByIdAsync(id);
         }
 
+        // Devuelve todos los clubes.
         public async Task<IEnumerable<Club>> ObtenerTodosAsync()
         {
             return await _clubRepository.GetAllAsync();
         }
 
+        // Valida el club y lo actualiza.
         public async Task<bool> ActualizarClubAsync(Club club)
         {
             ValidarClub(club);
@@ -42,11 +48,13 @@ namespace Core.Services
             return await _clubRepository.UpdateAsync(club);
         }
 
+        // Elimina el club. Si tiene eventos asociados, la BD lo impide (FK Restrict).
         public async Task<bool> EliminarClubAsync(int id)
         {
             return await _clubRepository.DeleteAsync(id);
         }
 
+        // Reglas: el club no puede ser nulo y nombre y abreviatura son obligatorios (si no, ArgumentException → 400).
         private static void ValidarClub(Club club)
         {
             if (club is null)

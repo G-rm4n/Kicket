@@ -1,3 +1,5 @@
+// Punto de entrada de la API: configura servicios (BD, JWT, autorización, DI, Swagger),
+// arma el pipeline HTTP y registra todos los endpoints.
 using System.Text;
 using Core.Interfaces;
 using Core.Services;
@@ -10,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using WebApi.EndPoints;
 using WebApi.Middlewares;
 
+// Crea el builder de la aplicación web (lee appsettings, variables de entorno, etc.).
 var builder = WebApplication.CreateBuilder(args);
 
 //Se agrega el context de la DB del TP
@@ -24,6 +27,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+// Configura cómo se valida el token JWT: emisor, audiencia, vencimiento y firma.
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -38,6 +42,7 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 
+    // Eventos de depuración: muestran en consola si el token falló o se validó.
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -53,6 +58,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Autorización: la política "Solo admin" exige que el token tenga el rol Admin.
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Solo admin", policy => policy.RequireRole("Admin"));
@@ -78,22 +84,28 @@ builder.Services.AddScoped<IEntradaService, EntradaService>();
 builder.Services.AddScoped<ICompraService, CompraService>();
 builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
 
+// Swagger: documentación y prueba de los endpoints en /swagger.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Registra el manejador global de excepciones.
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+// Construye la aplicación con todo lo registrado.
 var app = builder.Build();
 
+// Pipeline HTTP: primero el manejo de errores, después autenticación y autorización.
 app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Habilita Swagger y su interfaz web.
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Al arrancar, crea la base de datos si no existe (EnsureCreated, con los datos de seed).
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -109,6 +121,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Registra todos los endpoints de la API.
 app.MapClubEndPoints();
 app.MapCompraEndPoints();
 app.MapEntradaEndPoints();
@@ -119,4 +132,5 @@ app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
 app.MapPagoEndPoints();
 
+// Arranca el servidor web.
 app.Run();

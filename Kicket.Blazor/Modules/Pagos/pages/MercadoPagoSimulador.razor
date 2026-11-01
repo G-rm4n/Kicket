@@ -1,3 +1,4 @@
+@* Página que simula el checkout de Mercado Pago (ruta /pago/simulador). Se usa cuando no hay un token real. *@
 @page "/pago/simulador"
 @inject NavigationManager Nav
 
@@ -39,6 +40,7 @@
             </div>
 
             <!-- Selección de Resultado para Simulación -->
+            @* Opciones para elegir qué resultado simular: aprobado, rechazado o pendiente. *@
             <div class="mb-4">
                 <label class="form-label fw-bold text-dark mb-2">
                     Seleccioná el resultado que querés simular en este test:
@@ -84,6 +86,7 @@
             </div>
 
             <!-- Botones de Acción -->
+            @* Botón para "pagar" (procesa la simulación) y botón para cancelar. *@
             <div class="d-grid gap-2 pt-2">
                 <button class="btn btn-lg fw-bold text-white shadow rounded-pill py-3"
                         style="background-color: #009ee3;"
@@ -115,6 +118,7 @@
 </div>
 
 @code {
+    // Datos que llegan por la URL (query string) desde la preferencia simulada.
     [SupplyParameterFromQuery(Name = "prefId")]
     public string PrefId { get; set; } = string.Empty;
 
@@ -139,8 +143,10 @@
     [SupplyParameterFromQuery(Name = "sectorNombre")]
     public string SectorNombre { get; set; } = "Sector Seleccionado";
 
+    // Resultado elegido; por defecto "approved".
     private string _opcionSeleccionada = "approved";
 
+    // Inventa un id de pago "MP-TEST-..." y redirige a /pago/resultado con el estado elegido y los datos de la compra.
     private void ProcesarSimulacion()
     {
         string paymentId = $"MP-TEST-{Random.Shared.Next(10000000, 99999999)}";
@@ -149,6 +155,7 @@
         Nav.NavigateTo(targetUrl);
     }
 
+    // Cancela: vuelve a la compra del evento o, si no hay evento, al listado.
     private void Cancelar()
     {
         if (EventoId > 0)

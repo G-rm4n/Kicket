@@ -6,10 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.EndPoints
 {
+    // Endpoints REST de sectores: consultas públicas; alta, edición y baja solo para Admin.
     public static class SectorEndPoints
     {
+        // Registra todas las rutas /sectores.
         public static void MapSectorEndPoints(this WebApplication app)
         {
+            // GET /sectores: lista todos los sectores como DTO.
             app.MapGet("/sectores", async (ISectorService sectorService) =>
             {
                 var sectores = await sectorService.ObtenerTodosAsync();
@@ -28,6 +31,7 @@ namespace WebApi.EndPoints
             .WithName("GetAllSectores")
             .Produces<IEnumerable<SectorDto>>(StatusCodes.Status200OK);
 
+            // GET /sectores/{id}: devuelve un sector o 404.
             app.MapGet("/sectores/{id}", async (int id, ISectorService sectorService) =>
             {
                 Sector? sector = await sectorService.ObtenerPorIdAsync(id);
@@ -52,6 +56,7 @@ namespace WebApi.EndPoints
             .Produces<SectorDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+            // GET /sectores/estadio/{id}: lista los sectores de un estadio.
             app.MapGet("/sectores/estadio/{estadioId}", async (int estadioId, ISectorService sectorService) =>
             {
                 var sectores = await sectorService.ObtenerPorEstadioAsync(estadioId);
@@ -70,6 +75,7 @@ namespace WebApi.EndPoints
             .WithName("GetSectoresPorEstadio")
             .Produces<IEnumerable<SectorDto>>(StatusCodes.Status200OK);
 
+            // POST /sectores: crea un sector (solo Admin). 201 o 400.
             app.MapPost("/sectores", async (SectorRequest sectorReq, ISectorService sectorService) =>
             {
                 Sector sector = new()
@@ -105,6 +111,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // PUT /sectores: modifica un sector (solo Admin). 204, 404 o 400.
             app.MapPut("/sectores", async (SectorUpdateRequest sectorReq, ISectorService sectorService) =>
             {
                 Sector sector = new()
@@ -138,6 +145,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
+            // DELETE /sectores/{id}: borra un sector (solo Admin). 204, 404, o 409 si tiene entradas vendidas.
             app.MapDelete("/sectores/{id}", async (int id, ISectorService sectorService) =>
             {
                 try
@@ -151,6 +159,7 @@ namespace WebApi.EndPoints
 
                     return Results.NoContent();
                 }
+                // La FK Restrict de Entrada→Sector hace fallar el borrado: se responde 409 Conflict.
                 catch (DbUpdateException)
                 {
                     return Results.Conflict(new ApiError { Status = StatusCodes.Status409Conflict, Title = "No se puede eliminar el sector", Detail = "El sector tiene entradas vendidas asociadas." });
