@@ -16,6 +16,14 @@ namespace Kicket.Contracts.Usuarios
         public string Email { get; set; } = string.Empty;
         // Rol del usuario.
         public string Rol { get; set; } = Roles.Usuario;
+        // DNI normalizado (solo digitos). Puede ser null en usuarios creados antes de la v2.
+        public string? Dni { get; set; }
+        // Telefono de contacto (opcional).
+        public string? Telefono { get; set; }
+        // Fecha de nacimiento (opcional).
+        public DateTime? FechaNacimiento { get; set; }
+        // Fecha de alta en el sistema.
+        public DateTime FechaRegistro { get; set; }
 
         // Nombre armado "Apellido, Nombre" para mostrar en grillas.
         public string NombreCompleto => $"{Apellido}, {Nombre}";

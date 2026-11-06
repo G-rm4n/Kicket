@@ -4,6 +4,7 @@ using System.Text;
 using Core.Interfaces;
 using Core.Services;
 using Data;
+using Data.Esquema;
 using Data.Implementaciones;
 using Data.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -72,6 +73,8 @@ builder.Services.AddScoped<IEventoRepository, EventoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ISectorRepository, SectorRepository>();
 builder.Services.AddScoped<IEntradaRepository, EntradaRepository>();
+// Reportes: repositorio con ADO.NET (SqlConnection/SqlCommand), misma cadena de conexión que EF Core.
+builder.Services.AddScoped<IReporteVentasRepository, ReporteVentasRepository>();
 
 //Mapeo de Services
 builder.Services.AddScoped<IClubService, ClubService>();
@@ -83,6 +86,7 @@ builder.Services.AddScoped<ISectorService, SectorService>();
 builder.Services.AddScoped<IEntradaService, EntradaService>();
 builder.Services.AddScoped<ICompraService, CompraService>();
 builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
+builder.Services.AddScoped<IReporteService, ReporteService>();
 
 // Swagger: documentación y prueba de los endpoints en /swagger.
 builder.Services.AddEndpointsApiExplorer();
@@ -105,7 +109,8 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Al arrancar, crea la base de datos si no existe (EnsureCreated, con los datos de seed).
+// Al arrancar, crea la base de datos si no existe (EnsureCreated, con los datos de seed) y, si ya
+// existía de la versión 1, le agrega las columnas e índices nuevos sin borrar datos (ActualizadorEsquema).
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -113,6 +118,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<TPIContext>();
         context.Database.EnsureCreated();
+        ActualizadorEsquema.Aplicar(context);
     }
     catch (Exception ex)
     {
@@ -131,6 +137,7 @@ app.MapSectorEndPoints();
 app.MapEstadioEndPoints();
 app.MapAuthEndPoints();
 app.MapPagoEndPoints();
+app.MapReporteEndPoints();
 
 // Arranca el servidor web.
 app.Run();

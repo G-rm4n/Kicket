@@ -2,7 +2,9 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Usuarios;
+using Kicket.WinForms.Controles;
 
 namespace Kicket.WinForms.Forms
 {
@@ -13,7 +15,18 @@ namespace Kicket.WinForms.Forms
         private readonly IUsuarioApiClient _usuarioApiClient;
         private int? _usuarioIdSeleccionado = null;
 
-        // Constructor: recibe el cliente por inyección y carga el combo de roles.
+        // Controles agregados en la versión 2: datos personales, filtros y paginador.
+        private readonly TextBox textBoxDni = new() { MaxLength = 10 };
+        private readonly TextBox textBoxTelefono = new() { MaxLength = 30 };
+        private readonly DateTimePicker dateTimePickerNacimiento = new() { Format = DateTimePickerFormat.Short, ShowCheckBox = true, Checked = false };
+        private readonly BarraFiltros _filtros = new();
+        private readonly TextBox _filtroTexto;
+        private readonly TextBox _filtroDni;
+        private readonly ComboBox _filtroRol;
+        private readonly ControlPaginacion _paginador = new();
+        private PagedResult<UsuarioDto>? _pagina;
+
+        // Constructor: recibe el cliente por inyección, carga el combo de roles y arma los controles nuevos.
         public FormUsuario(IUsuarioApiClient usuarioApiClient)
         {
             InitializeComponent();
@@ -22,6 +35,24 @@ namespace Kicket.WinForms.Forms
             // Opciones del combo de roles: Cliente, Usuario y Admin.
             comboBoxRol.DataSource = new[] { Roles.Cliente, Roles.Usuario, Roles.Admin };
             comboBoxRol.SelectedIndex = 0;
+
+            // DNI al lado del rol; teléfono y fecha de nacimiento en una fila nueva.
+            LayoutListado.AgregarCampo(this, "DNI:", textBoxDni, label6.Left, textBoxPassword.Left, comboBoxRol.Top, textBoxPassword.Width);
+            int y = LayoutListado.FilaDebajoDe(this, comboBoxRol);
+            LayoutListado.AgregarCampo(this, "Teléfono:", textBoxTelefono, labelRol.Left, comboBoxRol.Left, y, comboBoxRol.Width);
+            LayoutListado.AgregarCampo(this, "Nacimiento:", dateTimePickerNacimiento, label6.Left, textBoxPassword.Left, y, textBoxPassword.Width);
+
+            dataGridViewUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColumnDni", DataPropertyName = "Dni", HeaderText = "DNI" });
+            dataGridViewUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColumnTelefono", DataPropertyName = "Telefono", HeaderText = "Teléfono" });
+
+            // Filtros: texto (nombre, apellido, email o DNI), DNI exacto y rol.
+            _filtroTexto = _filtros.AgregarTexto("Buscar:", 115, "Nombre, email...");
+            _filtroDni = _filtros.AgregarTexto("DNI:", 80);
+            _filtroRol = _filtros.AgregarCombo("Rol:", 85, "Todos", Roles.Admin, Roles.Usuario, Roles.Cliente);
+            _filtros.Buscar += async (_, _) => { _paginador.Reiniciar(); await CargarUsuarios(); };
+            _filtros.Limpiar += async (_, _) => { _paginador.Reiniciar(); await CargarUsuarios(); };
+            _paginador.PaginaCambiada += async (_, _) => await CargarUsuarios();
+            LayoutListado.Envolver(this, dataGridViewUsuarios, _filtros, _paginador);
         }
 
         // Al cargar: usa las columnas del diseñador y carga los usuarios.
@@ -36,8 +67,17 @@ namespace Kicket.WinForms.Forms
         {
             try
             {
-                var usuarios = await _usuarioApiClient.GetAllAsync();
-                dataGridViewUsuarios.DataSource = usuarios;
+                _pagina = await _usuarioApiClient.GetPaginadoAsync(new UsuarioFiltro
+                {
+                    Pagina = _paginador.Pagina,
+                    TamanoPagina = _paginador.TamanoPagina,
+                    Busqueda = _filtroTexto.Text,
+                    Dni = _filtroDni.Text,
+                    Rol = _filtroRol.SelectedIndex > 0 ? _filtroRol.SelectedItem?.ToString() : null,
+                    OrdenarPor = "apellido"
+                });
+                dataGridViewUsuarios.DataSource = _pagina.Items;
+                _paginador.Actualizar(_pagina);
                 LimpiarFormulario();
             }
             catch (Exception ex)
@@ -49,22 +89,23 @@ namespace Kicket.WinForms.Forms
         // Al hacer click en una fila, guarda el id y copia los datos a los campos (la contraseña queda vacía).
         private void dataGridViewUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0)
-            {
-                var fila = dataGridViewUsuarios.Rows[e.RowIndex];
+            if (e.RowIndex < 0 || _pagina is null || e.RowIndex >= _pagina.Items.Count) return;
 
-                _usuarioIdSeleccionado = Convert.ToInt32(fila.Cells[0].Value);
-                textBoxNombre.Text = fila.Cells[1].Value?.ToString();
-                textBoxApellido.Text = fila.Cells[2].Value?.ToString();
-                textBoxEmail.Text = fila.Cells[3].Value?.ToString();
-                // Si el rol de la fila está en el combo, lo selecciona.
-                string? rolFila = fila.Cells[4].Value?.ToString();
-                if (!string.IsNullOrWhiteSpace(rolFila) && comboBoxRol.Items.Contains(rolFila))
-                {
-                    comboBoxRol.SelectedItem = rolFila;
-                }
-                textBoxPassword.Clear();
+            var usuario = _pagina.Items[e.RowIndex];
+            _usuarioIdSeleccionado = usuario.IdUsuario;
+            textBoxNombre.Text = usuario.Nombre;
+            textBoxApellido.Text = usuario.Apellido;
+            textBoxEmail.Text = usuario.Email;
+            textBoxDni.Text = usuario.Dni;
+            textBoxTelefono.Text = usuario.Telefono;
+            dateTimePickerNacimiento.Checked = usuario.FechaNacimiento.HasValue;
+            if (usuario.FechaNacimiento.HasValue) dateTimePickerNacimiento.Value = usuario.FechaNacimiento.Value;
+            // Si el rol de la fila está en el combo, lo selecciona.
+            if (comboBoxRol.Items.Contains(usuario.Rol))
+            {
+                comboBoxRol.SelectedItem = usuario.Rol;
             }
+            textBoxPassword.Clear();
         }
 
         // Botón limpiar.
@@ -80,6 +121,9 @@ namespace Kicket.WinForms.Forms
             textBoxApellido.Clear();
             textBoxEmail.Clear();
             textBoxPassword.Clear();
+            textBoxDni.Clear();
+            textBoxTelefono.Clear();
+            dateTimePickerNacimiento.Checked = false;
             if (comboBoxRol.Items.Count > 0) comboBoxRol.SelectedIndex = 0;
             _usuarioIdSeleccionado = null;
         }
@@ -100,6 +144,13 @@ namespace Kicket.WinForms.Forms
                 return;
             }
 
+            // El DNI es obligatorio en las altas (7 u 8 dígitos, con o sin puntos). La API vuelve a validarlo.
+            if (!Dni.EsValido(textBoxDni.Text))
+            {
+                MessageBox.Show(Dni.MensajeInvalido, "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             // Arma el pedido de alta con el rol elegido en el combo.
             var nuevoUsuario = new UsuarioRequest
             {
@@ -107,7 +158,10 @@ namespace Kicket.WinForms.Forms
                 Apellido = textBoxApellido.Text.Trim(),
                 Email = textBoxEmail.Text.Trim(),
                 Pass = textBoxPassword.Text,
-                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente
+                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente,
+                Dni = textBoxDni.Text.Trim(),
+                Telefono = string.IsNullOrWhiteSpace(textBoxTelefono.Text) ? null : textBoxTelefono.Text.Trim(),
+                FechaNacimiento = dateTimePickerNacimiento.Checked ? dateTimePickerNacimiento.Value.Date : null
             };
 
             try
@@ -140,8 +194,18 @@ namespace Kicket.WinForms.Forms
                 Apellido = textBoxApellido.Text.Trim(),
                 Email = textBoxEmail.Text.Trim(),
                 Pass = string.IsNullOrWhiteSpace(textBoxPassword.Text) ? null : textBoxPassword.Text,
-                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente
+                Rol = comboBoxRol.SelectedItem?.ToString() ?? Roles.Cliente,
+                // DNI vacío: la API conserva el que tenía (no se inventan DNI para usuarios viejos).
+                Dni = string.IsNullOrWhiteSpace(textBoxDni.Text) ? null : textBoxDni.Text.Trim(),
+                Telefono = string.IsNullOrWhiteSpace(textBoxTelefono.Text) ? null : textBoxTelefono.Text.Trim(),
+                FechaNacimiento = dateTimePickerNacimiento.Checked ? dateTimePickerNacimiento.Value.Date : null
             };
+
+            if (usuarioModificado.Dni is not null && !Dni.EsValido(usuarioModificado.Dni))
+            {
+                MessageBox.Show(Dni.MensajeInvalido, "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             try
             {

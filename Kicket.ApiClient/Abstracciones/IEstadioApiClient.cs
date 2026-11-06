@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
 
 namespace Kicket.ApiClient.Abstracciones
@@ -7,6 +8,8 @@ namespace Kicket.ApiClient.Abstracciones
     {
         // GET /estadios: lista todos los estadios.
         Task<IReadOnlyList<EstadioDto>> GetAllAsync(CancellationToken ct = default);
+        // GET .../paginado: una pagina con filtros y orden resueltos en el servidor.
+        Task<PagedResult<EstadioDto>> GetPaginadoAsync(EstadioFiltro filtro, CancellationToken ct = default);
         // GET /estadios/{id}: trae un estadio.
         Task<EstadioDto> GetOneAsync(int id, CancellationToken ct = default);
         // POST /estadios: crea un estadio.

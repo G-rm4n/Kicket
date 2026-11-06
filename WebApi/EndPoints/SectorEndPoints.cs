@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Common;
 using Kicket.Contracts.Sectores;
@@ -17,19 +17,19 @@ namespace WebApi.EndPoints
             {
                 var sectores = await sectorService.ObtenerTodosAsync();
 
-                IEnumerable<SectorDto> dtos = sectores.Select(s => new SectorDto
-                {
-                    SectorId = s.SectorId,
-                    EstadioId = s.EstadioId,
-                    Nombre = s.Nombre,
-                    CapacidadMaxima = s.CapacidadMaxima,
-                    PrecioBase = s.PrecioBase
-                }).ToList();
+                IEnumerable<SectorDto> dtos = sectores.Select(s => s.ADto()).ToList();
 
                 return Results.Ok(dtos);
             })
             .WithName("GetAllSectores")
             .Produces<IEnumerable<SectorDto>>(StatusCodes.Status200OK);
+
+            // GET /sectores/paginado: página de sectores con filtros (estadio, nombre, tipo Platea/Popular, capacidad mínima).
+            app.MapGet("/sectores/paginado", async ([AsParameters] SectorFiltro filtro, ISectorService sectorService, CancellationToken ct) =>
+                Results.Ok(await sectorService.ObtenerPaginadoAsync(filtro, ct)))
+            .WithName("GetSectoresPaginado")
+            .Produces<PagedResult<SectorDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
             // GET /sectores/{id}: devuelve un sector o 404.
             app.MapGet("/sectores/{id}", async (int id, ISectorService sectorService) =>
@@ -41,14 +41,7 @@ namespace WebApi.EndPoints
                     return Results.NotFound();
                 }
 
-                SectorDto dto = new()
-                {
-                    SectorId = sector.SectorId,
-                    EstadioId = sector.EstadioId,
-                    Nombre = sector.Nombre,
-                    CapacidadMaxima = sector.CapacidadMaxima,
-                    PrecioBase = sector.PrecioBase
-                };
+                SectorDto dto = sector.ADto();
 
                 return Results.Ok(dto);
             })
@@ -61,14 +54,7 @@ namespace WebApi.EndPoints
             {
                 var sectores = await sectorService.ObtenerPorEstadioAsync(estadioId);
 
-                IEnumerable<SectorDto> dtos = sectores.Select(s => new SectorDto
-                {
-                    SectorId = s.SectorId,
-                    EstadioId = s.EstadioId,
-                    Nombre = s.Nombre,
-                    CapacidadMaxima = s.CapacidadMaxima,
-                    PrecioBase = s.PrecioBase
-                }).ToList();
+                IEnumerable<SectorDto> dtos = sectores.Select(s => s.ADto()).ToList();
 
                 return Results.Ok(dtos);
             })
@@ -90,14 +76,7 @@ namespace WebApi.EndPoints
                 {
                     Sector nuevoSector = await sectorService.CrearSectorAsync(sector);
 
-                    SectorDto dto = new()
-                    {
-                        SectorId = nuevoSector.SectorId,
-                        EstadioId = nuevoSector.EstadioId,
-                        Nombre = nuevoSector.Nombre,
-                        CapacidadMaxima = nuevoSector.CapacidadMaxima,
-                        PrecioBase = nuevoSector.PrecioBase
-                    };
+                    SectorDto dto = nuevoSector.ADto();
 
                     return Results.Created($"/sectores/{dto.SectorId}", dto);
                 }

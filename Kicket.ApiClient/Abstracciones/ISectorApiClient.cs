@@ -1,4 +1,5 @@
-﻿using Kicket.Contracts.Sectores;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Sectores;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace Kicket.ApiClient.Abstracciones
     {
         // GET /sectores: lista todos los sectores.
         Task<IReadOnlyList<SectorDto>> GetAllAsync(CancellationToken ct = default);
+        // GET .../paginado: una pagina con filtros y orden resueltos en el servidor.
+        Task<PagedResult<SectorDto>> GetPaginadoAsync(SectorFiltro filtro, CancellationToken ct = default);
         // GET /sectores/{id}: trae un sector.
         Task<SectorDto> GetOneAsync(int id, CancellationToken ct = default);
         // GET /sectores/estadio/{id}: sectores de un estadio.

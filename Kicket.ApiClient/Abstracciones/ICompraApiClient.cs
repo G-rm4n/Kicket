@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Compras;
 using System.Collections.Generic;
 using System.Threading;
@@ -13,6 +14,10 @@ namespace Kicket.ApiClient.Abstracciones
     {
         // GET /compras: lista todas las compras.
         Task<IReadOnlyList<CompraDto>> GetAllAsync(CancellationToken ct = default);
+        // GET .../paginado: una pagina con filtros y orden resueltos en el servidor.
+        Task<PagedResult<CompraDto>> GetPaginadoAsync(CompraFiltro filtro, CancellationToken ct = default);
+        // GET /compras/mis-entradas: partidos del usuario logueado (la API lo saca del token) con sus entradas.
+        Task<PagedResult<PartidoConEntradasDto>> GetMisEntradasAsync(MisEntradasFiltro filtro, CancellationToken ct = default);
         // GET /compras/usuario/{id}: compras de un usuario.
         Task<IReadOnlyList<CompraDto>> GetByUsuarioIdAsync(int usuarioId, CancellationToken ct = default);
         // GET /compras/{id}: trae una compra.

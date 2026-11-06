@@ -1,0 +1,69 @@
+@* Paginador reutilizable: muestra "registros X–Y de N", tamaño de página y navegación primera/anterior/siguiente/última.
+   No pagina nada por su cuenta: avisa a la página qué número o tamaño se eligió y la página vuelve a pedir a la API. *@
+@using Kicket.Contracts.Common
+
+<nav class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-2" aria-label="Paginación">
+    <div class="small text-secondary">
+        @if (TotalRegistros == 0)
+        {
+            <span>Sin registros</span>
+        }
+        else
+        {
+            <span>Mostrando <strong>@Desde–@Hasta</strong> de <strong>@TotalRegistros</strong> @(TotalRegistros == 1 ? "registro" : "registros")</span>
+        }
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <label class="small text-secondary mb-0" for="@_idSelector">Por página</label>
+        <select id="@_idSelector" class="form-select form-select-sm w-auto" value="@TamanoPagina" disabled="@Cargando"
+                @onchange="CambiarTamano">
+            @foreach (var tamano in PagedRequest.TamanosSugeridos)
+            {
+                <option value="@tamano">@tamano</option>
+            }
+        </select>
+
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-secondary" title="Primera página" aria-label="Primera página"
+                    disabled="@(Cargando || Pagina <= 1)" @onclick="() => IrA(1)">«</button>
+            <button type="button" class="btn btn-outline-secondary" title="Página anterior" aria-label="Página anterior"
+                    disabled="@(Cargando || Pagina <= 1)" @onclick="() => IrA(Pagina - 1)">‹</button>
+            <span class="btn btn-outline-secondary disabled text-dark" aria-live="polite">Página @Pagina de @TotalPaginas</span>
+            <button type="button" class="btn btn-outline-secondary" title="Página siguiente" aria-label="Página siguiente"
+                    disabled="@(Cargando || Pagina >= TotalPaginas)" @onclick="() => IrA(Pagina + 1)">›</button>
+            <button type="button" class="btn btn-outline-secondary" title="Última página" aria-label="Última página"
+                    disabled="@(Cargando || Pagina >= TotalPaginas)" @onclick="() => IrA(TotalPaginas)">»</button>
+        </div>
+    </div>
+</nav>
+
+@code {
+    // Datos de la página actual (vienen del PagedResult que devolvió la API).
+    [Parameter] public int Pagina { get; set; } = 1;
+    [Parameter] public int TotalPaginas { get; set; } = 1;
+    [Parameter] public int TotalRegistros { get; set; }
+    [Parameter] public int TamanoPagina { get; set; } = 10;
+    // Deshabilita los controles mientras se espera a la API.
+    [Parameter] public bool Cargando { get; set; }
+
+    // Avisan a la página que tiene que volver a consultar.
+    [Parameter] public EventCallback<int> OnCambioPagina { get; set; }
+    [Parameter] public EventCallback<int> OnCambioTamano { get; set; }
+
+    private readonly string _idSelector = $"tam-{Guid.NewGuid():N}";
+    private int Desde => TotalRegistros == 0 ? 0 : (Pagina - 1) * TamanoPagina + 1;
+    private int Hasta => Math.Min(Pagina * TamanoPagina, TotalRegistros);
+
+    private async Task IrA(int pagina)
+    {
+        if (pagina < 1 || pagina > TotalPaginas || pagina == Pagina) return;
+        await OnCambioPagina.InvokeAsync(pagina);
+    }
+
+    private async Task CambiarTamano(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var tamano))
+            await OnCambioTamano.InvokeAsync(tamano);
+    }
+}

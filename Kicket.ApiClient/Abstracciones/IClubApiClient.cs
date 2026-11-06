@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Clubes;
 
 namespace Kicket.ApiClient.Abstracciones
@@ -7,6 +8,8 @@ namespace Kicket.ApiClient.Abstracciones
     {
         // GET /clubes: lista todos los clubes.
         Task<IReadOnlyList<ClubDto>> GetAllAsync(CancellationToken ct = default);
+        // GET .../paginado: una pagina con filtros y orden resueltos en el servidor.
+        Task<PagedResult<ClubDto>> GetPaginadoAsync(ClubFiltro filtro, CancellationToken ct = default);
         // GET /clubes/{id}: trae un club.
         Task<ClubDto> GetOneAsync(int id, CancellationToken ct = default);
         // POST /clubes: crea un club y devuelve el creado.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +17,7 @@ namespace Domain.Entities
         public string Direccion { get; set; } = string.Empty;
         // Ciudad donde está el estadio.
         public String Ciudad { get; set; } = string.Empty;
+        // Provincia donde está el estadio (opcional, máx. 100 caracteres).
+        public string? Provincia { get; set; }
     }
 }

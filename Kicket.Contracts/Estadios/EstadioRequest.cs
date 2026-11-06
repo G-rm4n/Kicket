@@ -19,5 +19,9 @@ namespace Kicket.Contracts.Estadios
         [Required(ErrorMessage = "La ciudad es obligatoria.")]
         [StringLength(100, ErrorMessage = "La ciudad no puede superar los 100 caracteres.")]
         public string Ciudad { get; set; } = string.Empty;
+
+        // Provincia: opcional, hasta 100 caracteres.
+        [StringLength(100, ErrorMessage = "La provincia no puede superar los 100 caracteres.")]
+        public string? Provincia { get; set; }
     }
 }

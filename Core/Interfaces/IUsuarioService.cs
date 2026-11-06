@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Usuarios;
 
 namespace Core.Interfaces
 {
@@ -16,6 +18,8 @@ namespace Core.Interfaces
         Task<Usuario?> ObtenerPorIdAsync(int id);
         // Devuelve todos los usuarios.
         Task<IEnumerable<Usuario>> ObtenerTodosAsync();
+        // Pagina de usuarios con filtros (nombre, email, DNI, rol).
+        Task<PagedResult<UsuarioDto>> ObtenerPaginadoAsync(UsuarioFiltro filtro, CancellationToken ct = default);
         // Valida y actualiza un usuario; false si no existe.
         Task<bool> ActualizarUsuarioAsync(Usuario usuario);
         // Elimina un usuario; false si no existe.

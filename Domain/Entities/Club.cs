@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +17,9 @@ namespace Domain.Entities
         public string? Descripcion { get; set; } 
         // Sigla corta del club, por ejemplo "NOB" (máx. 10 caracteres).
         public string Abreviatura { get; set; } = string.Empty;
+        // Ciudad de origen del club (opcional, máx. 100 caracteres).
+        public string? Ciudad { get; set; }
+        // Año de fundación (opcional).
+        public int? AnioFundacion { get; set; }
     }
 }

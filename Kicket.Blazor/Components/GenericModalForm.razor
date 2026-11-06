@@ -1,4 +1,4 @@
-﻿@* Ventana modal genérica con un formulario: recibe el título, el objeto a editar y el contenido del formulario. *@
+@* Ventana modal genérica con un formulario: recibe el título, el objeto a editar y el contenido del formulario. *@
 @typeparam TOjb
 
 <div class="modal fade show d-block" tabindex="-1" style="background-color:rgba(0,0,0,0.5);">
@@ -13,12 +13,17 @@
                 <DataAnnotationsValidator></DataAnnotationsValidator>
             <div class="modal-body">
                 @* Dibuja los campos que le pasa la página que usa el modal. *@
+                @* Error devuelto por la API (por ejemplo, DNI repetido): se muestra dentro del modal para que se vea. *@
+                @if (!string.IsNullOrEmpty(Error))
+                {
+                    <div class="alert alert-danger py-2 small">@Error</div>
+                }
                 @if(CuerpoForm is not null && this.Obj is not null){
                     @CuerpoForm!(Obj!) 
                 }
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Close</button>
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cancelar</button>
                 <button type="submit" class="btn bg-primary">Confirmar</button>
             </div>
             </EditForm>
@@ -36,6 +41,9 @@
     // Objeto que se está editando.
     [Parameter]
     public TOjb Obj { get; set; } = default!;
+    // Mensaje de error a mostrar dentro del modal (null = sin error).
+    [Parameter]
+    public string? Error { get; set; }
     // Evento que se dispara al confirmar el formulario.
     [Parameter]
     public EventCallback<TOjb> Onsubmit { get; set; }

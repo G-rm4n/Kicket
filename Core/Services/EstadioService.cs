@@ -1,7 +1,9 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Data.Implementaciones;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Estadios;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,6 +42,13 @@ namespace Core.Services
             return await _estadioRepository.GetAllAsync();
         }
 
+        // Valida los filtros y pide la pagina al repositorio.
+        public async Task<PagedResult<EstadioDto>> ObtenerPaginadoAsync(EstadioFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _estadioRepository.ObtenerPaginadoAsync(filtro, ct);
+        }
+
         // Valida el estadio y lo actualiza.
         public async Task<bool> ActualizarEstadioAsync(Estadio estadio)
         {
@@ -72,6 +81,11 @@ namespace Core.Services
             if (string.IsNullOrWhiteSpace(estadio.Ciudad))
             {
                 throw new ArgumentException("La ciudad del estadio es obligatoria.");
+            }
+            estadio.Provincia = Validaciones.TextoOpcional(estadio.Provincia);
+            if (estadio.Provincia is { Length: > 100 })
+            {
+                throw new ArgumentException("La provincia no puede superar los 100 caracteres.");
             }
         }
     }

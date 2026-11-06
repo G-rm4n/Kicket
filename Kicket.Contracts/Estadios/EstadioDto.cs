@@ -11,6 +11,12 @@ namespace Kicket.Contracts.Estadios
         public string Direccion { get; set; }=string.Empty;
         // Ciudad.
         public string Ciudad { get; set; } = string.Empty;
+        // Provincia (opcional).
+        public string? Provincia { get; set; }
+        // Suma de la capacidad de sus sectores (dato calculado, no se guarda).
+        public int CapacidadTotal { get; set; }
+        // Cantidad de sectores del estadio (dato calculado).
+        public int CantidadSectores { get; set; }
 
         /// <summary>Direccion armada, para mostrar directo en una grilla.</summary>
         public string DireccionCompleta => $"{Direccion} {Ciudad}";

@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Middlewares;
 
@@ -31,6 +32,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             ArgumentException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             InvalidOperationException => StatusCodes.Status409Conflict,
+            // Borrado bloqueado por una FK Restrict (club con eventos, estadio con sectores...) o DNI/email duplicado.
+            DbUpdateException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
 
@@ -39,7 +42,10 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             Status = statusCode,
             Title = "Ocurrió un error al procesar la solicitud",
-            Detail = exception.Message 
+            // Para errores de base de datos no se expone el mensaje técnico de EF/SQL.
+            Detail = exception is DbUpdateException
+                ? "La operación no se puede realizar porque el registro tiene datos relacionados o duplicados."
+                : exception.Message
         };
 
         // Escribe el código y el JSON en la respuesta.

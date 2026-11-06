@@ -11,7 +11,8 @@ namespace WebApi.EndPoints
     /// </summary>
     public static class EntradaEndPoints
     {
-        // Registra las rutas de consulta de entradas (requieren estar logueado).
+        // Registra las rutas de consulta de entradas. Solo Admin: listan códigos QR de otros usuarios
+        // (los clientes ven sus entradas en GET /compras/mis-entradas).
         public static void MapEntradaEndPoints(this WebApplication app)
         {
             // GET /entradas/{id}: devuelve una entrada o 404.
@@ -29,7 +30,7 @@ namespace WebApi.EndPoints
             .WithName("GetEntrada")
             .Produces<EntradaDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization();
+            .RequireAuthorization("Solo admin");
 
             // GET /entradas/evento/{id}: lista las entradas vendidas para un evento.
             app.MapGet("/entradas/evento/{eventoId}", async (int eventoId, IEntradaService entradaService) =>
@@ -42,7 +43,7 @@ namespace WebApi.EndPoints
             })
             .WithName("GetEntradasPorEvento")
             .Produces<IEnumerable<EntradaDto>>(StatusCodes.Status200OK)
-            .RequireAuthorization();
+            .RequireAuthorization("Solo admin");
         }
 
         // Convierte una Entrada a EntradaDto.

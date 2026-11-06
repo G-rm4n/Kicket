@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Core.Services;
 using Domain.Entities;
 using Kicket.Contracts.Auth;
@@ -31,14 +31,7 @@ namespace WebApi.EndPoints
                 {
                     Token = token,
                     ExpiraEn = fechaExpiracion,
-                    Usuario = new UsuarioDto
-                    {
-                        IdUsuario = usuario.IdUsuario,
-                        Nombre = usuario.Nombre,
-                        Apellido = usuario.Apellido,
-                        Email = usuario.Email,
-                        Rol = usuario.Rol
-                    }
+                    Usuario = usuario.ADto()
                 });
             });
 
@@ -46,7 +39,16 @@ namespace WebApi.EndPoints
             app.MapPost("auth/register", async (UsuarioRequest RegReq, IAuthService authService) =>
             {
                 // Convierte el request en la entidad Usuario.
-                var usuario = new Usuario() { Email = RegReq.Email, Apellido = RegReq.Apellido, Nombre = RegReq.Nombre, Password = RegReq.Pass };
+                var usuario = new Usuario()
+                {
+                    Email = RegReq.Email,
+                    Apellido = RegReq.Apellido,
+                    Nombre = RegReq.Nombre,
+                    Password = RegReq.Pass,
+                    Dni = RegReq.Dni,
+                    Telefono = RegReq.Telefono,
+                    FechaNacimiento = RegReq.FechaNacimiento
+                };
 
                 // El servicio valida email repetido, hashea la contraseña y lo guarda.
                 await authService.RegistrarUsuario(usuario);

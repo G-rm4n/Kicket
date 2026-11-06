@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Sectores;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,5 +26,7 @@ namespace Data.Interfaces
         Task<IEnumerable<Sector>> GetAll();
         // Devuelve los sectores de un estadio.
         Task<IEnumerable<Sector>> ObtenerPorEstadioAsync(int estadioId);
+        // Pagina de sectores (con el nombre del estadio).
+        Task<PagedResult<SectorDto>> ObtenerPaginadoAsync(SectorFiltro filtro, CancellationToken ct = default);
     }
 }

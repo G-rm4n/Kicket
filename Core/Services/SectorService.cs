@@ -1,6 +1,8 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Sectores;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +49,13 @@ namespace Core.Services
         {
             return await _sectorRepository.ObtenerPorEstadioAsync(estadioId);
         }
+        // Valida los filtros y pide la pagina al repositorio.
+        public async Task<PagedResult<SectorDto>> ObtenerPaginadoAsync(SectorFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _sectorRepository.ObtenerPaginadoAsync(filtro, ct);
+        }
+
         // Valida el sector y lo actualiza.
         public async Task<bool> ActualizarSectorAsync(Sector sector)
         {

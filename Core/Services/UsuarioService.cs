@@ -1,7 +1,8 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Data.Implementaciones;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Usuarios;
 using System;
 using System.Collections.Generic;
@@ -24,12 +25,19 @@ namespace Core.Services
         public async Task<Usuario> RegistrarUsuarioAsync(Usuario usuario)
         {
             ValidarUsuario(usuario);
+            // En las altas el DNI es obligatorio.
+            Validaciones.ValidarDatosPersonales(usuario, dniObligatorio: true);
 
             // Si el email ya existe tira InvalidOperationException (el handler global responde 409).
             bool emailYaRegistrado = await _usuarioRepository.ExistsEmail(usuario.Email);
             if (emailYaRegistrado)
             {
                 throw new InvalidOperationException("Ya existe un usuario registrado con ese email.");
+            }
+            // El DNI tampoco se puede repetir (ademas lo garantiza el indice unico de la base).
+            if (await _usuarioRepository.ExistsDni(usuario.Dni!))
+            {
+                throw new InvalidOperationException("Ya existe un usuario registrado con ese DNI.");
             }
 
             // Fecha de alta y rol "Usuario" si no vino ninguno.
@@ -75,10 +83,27 @@ namespace Core.Services
             return await _usuarioRepository.GetAllAsync();
         }
 
+        // Valida los filtros y pide la pagina de usuarios.
+        public async Task<PagedResult<UsuarioDto>> ObtenerPaginadoAsync(UsuarioFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _usuarioRepository.ObtenerPaginadoAsync(filtro, ct);
+        }
+
         // Valida y actualiza el usuario; solo hashea la contraseña si es nueva (no un hash ya existente).
         public async Task<bool> ActualizarUsuarioAsync(Usuario usuario)
         {
             ValidarUsuario(usuario);
+            // Al editar se acepta DNI vacio (usuarios anteriores a la v2); si viene, tiene que ser valido y unico.
+            Validaciones.ValidarDatosPersonales(usuario, dniObligatorio: false);
+            if (await _usuarioRepository.ExistsEmailDeOtro(usuario.Email, usuario.IdUsuario))
+            {
+                throw new InvalidOperationException("Ya existe otro usuario registrado con ese email.");
+            }
+            if (usuario.Dni is not null && await _usuarioRepository.ExistsDni(usuario.Dni, usuario.IdUsuario))
+            {
+                throw new InvalidOperationException("Ya existe otro usuario registrado con ese DNI.");
+            }
 
             // El PUT reenvía el hash guardado cuando no se cambia la clave: no hay que volver a hashearlo.
             if (!Contrasenas.EsHash(usuario.Password))

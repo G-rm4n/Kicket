@@ -1,0 +1,257 @@
+@* Reportes de ventas (ruta /admin/reportes). Solo Admin: la pantalla lo controla con PaginaProtegida y la API con
+   la política "Solo admin". Los datos salen de la API (consultas ADO.NET) y los gráficos llegan ya dibujados
+   como SVG: son los mismos que van dentro del PDF. *@
+@page "/admin/reportes"
+@using Kicket.ApiClient.Abstracciones
+@using Kicket.Contracts.Eventos
+@using Kicket.Contracts.Reportes
+@layout AdminLayout
+@inherits PaginaProtegida
+@inject IReporteApiClient reporteApi
+@inject IEventoApiClient eventoApi
+@inject IJSRuntime JS
+
+<div class="d-flex flex-column mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <h1 class="mb-0">Reportes de ventas</h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger btn-sm" disabled="@(_reporte is null || _exportando)" @onclick="DescargarPdfAsync">
+                @if (_exportando && _exportandoTipo == "pdf") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Exportar PDF
+            </button>
+            <button class="btn btn-outline-success btn-sm" disabled="@(_reporte is null || _exportando)" @onclick="DescargarExcelAsync">
+                @if (_exportando && _exportandoTipo == "xlsx") { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <PanelFiltros Cargando="Procesando" OnBuscar="GenerarAsync" OnLimpiar="LimpiarAsync">
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1" for="r-desde">Compras desde</label>
+            <input id="r-desde" type="date" class="form-control form-control-sm" @bind="_filtro.Desde" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1" for="r-hasta">Compras hasta</label>
+            <input id="r-hasta" type="date" class="form-control form-control-sm" @bind="_filtro.Hasta" />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label small mb-1" for="r-evento">Partido</label>
+            <select id="r-evento" class="form-select form-select-sm" @bind="EventoSeleccionado">
+                <option value="">Todos los partidos</option>
+                @foreach (var ev in _eventos)
+                {
+                    <option value="@ev.IdEvento">@ev.Nombre (@ev.Fecha.ToString("dd/MM/yyyy"))</option>
+                }
+            </select>
+        </div>
+    </PanelFiltros>
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger">@MensajeError</div>
+    }
+
+    @if (_reporte is null)
+    {
+        @if (Procesando)
+        {
+            <div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="text-secondary mt-2">Generando reporte...</p></div>
+        }
+    }
+    else
+    {
+        <div class="@(Procesando ? "opacity-50" : "")">
+            <p class="small text-secondary mb-2">
+                Generado el @_reporte.GeneradoEn.ToString("dd/MM/yyyy HH:mm") ·
+                @(_reporte.Desde?.ToString("dd/MM/yyyy") ?? "sin fecha inicial") – @(_reporte.Hasta?.ToString("dd/MM/yyyy") ?? "hoy") ·
+                @(_reporte.EventoNombre ?? "Todos los partidos")
+            </p>
+
+            @* Indicadores principales *@
+            <div class="row g-3 mb-2">
+                @Indicador("Total recaudado", "$ " + _reporte.Resumen.TotalRecaudado.ToString("N2", _ar))
+                @Indicador("Entradas vendidas", _reporte.Resumen.EntradasVendidas.ToString("N0", _ar))
+                @Indicador("Compras confirmadas", _reporte.Resumen.ComprasConfirmadas.ToString("N0", _ar))
+                @Indicador("Ticket promedio", "$ " + _reporte.Resumen.TicketPromedio.ToString("N2", _ar))
+                @Indicador("Partidos con ventas", $"{_reporte.Resumen.EventosConVentas} de {_reporte.Resumen.EventosTotales}")
+                @Indicador("Compradores", _reporte.Resumen.CompradoresDistintos.ToString("N0", _ar))
+            </div>
+            <p class="small text-muted fst-italic">@ReporteVentasDto.CriterioVentas
+                @if (_reporte.Resumen.ComprasNoConfirmadas > 0)
+                {
+                    <span> Hay @_reporte.Resumen.ComprasNoConfirmadas compra(s) con otro estado que no suman.</span>
+                }
+            </p>
+
+            @* Gráficos: SVG generado en el servidor con datos reales (el texto viene escapado). *@
+            <div class="row g-3 mb-4">
+                @foreach (var grafico in _reporte.Graficos)
+                {
+                    <div class="col-12 col-xl-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h2 class="h6 fw-bold mb-3">@grafico.Titulo</h2>
+                                <div class="grafico-svg">@((MarkupString)grafico.Svg)</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* Tablas de detalle *@
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                @foreach (var (clave, titulo) in _pestanas)
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(_pestana == clave ? "active" : "")" role="tab" aria-selected="@(_pestana == clave ? "true" : "false")"
+                                @onclick="() => _pestana = clave">@titulo</button>
+                    </li>
+                }
+            </ul>
+
+            <div class="table-responsive">
+                @switch (_pestana)
+                {
+                    case "evento":
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-light"><tr><th>Partido</th><th>Fecha</th><th>Estadio</th><th class="text-end">Compras</th><th class="text-end">Entradas</th><th class="text-end">Recaudado</th></tr></thead>
+                            <tbody>
+                                @foreach (var x in _reporte.PorEvento)
+                                {
+                                    <tr><td>@x.Evento</td><td>@x.Fecha.ToString("dd/MM/yyyy HH:mm")</td><td>@x.Estadio</td><td class="text-end">@x.Compras</td><td class="text-end">@x.Entradas</td><td class="text-end">$ @x.Recaudado.ToString("N2", _ar)</td></tr>
+                                }
+                                @FilaVacia(_reporte.PorEvento.Count, 6)
+                            </tbody>
+                            <tfoot class="fw-bold"><tr><td colspan="3">Total</td><td class="text-end">@_reporte.PorEvento.Sum(x => x.Compras)</td><td class="text-end">@_reporte.PorEvento.Sum(x => x.Entradas)</td><td class="text-end">$ @_reporte.PorEvento.Sum(x => x.Recaudado).ToString("N2", _ar)</td></tr></tfoot>
+                        </table>
+                        break;
+                    case "club":
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-light"><tr><th>Club</th><th class="text-end">Partidos local</th><th class="text-end">Partidos visitante</th><th class="text-end">Entradas (local)</th><th class="text-end">Recaudado (local)</th></tr></thead>
+                            <tbody>
+                                @foreach (var x in _reporte.PorClub)
+                                {
+                                    <tr><td>@x.Club</td><td class="text-end">@x.EventosComoLocal</td><td class="text-end">@x.EventosComoVisitante</td><td class="text-end">@x.Entradas</td><td class="text-end">$ @x.Recaudado.ToString("N2", _ar)</td></tr>
+                                }
+                            </tbody>
+                            <tfoot class="fw-bold"><tr><td colspan="3">Total</td><td class="text-end">@_reporte.PorClub.Sum(x => x.Entradas)</td><td class="text-end">$ @_reporte.PorClub.Sum(x => x.Recaudado).ToString("N2", _ar)</td></tr></tfoot>
+                        </table>
+                        <p class="small text-muted">Cada venta se atribuye al club local del partido, así el total por club coincide con el total general.</p>
+                        break;
+                    case "sector":
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-light"><tr><th>Estadio</th><th>Sector</th><th class="text-end">Capacidad por partido</th><th class="text-end">Entradas</th><th class="text-end">Recaudado</th></tr></thead>
+                            <tbody>
+                                @foreach (var x in _reporte.PorSector)
+                                {
+                                    <tr><td>@x.Estadio</td><td>@x.Sector</td><td class="text-end">@x.CapacidadPorEvento.ToString("N0", _ar)</td><td class="text-end">@x.Entradas</td><td class="text-end">$ @x.Recaudado.ToString("N2", _ar)</td></tr>
+                                }
+                            </tbody>
+                            <tfoot class="fw-bold"><tr><td colspan="3">Total</td><td class="text-end">@_reporte.PorSector.Sum(x => x.Entradas)</td><td class="text-end">$ @_reporte.PorSector.Sum(x => x.Recaudado).ToString("N2", _ar)</td></tr></tfoot>
+                        </table>
+                        break;
+                    default:
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-light"><tr><th>Día</th><th class="text-end">Compras</th><th class="text-end">Entradas</th><th class="text-end">Recaudado</th></tr></thead>
+                            <tbody>
+                                @foreach (var x in _reporte.PorPeriodo)
+                                {
+                                    <tr><td>@x.Dia.ToString("dd/MM/yyyy")</td><td class="text-end">@x.Compras</td><td class="text-end">@x.Entradas</td><td class="text-end">$ @x.Recaudado.ToString("N2", _ar)</td></tr>
+                                }
+                                @FilaVacia(_reporte.PorPeriodo.Count, 4)
+                            </tbody>
+                            <tfoot class="fw-bold"><tr><td>Total</td><td class="text-end">@_reporte.PorPeriodo.Sum(x => x.Compras)</td><td class="text-end">@_reporte.PorPeriodo.Sum(x => x.Entradas)</td><td class="text-end">$ @_reporte.PorPeriodo.Sum(x => x.Recaudado).ToString("N2", _ar)</td></tr></tfoot>
+                        </table>
+                        break;
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly System.Globalization.CultureInfo _ar = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    private static readonly (string Clave, string Titulo)[] _pestanas =
+        { ("evento", "Por partido"), ("club", "Por club"), ("sector", "Por sector"), ("dia", "Por día") };
+
+    private ReporteFiltro _filtro = new();
+    private ReporteVentasDto? _reporte;
+    private IReadOnlyList<EventoDto> _eventos = Array.Empty<EventoDto>();
+    private string _pestana = "evento";
+    private bool _exportando;
+    private string _exportandoTipo = string.Empty;
+
+    // El select de partido trabaja con texto ("" = todos).
+    private string EventoSeleccionado
+    {
+        get => _filtro.EventoId?.ToString() ?? string.Empty;
+        set => _filtro.EventoId = int.TryParse(value, out var id) ? id : null;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await SecureExec(async () => _eventos = (await eventoApi.GetAllAsync()).OrderByDescending(e => e.Fecha).ToList());
+        await GenerarAsync();
+    }
+
+    private async Task GenerarAsync()
+    {
+        await SecureExec(async () => _reporte = await reporteApi.GetVentasAsync(_filtro));
+    }
+
+    private async Task LimpiarAsync()
+    {
+        _filtro = new ReporteFiltro();
+        await GenerarAsync();
+    }
+
+    private Task DescargarPdfAsync() =>
+        DescargarAsync("pdf", "application/pdf", () => reporteApi.DescargarPdfAsync(_filtro));
+
+    private Task DescargarExcelAsync() =>
+        DescargarAsync("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", () => reporteApi.DescargarExcelAsync(_filtro));
+
+    // Pide el archivo a la API (que lo genera con los mismos filtros) y lo baja con descargas.js.
+    private async Task DescargarAsync(string extension, string tipo, Func<Task<byte[]>> obtener)
+    {
+        _exportando = true;
+        _exportandoTipo = extension;
+        try
+        {
+            await SecureExec(async () =>
+            {
+                var bytes = await obtener();
+                using var stream = new MemoryStream(bytes);
+                using var referencia = new DotNetStreamReference(stream);
+                await JS.InvokeVoidAsync("kicketDescargar", $"kicket-ventas-{DateTime.Now:yyyyMMdd-HHmm}.{extension}", tipo, referencia);
+            });
+        }
+        finally
+        {
+            _exportando = false;
+        }
+    }
+
+    // Tarjeta de indicador.
+    private RenderFragment Indicador(string titulo, string valor) => __builder =>
+    {
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body py-3">
+                    <div class="small text-secondary">@titulo</div>
+                    <div class="fs-5 fw-bold text-primary text-nowrap">@valor</div>
+                </div>
+            </div>
+        </div>
+    };
+
+    private RenderFragment FilaVacia(int cantidad, int columnas) => __builder =>
+    {
+        if (cantidad == 0)
+        {
+            <tr><td colspan="@columnas" class="text-center text-secondary py-3">Sin ventas confirmadas para los filtros elegidos.</td></tr>
+        }
+    };
+}

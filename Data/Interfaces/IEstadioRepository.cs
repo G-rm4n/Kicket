@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Estadios;
 
 namespace Data.Interfaces
 {
@@ -20,5 +22,7 @@ namespace Data.Interfaces
         Task<Estadio?> GetByIdAsync(int id);
         // Devuelve todos los estadios.
         Task<IEnumerable<Estadio>> GetAllAsync();
+        // Pagina de estadios con la capacidad total de sus sectores.
+        Task<PagedResult<EstadioDto>> ObtenerPaginadoAsync(EstadioFiltro filtro, CancellationToken ct = default);
     }
 }

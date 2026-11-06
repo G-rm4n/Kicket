@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,7 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
+using Kicket.WinForms.Controles;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.WinForms.Forms
@@ -20,11 +22,34 @@ namespace Kicket.WinForms.Forms
         private readonly IEstadioApiClient _estadioApiClient;
         private int? _estadioIdSeleccionado = null;
 
-        // Constructor: recibe el cliente de estadios por inyección.
+        // Controles agregados en la versión 2: provincia, filtros y paginador.
+        private readonly TextBox textBoxProvincia = new();
+        private readonly BarraFiltros _filtros = new();
+        private readonly TextBox _filtroTexto;
+        private readonly TextBox _filtroCiudad;
+        private readonly ControlPaginacion _paginador = new();
+        private PagedResult<EstadioDto>? _pagina;
+
+        // Constructor: recibe el cliente de estadios por inyección y arma los controles nuevos.
         public FormEstadio(IEstadioApiClient estadioApiClient)
         {
             InitializeComponent();
             _estadioApiClient = estadioApiClient;
+
+            // Campo Provincia debajo de Ciudad.
+            int y = LayoutListado.FilaDebajoDe(this, textBoxCiudad);
+            LayoutListado.AgregarCampo(this, "Provincia:", textBoxProvincia, label4.Left, textBoxCiudad.Left, y, textBoxCiudad.Width);
+
+            // Columnas nuevas: provincia y capacidad total (suma de sus sectores, la calcula la API).
+            dataGridViewEstadios.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColumnProvincia", DataPropertyName = "Provincia", HeaderText = "Provincia" });
+            dataGridViewEstadios.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColumnCapacidad", DataPropertyName = "CapacidadTotal", HeaderText = "Capacidad" });
+
+            _filtroTexto = _filtros.AgregarTexto("Buscar:", 160, "Nombre o dirección");
+            _filtroCiudad = _filtros.AgregarTexto("Ciudad:", 100);
+            _filtros.Buscar += async (_, _) => { _paginador.Reiniciar(); await CargarEstadios(); };
+            _filtros.Limpiar += async (_, _) => { _paginador.Reiniciar(); await CargarEstadios(); };
+            _paginador.PaginaCambiada += async (_, _) => await CargarEstadios();
+            LayoutListado.Envolver(this, dataGridViewEstadios, _filtros, _paginador);
         }
 
         // --- 1. CARGA INICIAL ---
@@ -35,13 +60,21 @@ namespace Kicket.WinForms.Forms
             await CargarEstadios();
         }
 
-        // Pide los estadios a la API, los muestra en la grilla y limpia el formulario.
+        // Pide a la API la página actual con los filtros, la muestra en la grilla y limpia el formulario.
         private async Task CargarEstadios()
         {
             try
             {
-                var estadios = await _estadioApiClient.GetAllAsync();
-                dataGridViewEstadios.DataSource = estadios;
+                _pagina = await _estadioApiClient.GetPaginadoAsync(new EstadioFiltro
+                {
+                    Pagina = _paginador.Pagina,
+                    TamanoPagina = _paginador.TamanoPagina,
+                    Busqueda = _filtroTexto.Text,
+                    Ciudad = _filtroCiudad.Text,
+                    OrdenarPor = "nombre"
+                });
+                dataGridViewEstadios.DataSource = _pagina.Items;
+                _paginador.Actualizar(_pagina);
                 LimpiarFormulario();
             }
             catch (Exception ex)
@@ -54,16 +87,14 @@ namespace Kicket.WinForms.Forms
         // Al hacer click en una fila, guarda el id y copia los datos a los campos.
         private void dataGridEstadios_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0)
-            {
-                var fila = dataGridViewEstadios.Rows[e.RowIndex];
+            if (e.RowIndex < 0 || _pagina is null || e.RowIndex >= _pagina.Items.Count) return;
 
-                // Asume que las columnas visuales están en este orden: ID (0), Nombre (1), Direccion (2), Ciudad (3)
-                _estadioIdSeleccionado = Convert.ToInt32(fila.Cells[0].Value);
-                textBoxNombre.Text = fila.Cells[1].Value?.ToString();
-                textBoxDireccion.Text = fila.Cells[2].Value?.ToString();
-                textBoxCiudad.Text = fila.Cells[3].Value?.ToString();
-            }
+            var estadio = _pagina.Items[e.RowIndex];
+            _estadioIdSeleccionado = estadio.IdEstadio;
+            textBoxNombre.Text = estadio.Nombre;
+            textBoxDireccion.Text = estadio.Direccion;
+            textBoxCiudad.Text = estadio.Ciudad;
+            textBoxProvincia.Text = estadio.Provincia;
         }
 
         // --- 2b. BOTÓN "Sectores" DE LA FILA: abre el maestro-detalle en una ventana aparte ---
@@ -83,6 +114,8 @@ namespace Kicket.WinForms.Forms
             var formSectores = Program.ServiceProvider.GetRequiredService<FormSectorDetalle>();
             formSectores.Inicializar(estadioId, nombreEstadio);
             formSectores.ShowDialog(this);
+            // Al volver se refresca la capacidad total (pudo cambiar al editar sectores).
+            _ = CargarEstadios();
         }
 
         // --- 3. BOTÓN LIMPIAR ---
@@ -97,6 +130,7 @@ namespace Kicket.WinForms.Forms
             textBoxNombre.Clear();
             textBoxDireccion.Clear();
             textBoxCiudad.Clear();
+            textBoxProvincia.Clear();
             _estadioIdSeleccionado = null;
         }
 
@@ -115,7 +149,8 @@ namespace Kicket.WinForms.Forms
             {
                 Nombre = textBoxNombre.Text,
                 Direccion = textBoxDireccion.Text,
-                Ciudad = textBoxCiudad.Text
+                Ciudad = textBoxCiudad.Text,
+                Provincia = textBoxProvincia.Text
             };
 
             try
@@ -146,7 +181,8 @@ namespace Kicket.WinForms.Forms
                 IdEstadio = _estadioIdSeleccionado.Value,
                 Nombre = textBoxNombre.Text,
                 Direccion = textBoxDireccion.Text,
-                Ciudad = textBoxCiudad.Text
+                Ciudad = textBoxCiudad.Text,
+                Provincia = textBoxProvincia.Text
             };
 
             try
@@ -173,7 +209,7 @@ namespace Kicket.WinForms.Forms
             {
                 try
                 {
-                    // DELETE /estadios/{id} y recarga la grilla. Si tiene sectores, la API devuelve error.
+                    // DELETE /estadios/{id} y recarga la grilla. Si tiene sectores, la API responde 409.
                     await _estadioApiClient.DeleteAsync(_estadioIdSeleccionado.Value);
                     await CargarEstadios();
                 }

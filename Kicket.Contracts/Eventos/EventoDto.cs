@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,12 @@ namespace Kicket.Contracts.Eventos
         public int IdEquipoVisitante { get; set; }
         // Si fue cancelado.
         public bool EstaCancelado { get; set; }
+        // Descripcion / informacion para el comprador (opcional).
+        public string? Descripcion { get; set; }
+        // Nombres resueltos (los completan los listados paginados; en el resto pueden venir vacios).
+        public string? NombreEquipoLocal { get; set; }
+        public string? NombreEquipoVisitante { get; set; }
+        public string? NombreEstadio { get; set; }
         // Propiedad calculada: true si no está cancelado y la fecha es futura.
         public bool Activo => !EstaCancelado && Fecha > DateTime.Now;
     }

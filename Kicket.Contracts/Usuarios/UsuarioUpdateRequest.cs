@@ -36,5 +36,17 @@ namespace Kicket.Contracts.Usuarios
         // Rol: obligatorio.
         [Required(ErrorMessage = "El rol es obligatorio.")]
         public string Rol { get; set; } = Roles.Usuario;
+
+        // DNI: opcional al editar para no obligar a inventar uno a los usuarios viejos.
+        // Si viene vacio, la API conserva el que ya tenia el usuario.
+        [RegularExpression(Usuarios.Dni.Patron, ErrorMessage = Usuarios.Dni.MensajeInvalido)]
+        public string? Dni { get; set; }
+
+        // Telefono: opcional.
+        [RegularExpression(@"^[0-9+()\- ]{6,30}$", ErrorMessage = "El telefono solo puede tener numeros, espacios, +, - y parentesis (6 a 30 caracteres).")]
+        public string? Telefono { get; set; }
+
+        // Fecha de nacimiento: opcional.
+        public DateTime? FechaNacimiento { get; set; }
     }
 }

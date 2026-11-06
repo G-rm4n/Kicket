@@ -13,13 +13,16 @@ Sistema de venta de entradas para espectáculos deportivos. Una API REST concent
 | Proyecto | Qué es |
 |---|---|
 | `Domain` | Entidades (Club, Estadio, Evento, Sector, Compra, Entrada, Usuario) |
-| `Data` | Acceso a datos: `TPIContext` (EF Core) y repositorios |
-| `Core` | Lógica de negocio: servicios, JWT, hash de contraseñas, Mercado Pago |
+| `Data` | Acceso a datos: `TPIContext` y repositorios (EF Core), reportes (ADO.NET) y actualización de esquema |
+| `Core` | Lógica de negocio: servicios, JWT, hash de contraseñas, Mercado Pago, reportes (PDF y Excel) |
 | `Kicket.Contracts` | DTOs y requests compartidos entre la API y los clientes |
 | `WebApi` | API REST (minimal APIs) con Swagger |
 | `Kicket.ApiClient` | Cliente HTTP de la API, usado por WinForms y Blazor |
 | `Kicket.WinForms` | Cliente de escritorio |
 | `Kicket.Blazor` | Cliente web |
+| `Kicket.Tests` | Pruebas automatizadas (xUnit) |
+
+Los cambios de la versión 2 (paginación, filtros, DNI, Mis Entradas, menú de escritorio, reportes y ADO.NET) están explicados en [`MEJORAS_KICKET_V2.md`](MEJORAS_KICKET_V2.md).
 
 ## Base de datos
 
@@ -32,6 +35,21 @@ Server=.\SQLEXPRESS;Database=kicket;Trusted_Connection=True;TrustServerCertifica
 ```
 
 Para cualquier otra instancia de SQL Server, reemplazar el valor de `Server=` por el nombre de esa instancia.
+
+**Bases creadas con la versión anterior:** no hace falta borrarlas. Al arrancar, la API agrega sola las columnas nuevas de la versión 2 (DNI, teléfono, ciudad del club, etc.) sin tocar los datos existentes (`Data/Esquema/ActualizadorEsquema.cs`). El mismo script está en [`docs/sql/kicket_v2_actualizacion.sql`](docs/sql/kicket_v2_actualizacion.sql) por si se prefiere correrlo a mano. Los datos de prueba nuevos solo aparecen en bases creadas desde cero.
+
+## EF Core y ADO.NET
+
+El proyecto usa las dos tecnologías de acceso a datos, cada una donde conviene:
+
+| | EF Core | ADO.NET |
+|---|---|---|
+| **Dónde** | `TPIContext` y los repositorios de `Data/Implementaciones` (ABM, compras, listados paginados, Mis Entradas) | `Data/Implementaciones/ReporteVentasRepository.cs` (reportes de ventas) |
+| **Para qué** | Crear, leer, modificar y borrar entidades con sus relaciones, validaciones de FK y transacciones | Consultas de solo lectura con agregaciones (`GROUP BY`, `SUM`, `COUNT DISTINCT`, CTE) |
+| **Ventajas** | Menos código, consultas LINQ tipadas, el esquema y los datos semilla salen del modelo | SQL explícito y controlado, se lee fila por fila con `SqlDataReader` sin cargar entidades, varios resultados en un solo viaje (`NextResultAsync`) |
+| **Limitaciones** | Las consultas agregadas complejas son más difíciles de expresar y de controlar | Hay que escribir el SQL y mapear cada columna a mano; un cambio de columna no lo detecta el compilador |
+
+El flujo de los reportes es **Pantalla de reportes → `Kicket.ApiClient` → WebApi (`/reportes/ventas`) → `Core/ReporteService` → `ReporteVentasRepository` (ADO.NET) → SQL Server**. Las dos tecnologías usan **la misma cadena de conexión**: el repositorio ADO.NET la toma del propio `TPIContext`. Todos los valores del usuario viajan como `SqlParameter` (nunca se concatenan al SQL).
 
 ## Cómo ejecutarlo
 
@@ -58,19 +76,27 @@ Si la API corre en otro puerto, hay que cambiar `BaseUrl` en `Kicket.WinForms/Pr
 
 Se cargan solos al crear la base:
 
-- Clubes: Newell's Old Boys, Rosario Central
-- Estadio: Coloso del Parque (Rosario), con los sectores Platea Este y Popular Sur
-- Evento: Clásico Rosarino (15/12/2027)
-- Usuario administrador: `EmailRaro@gmail.com` / contraseña `Has`
+- Clubes: Newell's Old Boys, Rosario Central, Boca Juniors y River Plate
+- Estadios: Coloso del Parque (Platea Este, Popular Sur) y Gigante de Arroyito (Platea Norte, Popular Norte)
+- Eventos: Clásico Rosarino y Central vs Boca (próximos), Newell's vs River (ya jugado) y Central vs River (cancelado)
+- 7 compras aprobadas con 16 entradas, para que los reportes y "Mis Entradas" tengan datos
+- Usuarios (todos con contraseña `Has`):
 
-Los usuarios que se registran desde la app quedan con el rol `Cliente`.
+| Email | Rol | DNI |
+|---|---|---|
+| `EmailRaro@gmail.com` | Admin | 30111222 |
+| `lucia.fernandez@mail.com` | Cliente | 38456789 |
+| `martin.gomez@mail.com` | Cliente | 40123987 |
+
+Los usuarios que se registran desde la app quedan con el rol `Cliente`. El registro exige DNI (7 u 8 dígitos, con o sin puntos) y no permite repetirlo.
 
 ## Seguridad y roles
 
 - Login con JWT (vence a las 2 horas). Las contraseñas se guardan con hash BCrypt.
 - Roles: `Admin`, `Usuario`, `Cliente`.
 - Crear, modificar y borrar clubes, estadios, eventos, sectores y usuarios requiere rol `Admin`.
-- Compras, pagos y entradas requieren estar logueado.
+- Compras, pagos y entradas requieren estar logueado. Cada usuario solo ve sus propias compras y entradas: la API toma el usuario del token, no del id que manda el navegador.
+- Listar todas las compras, anular compras, consultar entradas sueltas, ver usuarios (con su DNI) y los reportes requieren rol `Admin`.
 - La consulta de clubes, estadios, eventos y sectores es pública.
 
 ## Pagos con Mercado Pago
@@ -80,6 +106,14 @@ Por defecto el token de `WebApi/appsettings.json` es un placeholder, así que la
 El simulador acepta como válido cualquier pago cuyo id empiece con `SIM-`, `TEST-` o `MP-`: está pensado solo para desarrollo y no para producción.
 
 Cada entrada comprada tiene su código QR.
+
+## Pruebas
+
+```
+dotnet test Kicket.Tests
+```
+
+Prueban las reglas del DNI, la validación de filtros, la paginación y el agrupamiento de "Mis Entradas" con los datos semilla, la exportación a PDF y Excel, y que los formularios de escritorio se armen sin superponer controles.
 
 ## Problemas frecuentes
 

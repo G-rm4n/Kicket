@@ -1,34 +1,40 @@
 ﻿@* Tabla genérica: recibe la lista de datos, las cabeceras y cómo dibujar cada fila. *@
 @typeparam TItem
 
-<table class="table table-hover">
-    <thead>
+<div class="table-responsive">
+<table class="table table-hover align-middle">
+    <thead class="table-light">
         <tr>
             @Cabeceras
         </tr>
     </thead>
     <tbody>
-        @if(DatosTabla is not null){
-        @* Una fila por cada elemento; se resalta si es la seleccionada. *@
-        @foreach(var item in DatosTabla)
+        @if (DatosTabla is not null && DatosTabla.Any())
         {
+            @* Una fila por cada elemento; se resalta si es la seleccionada. *@
+            @foreach (var item in DatosTabla)
+            {
                 string claseSeleccion = FilaSeleccionada != null && FilaSeleccionada(item) ? "table-active table" : "";
 
-            @* Click selecciona la fila; doble click dispara OnDoubleClick. *@
-            <tr class="@claseSeleccion" @ondblclick="()=>OnDoubleClick.InvokeAsync(item)" @onclick="()=>OnClick.InvokeAsync(item)" style="cursor:pointer">
-                @if (fila != null)
-                {
-                    @fila(item)
-                }
-            </tr>
+                @* Click selecciona la fila; doble click dispara OnDoubleClick. *@
+                <tr class="@claseSeleccion" @ondblclick="()=>OnDoubleClick.InvokeAsync(item)" @onclick="()=>OnClick.InvokeAsync(item)" style="cursor:pointer">
+                    @if (fila != null)
+                    {
+                        @fila(item)
+                    }
+                </tr>
             }
         }
         else
         {
-            <tr>No hay Clubes creados</tr>
+            @* Estado vacío: la búsqueda o los filtros no devolvieron resultados. *@
+            <tr>
+                <td colspan="100" class="text-center text-secondary py-4">@MensajeVacio</td>
+            </tr>
         }
     </tbody>
 </table>
+</div>
 @code {
     // Datos a mostrar.
     [Parameter]
@@ -54,7 +60,7 @@
     [Parameter]
     public Func<TItem, bool>? FilaSeleccionada { get; set; }
 
-
-
-
+    // Texto que se muestra cuando no hay filas.
+    [Parameter]
+    public string MensajeVacio { get; set; } = "No se encontraron resultados para los filtros aplicados.";
 }

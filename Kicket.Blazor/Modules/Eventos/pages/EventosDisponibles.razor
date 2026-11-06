@@ -4,6 +4,7 @@
 @using Kicket.Blazor.Core.HTTP
 @using Kicket.Blazor.Core.state
 @using Kicket.Contracts.Clubes
+@using Kicket.Contracts.Common
 @using Kicket.Contracts.Estadios
 @using Kicket.Contracts.Eventos
 @inherits PaginaApi
@@ -24,7 +25,7 @@
             @* El link a "Mis Entradas" solo aparece si hay sesión. *@
             @if (sesion.EstaAutenticado)
             {
-                <a href="/mis-compras" class="btn btn-outline-success fw-semibold">
+                <a href="/mis-entradas" class="btn btn-outline-success fw-semibold">
                     Mis Entradas Compradas
                 </a>
             }
@@ -33,6 +34,22 @@
             </button>
         </div>
     </div>
+
+    @* Filtros: solo partidos a la venta (estado "proximos"), resueltos y paginados en la API. *@
+    <PanelFiltros Cargando="Procesando" OnBuscar="BuscarAsync" OnLimpiar="LimpiarFiltrosAsync">
+        <div class="col-12 col-md-5">
+            <label class="form-label small mb-1" for="ev-buscar">Buscar</label>
+            <input id="ev-buscar" class="form-control form-control-sm" placeholder="Club, partido o estadio" @bind="filtro.Busqueda" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="ev-desde">Desde</label>
+            <input id="ev-desde" type="date" class="form-control form-control-sm" @bind="filtro.Desde" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="ev-hasta">Hasta</label>
+            <input id="ev-hasta" type="date" class="form-control form-control-sm" @bind="filtro.Hasta" />
+        </div>
+    </PanelFiltros>
 
     @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
@@ -53,8 +70,16 @@
     else if (_eventosDisponibles.Count == 0)
     {
         <div class="card border-0 shadow-sm text-center p-5 bg-light">
-            <h4 class="fw-bold text-secondary mb-2">No hay eventos disponibles en este momento</h4>
-            <p class="text-muted mb-0">Un administrador debe cargar próximos partidos desde la aplicación de escritorio.</p>
+            @if (!string.IsNullOrWhiteSpace(filtro.Busqueda) || filtro.Desde.HasValue || filtro.Hasta.HasValue)
+            {
+                <h4 class="fw-bold text-secondary mb-2">No hay partidos que coincidan con la búsqueda</h4>
+                <p class="text-muted mb-0">Probá con otro club o con otras fechas.</p>
+            }
+            else
+            {
+                <h4 class="fw-bold text-secondary mb-2">No hay eventos disponibles en este momento</h4>
+                <p class="text-muted mb-0">Un administrador debe cargar próximos partidos desde la aplicación de escritorio.</p>
+            }
         </div>
     }
     else
@@ -96,9 +121,13 @@
                                 </div>
                             </div>
 
-                            <div class="mt-2 mb-4 text-center small text-secondary">
+                            <div class="mt-2 mb-2 text-center small text-secondary">
                                 <strong>Estadio:</strong> @ObtenerNombreEstadio(ev.IdEstadio)
                             </div>
+                            @if (!string.IsNullOrWhiteSpace(ev.Descripcion))
+                            {
+                                <p class="small text-muted text-center mb-3">@ev.Descripcion</p>
+                            }
 
                             <div class="mt-auto d-grid">
                                 <button class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm"
@@ -111,12 +140,23 @@
                 </div>
             }
         </div>
+
+        @if (_pagina is not null)
+        {
+            <Paginador Pagina="_pagina.Pagina" TotalPaginas="_pagina.TotalPaginas" TotalRegistros="_pagina.TotalRegistros"
+                       TamanoPagina="_pagina.TamanoPagina" Cargando="Procesando"
+                       OnCambioPagina="IrAPaginaAsync" OnCambioTamano="CambiarTamanoAsync" />
+        }
     }
 </div>
 
 @code {
-    // Eventos a mostrar y diccionarios de clubes y estadios (por id) para mostrar nombres.
+    // Página de eventos a mostrar y diccionarios de clubes y estadios (por id) para mostrar siglas y direcciones.
     private List<EventoDto> _eventosDisponibles = new();
+    private PagedResult<EventoDto>? _pagina;
+    // Solo se listan partidos a la venta, del más próximo al más lejano.
+    private EventoFiltro filtro = NuevoFiltro();
+    private static EventoFiltro NuevoFiltro() => new() { Estado = EventoFiltro.EstadoProximos, OrdenarPor = "fecha", TamanoPagina = 10 };
     private Dictionary<int, ClubDto> _clubes = new();
     private Dictionary<int, EstadioDto> _estadios = new();
 
@@ -127,23 +167,48 @@
         await CargarDatosAsync();
     }
 
-    // Trae eventos, clubes y estadios de la API y se queda solo con los eventos no cancelados y futuros, ordenados por fecha.
+    // Pide a la API la página de eventos próximos (filtrados y ordenados en el servidor) y los catálogos para siglas.
     private async Task CargarDatosAsync()
     {
         await SecureExec(async () =>
         {
-            var todosEventos = await eventoApi.GetAllAsync();
-            var clubesLista = await clubApi.GetAllAsync();
-            var estadiosLista = await estadioApi.GetAllAsync();
+            _pagina = await eventoApi.GetPaginadoAsync(filtro);
+            filtro.Pagina = _pagina.Pagina;
+            _eventosDisponibles = _pagina.Items;
 
-            _clubes = clubesLista.ToDictionary(c => c.ClubId);
-            _estadios = estadiosLista.ToDictionary(e => e.IdEstadio);
-
-            _eventosDisponibles = todosEventos
-                .Where(e => !e.EstaCancelado && e.Fecha > DateTime.Now)
-                .OrderBy(e => e.Fecha)
-                .ToList();
+            if (_clubes.Count == 0)
+            {
+                var clubesLista = await clubApi.GetAllAsync();
+                var estadiosLista = await estadioApi.GetAllAsync();
+                _clubes = clubesLista.ToDictionary(c => c.ClubId);
+                _estadios = estadiosLista.ToDictionary(e => e.IdEstadio);
+            }
         });
+    }
+
+    private async Task BuscarAsync()
+    {
+        filtro.Pagina = 1;
+        await CargarDatosAsync();
+    }
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        filtro = NuevoFiltro();
+        await CargarDatosAsync();
+    }
+
+    private async Task IrAPaginaAsync(int pagina)
+    {
+        filtro.Pagina = pagina;
+        await CargarDatosAsync();
+    }
+
+    private async Task CambiarTamanoAsync(int tamano)
+    {
+        filtro.TamanoPagina = tamano;
+        filtro.Pagina = 1;
+        await CargarDatosAsync();
     }
 
     // Nombre del club por id (o "Club #id" si no se encuentra).

@@ -1,4 +1,5 @@
-﻿using Kicket.ApiClient.Abstracciones;
+using Kicket.Contracts.Common;
+using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Sectores;
 using System;
@@ -22,6 +23,9 @@ namespace Kicket.ApiClient.Clientes
         public async Task<IReadOnlyList<SectorDto>> GetAllAsync(CancellationToken ct = default) =>
             await GetAsync<List<SectorDto>>(Ruta, ct);
 
+        // Pide una pagina filtrada (los filtros viajan en la query string).
+        public Task<PagedResult<SectorDto>> GetPaginadoAsync(SectorFiltro filtro, CancellationToken ct = default) =>
+            GetAsync<PagedResult<SectorDto>>(ConQuery($"{Ruta}/paginado", filtro), ct);
         // Trae un sector por id.
         public Task<SectorDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<SectorDto>($"{Ruta}/{id}", ct);

@@ -16,21 +16,20 @@ namespace WebApi.EndPoints
             {
                 var eventos = await eventoService.ObtenerTodosAsync();
 
-                IEnumerable<EventoDto> dtos = eventos.Select(e => new EventoDto
-                {
-                    IdEvento = e.IdEvento,
-                    Nombre = e.Nombre,
-                    Fecha = e.Fecha,
-                    IdEstadio = e.EstadioId,
-                    IdEquipoLocal = e.ClubLocalId,
-                    IdEquipoVisitante = e.ClubVisitanteId,
-                    EstaCancelado = e.EstaCancelado
-                }).ToList();
+                IEnumerable<EventoDto> dtos = eventos.Select(e => e.ADto()).ToList();
 
                 return Results.Ok(dtos);
             })
             .WithName("GetAllEventos")
             .Produces<IEnumerable<EventoDto>>(StatusCodes.Status200OK);
+
+            // GET /eventos/paginado: página de eventos con filtros (club, estadio, rango de fechas, estado)
+            // y los nombres de clubes y estadio ya resueltos. Público, igual que GET /eventos.
+            app.MapGet("/eventos/paginado", async ([AsParameters] EventoFiltro filtro, IEventoService eventoService, CancellationToken ct) =>
+                Results.Ok(await eventoService.ObtenerPaginadoAsync(filtro, ct)))
+            .WithName("GetEventosPaginado")
+            .Produces<PagedResult<EventoDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
             // GET /eventos/{id}: devuelve un evento o 404.
             app.MapGet("/eventos/{id}", async (int id, IEventoService eventoService) =>
@@ -42,16 +41,7 @@ namespace WebApi.EndPoints
                     return Results.NotFound();
                 }
 
-                EventoDto dto = new()
-                {
-                    IdEvento = evento.IdEvento,
-                    Nombre = evento.Nombre,
-                    Fecha = evento.Fecha,
-                    IdEstadio = evento.EstadioId,
-                    IdEquipoLocal = evento.ClubLocalId,
-                    IdEquipoVisitante = evento.ClubVisitanteId,
-                    EstaCancelado = evento.EstaCancelado
-                };
+                EventoDto dto = evento.ADto();
 
                 return Results.Ok(dto);
             })
@@ -90,7 +80,8 @@ namespace WebApi.EndPoints
                     Fecha = eventoReq.Fecha,
                     EstadioId = eventoReq.EstadioId,
                     ClubLocalId = eventoReq.ClubLocalId,
-                    ClubVisitanteId = eventoReq.ClubVisitanteId
+                    ClubVisitanteId = eventoReq.ClubVisitanteId,
+                    Descripcion = eventoReq.Descripcion
                 };
 
                 try
@@ -98,16 +89,7 @@ namespace WebApi.EndPoints
                     // El servicio valida (fecha futura, clubes distintos, estadio y clubes existentes) y guarda.
                     Evento nuevoEvento = await eventoService.CrearEventoAsync(evento);
 
-                    EventoDto dto = new()
-                    {
-                        IdEvento = nuevoEvento.IdEvento,
-                        Nombre = nuevoEvento.Nombre,
-                        Fecha = nuevoEvento.Fecha,
-                        IdEstadio = nuevoEvento.EstadioId,
-                        IdEquipoLocal = nuevoEvento.ClubLocalId,
-                        IdEquipoVisitante = nuevoEvento.ClubVisitanteId,
-                        EstaCancelado = nuevoEvento.EstaCancelado
-                    };
+                    EventoDto dto = nuevoEvento.ADto();
 
                     return Results.Created($"/eventos/{dto.IdEvento}", dto);
                 }
@@ -132,7 +114,8 @@ namespace WebApi.EndPoints
                     EstadioId = eventoReq.EstadioId,
                     ClubLocalId = eventoReq.ClubLocalId,
                     ClubVisitanteId = eventoReq.ClubVisitanteId,
-                    EstaCancelado = eventoReq.EstaCancelado
+                    EstaCancelado = eventoReq.EstaCancelado,
+                    Descripcion = eventoReq.Descripcion
                 };
 
                 try

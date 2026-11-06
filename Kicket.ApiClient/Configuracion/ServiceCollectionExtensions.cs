@@ -66,6 +66,7 @@ namespace Kicket.ApiClient.Configuracion
             services.AgregarCliente<ICompraApiClient, CompraApiClient>(opciones);
             services.AgregarCliente<IEntradaApiClient, EntradaApiClient>(opciones);
             services.AgregarCliente<IPagoApiClient, PagoApiClient>(opciones);
+            services.AgregarCliente<IReporteApiClient, ReporteApiClient>(opciones);
 
             return services;
         }

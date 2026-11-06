@@ -3,6 +3,7 @@ using System.Net;
 using Core.Interfaces;
 using Domain.Entities;
 using Kicket.Contracts.Clubes;
+using Kicket.Contracts.Common;
 
 namespace WebApi.EndPoints
 {
@@ -15,22 +16,24 @@ namespace WebApi.EndPoints
             // Agrupa todas las rutas bajo el prefijo /clubes.
             var clubGroup = app.MapGroup("/clubes");
 
-            // GET /clubes: lista todos los clubes convertidos a DTO.
+            // GET /clubes: lista todos los clubes (se mantiene para los combos de los formularios).
             clubGroup.MapGet("/", async (IClubService clubService) =>
             {
                 var clubes = await clubService.ObtenerTodosAsync();
-                IEnumerable<ClubDto> clubDtos = clubes.Select(c => new ClubDto
-                {
-                    ClubId = c.ClubId,
-                    Nombre = c.Nombre,
-                    Descripcion = c.Descripcion,
-                    Abreviatura = c.Abreviatura
-                }).ToList();
+                IEnumerable<ClubDto> clubDtos = clubes.Select(c => c.ADto()).ToList();
 
                 return Results.Ok(clubDtos);
             })
             .WithName("GetAllClubes")
             .Produces<IEnumerable<ClubDto>>(StatusCodes.Status200OK);
+
+            // GET /clubes/paginado?pagina=1&tamanoPagina=10&busqueda=...&ciudad=...&ordenarPor=nombre&descendente=false
+            // Paginación y filtros resueltos en SQL. Parámetros inválidos → 400.
+            clubGroup.MapGet("/paginado", async ([AsParameters] ClubFiltro filtro, IClubService clubService, CancellationToken ct) =>
+                Results.Ok(await clubService.ObtenerPaginadoAsync(filtro, ct)))
+            .WithName("GetClubesPaginado")
+            .Produces<PagedResult<ClubDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
             // GET /clubes/{id}: devuelve un club o 404 si no existe.
             clubGroup.MapGet("/{id}", static async (int id, IClubService clubService) =>
@@ -42,15 +45,7 @@ namespace WebApi.EndPoints
                     return Results.Problem(detail: "Club no encontrado", statusCode: (int)HttpStatusCode.NotFound);
                 }
 
-                ClubDto clubDto = new()
-                {
-                    ClubId = club.ClubId,
-                    Abreviatura = club.Abreviatura,
-                    Descripcion = club.Descripcion,
-                    Nombre = club.Nombre
-                };
-
-                return Results.Ok(clubDto);
+                return Results.Ok(club.ADto());
             })
             .WithName("GetClub")
             .Produces<ClubDto>(StatusCodes.Status200OK)
@@ -64,20 +59,14 @@ namespace WebApi.EndPoints
                 {
                     Abreviatura = clubReq.Abreviatura,
                     Descripcion = clubReq.Descripcion,
-                    Nombre = clubReq.Nombre
+                    Nombre = clubReq.Nombre,
+                    Ciudad = clubReq.Ciudad,
+                    AnioFundacion = clubReq.AnioFundacion
                 };
 
                 // El servicio valida y guarda; si los datos son inválidos tira ArgumentException (400).
                 Club newClub = await clubService.CrearClubAsync(club);
-
-                // Convierte la entidad guardada (ya con id) a DTO.
-                ClubDto clubDto = new()
-                {
-                    Abreviatura = newClub.Abreviatura,
-                    Descripcion = newClub.Descripcion,
-                    Nombre = newClub.Nombre,
-                    ClubId = newClub.ClubId
-                };
+                ClubDto clubDto = newClub.ADto();
 
                 return Results.Created($"/clubes/{clubDto.ClubId}", clubDto);
             })
@@ -94,6 +83,8 @@ namespace WebApi.EndPoints
                     Abreviatura = clubReq.Abreviatura,
                     Descripcion = clubReq.Descripcion,
                     Nombre = clubReq.Nombre,
+                    Ciudad = clubReq.Ciudad,
+                    AnioFundacion = clubReq.AnioFundacion,
                     ClubId = clubReq.IdClub
                 };
 
@@ -112,7 +103,7 @@ namespace WebApi.EndPoints
             .RequireAuthorization("Solo admin");
 
             // DELETE /clubes/{id}: borra un club (solo Admin). 204 si sale bien, 404 si no existe.
-            // Si el club tiene eventos, la FK Restrict hace fallar el borrado y el handler global responde 500.
+            // Si el club tiene eventos, la FK Restrict hace fallar el borrado y el handler global responde 409.
             clubGroup.MapDelete("/{id}", async (int id, IClubService clubService) =>
             {
                 var deleted = await clubService.EliminarClubAsync(id);

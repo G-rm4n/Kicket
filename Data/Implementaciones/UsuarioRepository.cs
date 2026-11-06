@@ -1,4 +1,7 @@
+using Data.Consultas;
 using Data.Interfaces;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Usuarios;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -44,6 +47,9 @@ namespace Data.Implementaciones
                 usuarioFound.Apellido = usuario.Apellido;
                 usuarioFound.Email = usuario.Email;
                 usuarioFound.Password = usuario.Password;
+                usuarioFound.Dni = usuario.Dni;
+                usuarioFound.Telefono = usuario.Telefono;
+                usuarioFound.FechaNacimiento = usuario.FechaNacimiento;
                 if (!string.IsNullOrWhiteSpace(usuario.Rol))
                 {
                     usuarioFound.Rol = usuario.Rol;
@@ -85,30 +91,60 @@ namespace Data.Implementaciones
             return await context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        // Paginado de usuarios: si hay filtro, además limita a los de rol "Usuario";
-        // después ordena si se pidió y aplica Skip/Take.
-        public async Task<IEnumerable<Usuario>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Usuario, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Usuario>, IOrderedQueryable<Usuario>>? ordenamiento = null)
+        // Devuelve true si otro usuario ya usa ese email.
+        public async Task<bool> ExistsEmailDeOtro(string email, int excluirId)
         {
-            IQueryable<Usuario> query = context.Set<Usuario>();
+            return await context.Usuarios.AnyAsync(u => u.Email == email && u.IdUsuario != excluirId);
+        }
 
-            // Al filtrar, se excluyen los administradores.
-            if (esFiltrado && filtro is not null)
+        // Devuelve true si ya hay un usuario con ese DNI (excluyendo, si se indica, al usuario que se edita).
+        public async Task<bool> ExistsDni(string dni, int? excluirId = null)
+        {
+            return await context.Usuarios.AnyAsync(u => u.Dni == dni && (excluirId == null || u.IdUsuario != excluirId));
+        }
+
+        // Pagina de usuarios filtrada y ordenada en la base; nunca devuelve la contraseña.
+        public async Task<PagedResult<UsuarioDto>> ObtenerPaginadoAsync(UsuarioFiltro filtro, CancellationToken ct = default)
+        {
+            IQueryable<Usuario> consulta = context.Usuarios.AsNoTracking();
+            if (filtro.Busqueda is not null)
             {
-                query = query.Where(filtro).Where(u => u.Rol == "Usuario");
+                var texto = filtro.Busqueda;
+                var digitos = Kicket.Contracts.Usuarios.Dni.Normalizar(texto) ?? texto;
+                consulta = consulta.Where(u => u.Nombre.Contains(texto) || u.Apellido.Contains(texto)
+                                               || u.Email.Contains(texto) || (u.Dni != null && u.Dni.Contains(digitos)));
+            }
+            if (!string.IsNullOrWhiteSpace(filtro.Rol))
+            {
+                var rol = filtro.Rol.Trim();
+                consulta = consulta.Where(u => u.Rol == rol);
+            }
+            var dni = Kicket.Contracts.Usuarios.Dni.Normalizar(filtro.Dni);
+            if (dni is not null)
+            {
+                consulta = consulta.Where(u => u.Dni != null && u.Dni.Contains(dni));
             }
 
-            // Si se pidió ordenar, aplica el ordenamiento.
-            if (esOrdenado && ordenamiento is not null)
+            bool desc = filtro.EsDescendente;
+            var ordenada = filtro.OrdenarPor switch
             {
-                query = ordenamiento(query);
-            }
+                "id" => consulta.OrdenarPor(u => u.IdUsuario, desc),
+                "nombre" => consulta.OrdenarPor(u => u.Nombre, desc),
+                "email" => consulta.OrdenarPor(u => u.Email, desc),
+                "dni" => consulta.OrdenarPor(u => u.Dni, desc),
+                "rol" => consulta.OrdenarPor(u => u.Rol, desc),
+                "registro" => consulta.OrdenarPor(u => u.FechaRegistro, desc),
+                _ => consulta.OrdenarPor(u => u.Apellido, desc)
+            };
 
-            // Saltea las páginas anteriores y toma la cantidad de la página actual.
-            query = query
-                .Skip((pagina - 1) * cantidadPorPagina)
-                .Take(cantidadPorPagina);
-
-            return await query.ToListAsync();
+            return await ordenada.LuegoPor(u => u.IdUsuario, desc)
+                .Select(u => new UsuarioDto
+                {
+                    IdUsuario = u.IdUsuario, Nombre = u.Nombre, Apellido = u.Apellido, Email = u.Email,
+                    Rol = u.Rol, Dni = u.Dni, Telefono = u.Telefono, FechaNacimiento = u.FechaNacimiento,
+                    FechaRegistro = u.FechaRegistro
+                })
+                .PaginarAsync(filtro, ct);
         }
     }
 }

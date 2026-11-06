@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,8 @@ namespace Domain.Entities
         public int ClubVisitanteId { get; set; }
         // Indica si el evento fue cancelado (por defecto false).
         public bool EstaCancelado { get; set; }
+        // Información para el comprador (horario de apertura, recomendaciones...). Opcional, máx. 500.
+        public string? Descripcion { get; set; }
         // Devuelve true si el evento se puede vender: no está cancelado y la fecha todavía no pasó.
         public bool EstaDisponible()
         {

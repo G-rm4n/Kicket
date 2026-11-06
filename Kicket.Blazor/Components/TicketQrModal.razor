@@ -37,6 +37,9 @@
                                 <span class="small text-muted">Sector:</span>
                                 <div class="fw-bold text-dark">@SectorNombre</div>
                             </div>
+                            @* En "Mis Entradas" no se muestra fila ni asiento (pedido del profesor): MostrarUbicacion = false. *@
+                            @if (MostrarUbicacion)
+                            {
                             <div class="text-end">
                                 <span class="small text-muted">Ubicación:</span>
                                 <div>
@@ -51,6 +54,7 @@
                                     }
                                 </div>
                             </div>
+                            }
                         </div>
                     </div>
 
@@ -110,6 +114,8 @@
     [Parameter] public string EstadioNombre { get; set; } = string.Empty;
     [Parameter] public string SectorNombre { get; set; } = string.Empty;
     [Parameter] public string? FilaAsiento { get; set; }
+    // false = oculta el bloque "Ubicación" (fila y asiento).
+    [Parameter] public bool MostrarUbicacion { get; set; } = true;
     [Parameter] public string CodigoQr { get; set; } = string.Empty;
 
     // Imagen QR ya generada (data URI).

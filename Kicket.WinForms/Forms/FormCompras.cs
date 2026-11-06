@@ -1,34 +1,35 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Compras;
 using Kicket.Contracts.Eventos;
-using Kicket.Contracts.Sectores;
-using Kicket.Contracts.Usuarios;
+using Kicket.Contracts.Reportes;
+using Kicket.WinForms.Controles;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kicket.WinForms.Forms
 {
-    // Pantalla de compras del administrador: lista todas las compras con filtros, muestra sus entradas,
-    // permite ver el QR de cada entrada y anular (borrar) una compra.
+    // Pantalla de compras del administrador: lista paginada de compras con filtros (resueltos en la API),
+    // muestra sus entradas, permite ver el QR de cada entrada y anular (borrar) una compra.
     public partial class FormCompras : Form
     {
         // Clientes HTTP necesarios (inyectados).
         private readonly ICompraApiClient _compraApiClient;
         private readonly IEventoApiClient _eventoApiClient;
-        private readonly IUsuarioApiClient _usuarioApiClient;
-        private readonly ISectorApiClient _sectorApiClient;
+        private readonly IReporteApiClient _reporteApiClient;
 
-        // Todas las compras traídas de la API y diccionarios (por id) para mostrar nombres.
-        private IReadOnlyList<CompraDto> _todasLasCompras = Array.Empty<CompraDto>();
-        private Dictionary<int, EventoDto> _eventosMap = new();
-        private Dictionary<int, UsuarioDto> _usuariosMap = new();
-        private Dictionary<int, SectorDto> _sectoresMap = new();
-        // Id de la compra seleccionada en la grilla superior.
+        // Página actual de compras (ya trae nombres de usuario, evento y sector) e id de la compra seleccionada.
+        private PagedResult<CompraDto>? _pagina;
         private int? _compraIdSeleccionada = null;
+
+        // Controles agregados en la versión 2: búsqueda por texto y paginador.
+        private readonly TextBox _textoBusqueda = new() { PlaceholderText = "Email, apellido o id de pago" };
+        private readonly ControlPaginacion _paginador = new();
 
         // Ítem del combo de filtro por evento (IdEvento null = "Todos").
         private sealed class EventoFiltroItem
@@ -52,7 +53,7 @@ namespace Kicket.WinForms.Forms
             public string EstadoPago { get; set; } = string.Empty;
         }
 
-        // Fila "lista para mostrar" de la grilla de entradas.
+        // Fila "lista para mostrar" de la grilla de entradas. Acá (administración) sí se muestra la ubicación.
         private sealed class EntradaFilaVista
         {
             public int EntradaId { get; set; }
@@ -63,18 +64,36 @@ namespace Kicket.WinForms.Forms
             public string CodigoQr { get; set; } = string.Empty;
         }
 
-        // Constructor: recibe los clientes HTTP por inyección.
+        // Constructor: recibe los clientes HTTP por inyección y agrega búsqueda y paginador.
         public FormCompras(
             ICompraApiClient compraApiClient,
             IEventoApiClient eventoApiClient,
-            IUsuarioApiClient usuarioApiClient,
-            ISectorApiClient sectorApiClient)
+            IReporteApiClient reporteApiClient)
         {
             InitializeComponent();
             _compraApiClient = compraApiClient;
             _eventoApiClient = eventoApiClient;
-            _usuarioApiClient = usuarioApiClient;
-            _sectorApiClient = sectorApiClient;
+            _reporteApiClient = reporteApiClient;
+
+            // Búsqueda por texto en la segunda fila del grupo de filtros (a la izquierda de las fechas).
+            groupBoxFiltros.Controls.Add(new Label { Text = "Buscar:", AutoSize = true, Location = new Point(labelFiltroEvento.Left, labelDesde.Top) });
+            _textoBusqueda.Location = new Point(comboBoxFiltroEvento.Left, dateTimePickerDesde.Top);
+            _textoBusqueda.Width = comboBoxFiltroEvento.Width;
+            _textoBusqueda.KeyDown += async (_, e) =>
+            {
+                if (e.KeyCode != Keys.Enter) return;
+                e.SuppressKeyPress = true;
+                _paginador.Reiniciar();
+                await CargarComprasAsync();
+            };
+            groupBoxFiltros.Controls.Add(_textoBusqueda);
+
+            // Resumen en dos líneas para que entre completo.
+            labelResumen.AutoSize = false;
+            labelResumen.Size = new Size(btnVerQrEntrada.Left - labelResumen.Left - 10, btnVerQrEntrada.Height * 2);
+
+            _paginador.PaginaCambiada += async (_, _) => await CargarComprasAsync();
+            LayoutListado.Envolver(this, dataGridViewCompras, null, _paginador);
         }
 
         // Al cargar: configura las grillas, pone el rango de fechas del último mes y carga los datos.
@@ -85,29 +104,23 @@ namespace Kicket.WinForms.Forms
             dateTimePickerDesde.Value = DateTime.Today.AddMonths(-1);
             dateTimePickerHasta.Value = DateTime.Today;
 
-            await CargarDatosCompletosAsync();
+            await CargarEventosAsync();
+            await CargarComprasAsync();
         }
 
-        // Trae eventos, usuarios, sectores y compras; arma los diccionarios y el combo de eventos, y muestra la grilla.
-        private async Task CargarDatosCompletosAsync()
+        // Llena el combo de eventos (solo para elegir el filtro).
+        private async Task CargarEventosAsync()
         {
             try
             {
                 var eventos = await _eventoApiClient.GetAllAsync();
-                var usuarios = await _usuarioApiClient.GetAllAsync();
-                var sectores = await _sectorApiClient.GetAllAsync();
-                _todasLasCompras = await _compraApiClient.GetAllAsync();
-
-                _eventosMap = eventos.ToDictionary(ev => ev.IdEvento);
-                _usuariosMap = usuarios.ToDictionary(u => u.IdUsuario);
-                _sectoresMap = sectores.ToDictionary(s => s.SectorId);
 
                 // El combo arranca con la opción "Todos los Eventos" y después un ítem por evento.
                 var itemsFiltro = new List<EventoFiltroItem>
                 {
                     new EventoFiltroItem { IdEvento = null, Descripcion = "-- Todos los Eventos --" }
                 };
-                itemsFiltro.AddRange(eventos.Select(ev => new EventoFiltroItem
+                itemsFiltro.AddRange(eventos.OrderByDescending(ev => ev.Fecha).Select(ev => new EventoFiltroItem
                 {
                     IdEvento = ev.IdEvento,
                     Descripcion = $"{ev.Nombre} ({ev.Fecha:dd/MM/yyyy})"
@@ -116,12 +129,10 @@ namespace Kicket.WinForms.Forms
                 comboBoxFiltroEvento.DataSource = itemsFiltro;
                 comboBoxFiltroEvento.DisplayMember = nameof(EventoFiltroItem.Descripcion);
                 comboBoxFiltroEvento.ValueMember = nameof(EventoFiltroItem.IdEvento);
-
-                AplicarFiltrosYMostrar();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar las compras: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar los eventos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -132,96 +143,93 @@ namespace Kicket.WinForms.Forms
             dateTimePickerHasta.Enabled = checkBoxFiltrarFecha.Checked;
         }
 
-        // Aplica los filtros elegidos.
-        private void btnFiltrar_Click(object sender, EventArgs e)
+        // Aplica los filtros elegidos (vuelve a la página 1).
+        private async void btnFiltrar_Click(object sender, EventArgs e)
         {
-            AplicarFiltrosYMostrar();
+            _paginador.Reiniciar();
+            await CargarComprasAsync();
         }
 
-        // Quita los filtros y recarga todo desde la API.
+        // Quita los filtros y recarga desde la API.
         private async void btnRefrescar_Click(object sender, EventArgs e)
         {
             checkBoxFiltrarFecha.Checked = false;
+            _textoBusqueda.Clear();
             if (comboBoxFiltroEvento.Items.Count > 0)
             {
                 comboBoxFiltroEvento.SelectedIndex = 0;
             }
-            await CargarDatosCompletosAsync();
+            _paginador.Reiniciar();
+            await CargarComprasAsync();
         }
 
-        // Filtra las compras en memoria (por evento y/o rango de fechas) y las muestra en la grilla con el resumen.
-        private void AplicarFiltrosYMostrar()
+        // Arma el filtro con lo elegido en pantalla. Fechas = días completos.
+        private CompraFiltro FiltroActual() => new()
         {
-            IEnumerable<CompraDto> filtradas = _todasLasCompras;
+            Pagina = _paginador.Pagina,
+            TamanoPagina = _paginador.TamanoPagina,
+            Busqueda = _textoBusqueda.Text,
+            EventoId = (comboBoxFiltroEvento.SelectedItem as EventoFiltroItem)?.IdEvento,
+            Desde = checkBoxFiltrarFecha.Checked ? dateTimePickerDesde.Value.Date : null,
+            Hasta = checkBoxFiltrarFecha.Checked ? dateTimePickerHasta.Value.Date : null,
+            OrdenarPor = "fecha",
+            Descendente = true
+        };
 
-            // Filtro por evento: compras que tengan alguna entrada de ese evento.
-            if (comboBoxFiltroEvento.SelectedItem is EventoFiltroItem itemEvento && itemEvento.IdEvento.HasValue)
+        // Pide a la API la página de compras con los filtros (no se traen todas para filtrar en memoria)
+        // y los totales del filtro desde el reporte de ventas.
+        private async Task CargarComprasAsync()
+        {
+            _paginador.Bloquear(true);
+            btnFiltrar.Enabled = btnRefrescar.Enabled = false;
+            try
             {
-                int idEventoBuscado = itemEvento.IdEvento.Value;
-                filtradas = filtradas.Where(c => c.Entradas.Any(ent => ent.EventoId == idEventoBuscado));
-            }
+                var filtro = FiltroActual();
+                _pagina = await _compraApiClient.GetPaginadoAsync(filtro);
 
-            // Filtro por fecha: desde el inicio del día "desde" hasta el final del día "hasta".
-            if (checkBoxFiltrarFecha.Checked)
-            {
-                DateTime desde = dateTimePickerDesde.Value.Date;
-                DateTime hasta = dateTimePickerHasta.Value.Date.AddDays(1).AddTicks(-1);
-                filtradas = filtradas.Where(c => c.FechaCompra >= desde && c.FechaCompra <= hasta);
-            }
-
-            var listaFiltrada = filtradas.OrderByDescending(c => c.FechaCompra).ToList();
-
-            // Convierte cada compra en una fila con textos legibles (evento y sector de la primera entrada, usuario, monto...).
-            var filasCompras = listaFiltrada.Select(c =>
-            {
-                var primeraEntrada = c.Entradas.FirstOrDefault();
-                string nombreEvento = "Sin detalle";
-                string nombreSector = "Sin detalle";
-
-                if (primeraEntrada is not null)
-                {
-                    nombreEvento = _eventosMap.TryGetValue(primeraEntrada.EventoId, out var ev)
-                        ? ev.Nombre
-                        : $"Evento #{primeraEntrada.EventoId}";
-
-                    nombreSector = _sectoresMap.TryGetValue(primeraEntrada.SectorId, out var sec)
-                        ? sec.Nombre
-                        : $"Sector #{primeraEntrada.SectorId}";
-                }
-
-                string usuarioTexto = _usuariosMap.TryGetValue(c.UsuarioId, out var usr)
-                    ? $"{usr.Nombre} {usr.Apellido} ({usr.Email})"
-                    : $"Usuario #{c.UsuarioId}";
-
-                return new CompraFilaVista
+                // Convierte cada compra en una fila con textos legibles (los nombres ya vienen de la API).
+                var filasCompras = _pagina.Items.Select(c => new CompraFilaVista
                 {
                     CompraId = c.CompraId,
                     FechaTexto = c.FechaCompra.ToString("dd/MM/yyyy HH:mm"),
-                    UsuarioTexto = usuarioTexto,
-                    EventoTexto = nombreEvento,
-                    SectorTexto = nombreSector,
+                    UsuarioTexto = c.UsuarioNombre is null ? $"Usuario #{c.UsuarioId}" : $"{c.UsuarioNombre} ({c.UsuarioEmail})",
+                    EventoTexto = c.EventoNombre ?? "Sin detalle",
+                    SectorTexto = c.SectorNombre ?? "Sin detalle",
                     Cantidad = c.Cantidad,
                     MontoTotalTexto = $"${c.MontoTotal:N2}",
                     MetodoPago = string.IsNullOrWhiteSpace(c.MetodoPago) ? "No especificado" : c.MetodoPago,
                     PaymentId = string.IsNullOrWhiteSpace(c.PaymentId) ? "-" : c.PaymentId,
                     EstadoPago = string.IsNullOrWhiteSpace(c.EstadoPago) ? "Aprobado" : c.EstadoPago
-                };
-            }).ToList();
+                }).ToList();
 
-            // Muestra las compras y limpia la grilla de entradas y la selección.
-            dataGridViewCompras.DataSource = filasCompras;
-            dataGridViewEntradas.DataSource = null;
-            _compraIdSeleccionada = null;
+                // Muestra las compras y limpia la grilla de entradas y la selección.
+                dataGridViewCompras.DataSource = filasCompras;
+                dataGridViewEntradas.DataSource = null;
+                _compraIdSeleccionada = null;
+                _paginador.Actualizar(_pagina);
 
-            // Resumen: cantidad de compras, entradas vendidas y total recaudado.
-            decimal totalRecaudado = listaFiltrada.Sum(c => c.MontoTotal);
-            int totalEntradas = listaFiltrada.Sum(c => c.Cantidad);
-            labelResumen.Text = $"Compras: {listaFiltrada.Count} | Entradas Vendidas: {totalEntradas} | Total Recaudado: ${totalRecaudado:N2}";
+                // Resumen: cantidad de compras encontradas y totales de ventas confirmadas del mismo filtro
+                // (los calcula la API con ADO.NET, no se suman solo las filas de esta página).
+                var totales = await _reporteApiClient.GetVentasAsync(new ReporteFiltro { Desde = filtro.Desde, Hasta = filtro.Hasta, EventoId = filtro.EventoId });
+                labelResumen.Text =
+                    $"Compras encontradas: {_pagina.TotalRegistros}\n" +
+                    $"Ventas confirmadas: {totales.Resumen.EntradasVendidas} entradas | ${totales.Resumen.TotalRecaudado:N2}";
 
-            // Si hay compras, muestra las entradas de la primera.
-            if (filasCompras.Count > 0)
+                // Si hay compras, muestra las entradas de la primera.
+                if (filasCompras.Count > 0)
+                {
+                    MostrarEntradasDeCompra(filasCompras[0].CompraId);
+                }
+            }
+            catch (Exception ex)
             {
-                MostrarEntradasDeCompra(filasCompras[0].CompraId);
+                MessageBox.Show($"Error al cargar las compras: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnFiltrar.Enabled = btnRefrescar.Enabled = true;
+                _paginador.Bloquear(false);
+                if (_pagina is not null) _paginador.Actualizar(_pagina);
             }
         }
 
@@ -235,40 +243,32 @@ namespace Kicket.WinForms.Forms
             MostrarEntradasDeCompra(compraId);
         }
 
-        // Busca la compra y llena la grilla de entradas con sus datos legibles.
+        // Busca la compra en la página actual y llena la grilla de entradas con sus datos legibles.
         private void MostrarEntradasDeCompra(int compraId)
         {
             _compraIdSeleccionada = compraId;
-            var compra = _todasLasCompras.FirstOrDefault(c => c.CompraId == compraId);
+            var compra = _pagina?.Items.FirstOrDefault(c => c.CompraId == compraId);
             if (compra is null)
             {
                 dataGridViewEntradas.DataSource = null;
                 return;
             }
 
-            var filasEntradas = compra.Entradas.Select(ent =>
+            // Todas las entradas de una compra son del mismo evento y sector.
+            string nombreEvento = compra.EventoNombre ?? "Sin detalle";
+            string nombreSector = compra.SectorNombre ?? "Sin detalle";
+            bool esPlatea = nombreSector.Contains("Platea", StringComparison.OrdinalIgnoreCase);
+
+            var filasEntradas = compra.Entradas.OrderBy(ent => ent.EntradaId).Select(ent => new EntradaFilaVista
             {
-                string nombreEvento = _eventosMap.TryGetValue(ent.EventoId, out var ev)
-                    ? ev.Nombre
-                    : $"Evento #{ent.EventoId}";
-
-                string nombreSector = _sectoresMap.TryGetValue(ent.SectorId, out var sec)
-                    ? sec.Nombre
-                    : $"Sector #{ent.SectorId}";
-
-                bool esPlatea = nombreSector.Contains("Platea", StringComparison.OrdinalIgnoreCase);
-
-                return new EntradaFilaVista
-                {
-                    EntradaId = ent.EntradaId,
-                    EventoNombre = nombreEvento,
-                    SectorNombre = nombreSector,
-                    TipoSector = esPlatea ? "Platea (Numerada)" : "Popular (General)",
-                    Ubicacion = string.IsNullOrWhiteSpace(ent.FilaAsiento)
-                        ? "Sin numeración (Popular)"
-                        : ent.FilaAsiento,
-                    CodigoQr = ent.CodigoQr
-                };
+                EntradaId = ent.EntradaId,
+                EventoNombre = nombreEvento,
+                SectorNombre = nombreSector,
+                TipoSector = esPlatea ? "Platea (Numerada)" : "Popular (General)",
+                Ubicacion = string.IsNullOrWhiteSpace(ent.FilaAsiento)
+                    ? "Sin numeración (Popular)"
+                    : ent.FilaAsiento,
+                CodigoQr = ent.CodigoQr
             }).ToList();
 
             dataGridViewEntradas.DataSource = filasEntradas;
@@ -328,7 +328,7 @@ namespace Kicket.WinForms.Forms
                 {
                     await _compraApiClient.DeleteAsync(_compraIdSeleccionada.Value);
                     MessageBox.Show("Compra anulada correctamente. El stock del sector fue restituido.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    await CargarDatosCompletosAsync();
+                    await CargarComprasAsync();
                 }
                 catch (Exception ex)
                 {

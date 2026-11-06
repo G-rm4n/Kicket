@@ -11,5 +11,9 @@ namespace Kicket.Contracts.Clubes
         public string? Descripcion { get; set; }
         // Sigla del club.
         public string Abreviatura { get; set; } = string.Empty;
+        // Ciudad de origen del club (opcional).
+        public string? Ciudad { get; set; }
+        // Año de fundacion (opcional).
+        public int? AnioFundacion { get; set; }
     }
 }

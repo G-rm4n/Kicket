@@ -25,5 +25,13 @@ namespace Kicket.Contracts.Compras
         public string? EstadoPago { get; set; }
         // Entradas generadas por la compra.
         public List<EntradaDto> Entradas { get; set; } = new();
+
+        // Datos resueltos para mostrar en listados de administracion (los completa GET /compras/paginado).
+        public string? UsuarioNombre { get; set; }
+        public string? UsuarioEmail { get; set; }
+        public int? EventoId { get; set; }
+        public string? EventoNombre { get; set; }
+        public DateTime? EventoFecha { get; set; }
+        public string? SectorNombre { get; set; }
     }
 }

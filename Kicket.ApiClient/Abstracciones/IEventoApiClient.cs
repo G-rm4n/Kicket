@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Eventos;
 using System.Collections.Generic;
 using System.Threading;
@@ -10,6 +11,8 @@ namespace Kicket.ApiClient.Abstracciones
     {
         // GET /eventos: lista todos los eventos.
         Task<IReadOnlyList<EventoDto>> GetAllAsync(CancellationToken ct = default);
+        // GET .../paginado: una pagina con filtros y orden resueltos en el servidor.
+        Task<PagedResult<EventoDto>> GetPaginadoAsync(EventoFiltro filtro, CancellationToken ct = default);
         // GET /eventos/{id}: trae un evento.
         Task<EventoDto> GetOneAsync(int id, CancellationToken ct = default);
         // GET /eventos/{id}/disponibilidad: stock de cada sector para ese evento.

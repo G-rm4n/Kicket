@@ -1,6 +1,7 @@
 using Core.Interfaces;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Eventos;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,13 @@ namespace Core.Services
         public async Task<IEnumerable<Evento>> ObtenerTodosAsync()
         {
             return await _eventoRepository.GetAllAsync();
+        }
+
+        // Valida los filtros y pide la pagina al repositorio.
+        public async Task<PagedResult<EventoDto>> ObtenerPaginadoAsync(EventoFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _eventoRepository.ObtenerPaginadoAsync(filtro, ct);
         }
 
         // Calcula la disponibilidad de cada sector del estadio del evento.
@@ -131,6 +139,11 @@ namespace Core.Services
             if (!esActualizacion && evento.Fecha <= DateTime.Now)
             {
                 throw new ArgumentException("La fecha del evento debe ser futura.");
+            }
+            evento.Descripcion = Validaciones.TextoOpcional(evento.Descripcion);
+            if (evento.Descripcion is { Length: > 500 })
+            {
+                throw new ArgumentException("La descripcion no puede superar los 500 caracteres.");
             }
             if (evento.ClubLocalId == evento.ClubVisitanteId)
             {

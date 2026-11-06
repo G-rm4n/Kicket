@@ -5,6 +5,7 @@ using Kicket.Contracts.Compras;
 using Kicket.Contracts.Pagos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using WebApi.Seguridad;
 
 namespace WebApi.EndPoints
 {
@@ -25,6 +26,14 @@ namespace WebApi.EndPoints
                 HttpContext httpContext,
                 IConfiguration config) =>
             {
+                // El comprador es siempre el usuario del token (un Admin puede indicar otro).
+                if (!httpContext.User.EsAdmin())
+                {
+                    int? idToken = httpContext.User.ObtenerId();
+                    if (idToken is null) return Results.Unauthorized();
+                    request.UsuarioId = idToken.Value;
+                }
+
                 try
                 {
                     // Detecta la URL base del frontend que invoca
@@ -72,8 +81,17 @@ namespace WebApi.EndPoints
             pagosGroup.MapPost("/confirmar", async (
                 ConfirmarPagoRequest request,
                 IMercadoPagoService mpService,
-                ICompraService compraService) =>
+                ICompraService compraService,
+                HttpContext httpContext) =>
             {
+                // Igual que al crear la preferencia: la compra queda a nombre del usuario del token.
+                if (!httpContext.User.EsAdmin())
+                {
+                    int? idToken = httpContext.User.ObtenerId();
+                    if (idToken is null) return Results.Unauthorized();
+                    request.UsuarioId = idToken.Value;
+                }
+
                 // 1) El estado informado tiene que ser "approved".
                 if (!string.Equals(request.Status, "approved", StringComparison.OrdinalIgnoreCase))
                 {

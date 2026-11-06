@@ -1,7 +1,9 @@
-﻿using Core.Interfaces;
+using Core.Interfaces;
 using Data.Implementaciones;
 using Data.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Clubes;
+using Kicket.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,6 +42,13 @@ namespace Core.Services
             return await _clubRepository.GetAllAsync();
         }
 
+        // Valida los filtros y pide la pagina al repositorio.
+        public async Task<PagedResult<ClubDto>> ObtenerPaginadoAsync(ClubFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _clubRepository.ObtenerPaginadoAsync(filtro, ct);
+        }
+
         // Valida el club y lo actualiza.
         public async Task<bool> ActualizarClubAsync(Club club)
         {
@@ -68,6 +77,15 @@ namespace Core.Services
             if (string.IsNullOrWhiteSpace(club.Abreviatura))
             {
                 throw new ArgumentException("La abreviatura del club es obligatoria.");
+            }
+            club.Ciudad = Validaciones.TextoOpcional(club.Ciudad);
+            if (club.Ciudad is { Length: > 100 })
+            {
+                throw new ArgumentException("La ciudad no puede superar los 100 caracteres.");
+            }
+            if (club.AnioFundacion.HasValue && (club.AnioFundacion < 1850 || club.AnioFundacion > DateTime.Today.Year))
+            {
+                throw new ArgumentException("El año de fundacion debe estar entre 1850 y el año actual.");
             }
         }
     }

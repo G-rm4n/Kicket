@@ -1,19 +1,42 @@
-@* Pantalla de administración de estadios (ruta /admin/Estadios): listar, crear, editar y borrar. Solo Admin. *@
+@* Pantalla de administración de estadios (ruta /admin/Estadios): listar con filtros y paginación, crear, editar y borrar. Solo Admin. *@
 @page "/admin/Estadios"
+@using Kicket.Contracts.Common
 @using Kicket.Contracts.Estadios
 @using Kicket.ApiClient.Abstracciones
 @layout AdminLayout
 @inherits PaginaProtegida
 @inject IEstadioApiClient estadioApi
 
-@* Click fuera de la tabla deselecciona el estadio. *@
-<div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsEstadioSelected = false; this.IdEstadio = 0; }">
-    <h1>
-        Gestionar Estadios
-    </h1>
-    <div @onclick:stopPropagation="true" class="p-3">
+<div class="d-flex flex-column mb-3">
+    <h1>Gestionar Estadios</h1>
+
+    @* Filtros resueltos en la API; se conservan al cambiar de página. *@
+    <PanelFiltros Cargando="Procesando" OnBuscar="BuscarAsync" OnLimpiar="LimpiarFiltrosAsync">
+        <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Buscar</label>
+            <input class="form-control form-control-sm" placeholder="Nombre o dirección" @bind="filtro.Busqueda" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1">Ciudad</label>
+            <input class="form-control form-control-sm" @bind="filtro.Ciudad" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1">Provincia</label>
+            <input class="form-control form-control-sm" @bind="filtro.Provincia" />
+        </div>
+        <div class="col-12 col-md-2">
+            <label class="form-label small mb-1">Ordenar por</label>
+            <select class="form-select form-select-sm" @bind="filtro.OrdenarPor">
+                <option value="nombre">Nombre</option>
+                <option value="ciudad">Ciudad</option>
+                <option value="provincia">Provincia</option>
+            </select>
+        </div>
+    </PanelFiltros>
+
+    <div class="p-1">
         @* Tabla de estadios; click en una fila la selecciona. *@
-        <GenericTable TItem="EstadioDto" DatosTabla="estadios ?? Enumerable.Empty<EstadioDto>()"
+        <GenericTable TItem="EstadioDto" DatosTabla="resultado?.Items ?? new List<EstadioDto>()"
                       OnClick="SelectFila"
                       FilaSeleccionada="@(e=>e.IdEstadio==this.IdEstadio)">
             <Cabeceras>
@@ -25,73 +48,52 @@
             <fila Context="Estadio">
                 <td>@Estadio.IdEstadio</td>
                 <td>@Estadio.Nombre</td>
-                <td>@Estadio.Ciudad</td>
                 <td>@Estadio.Direccion</td>
+                <td>@Estadio.Ciudad</td>
+                <td>@Estadio.Provincia</td>
+                <td class="text-end">@Estadio.CantidadSectores</td>
+                <td class="text-end">@Estadio.CapacidadTotal.ToString("N0")</td>
             </fila>
         </GenericTable>
+
+        @if (resultado is not null)
+        {
+            <Paginador Pagina="resultado.Pagina" TotalPaginas="resultado.TotalPaginas" TotalRegistros="resultado.TotalRegistros"
+                       TamanoPagina="resultado.TamanoPagina" Cargando="Procesando"
+                       OnCambioPagina="IrAPaginaAsync" OnCambioTamano="CambiarTamanoAsync" />
+        }
     </div>
 
     @* Botones de acción: borrar y editar se habilitan solo con un estadio seleccionado. *@
-    <div class="d-flex justify-content-end flex-row gap-4 w-100">
+    <div class="d-flex justify-content-end flex-row flex-wrap gap-3 w-100">
         <button class="btn btn-danger text-white" disabled="@(!IsEstadioSelected)" @onclick="EliminarEstadio">Borrar Estadio</button>
         <button class="btn bg-primary text-white" disabled="@(!IsEstadioSelected)" @onclick="AbrirModalEdicion">Editar Estadio</button>
         <button class="btn btn-green" @onclick="AbrirModalCreacion">Crear Estadio</button>
         <button class="btn bg-secondary text-white" @onclick="CargarEstadiosAsync">Refrescar</button>
     </div>
+
     @* Modal de edición del estadio seleccionado. *@
     @if (this.ShowModalEdicion && EstadioEditando is not null)
     {
-        <GenericModalForm TOjb="EstadioUpdateRequest" Obj="EstadioEditando" Titulo="Editar estadio" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
-
+        <GenericModalForm TOjb="EstadioUpdateRequest" Obj="EstadioEditando" Titulo="Editar estadio" Error="@MensajeError" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
             <CuerpoForm Context="estadio">
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <InputText class="form-control" @bind-Value="estadio!.Nombre" />
-                    <ValidationMessage For="@(()=>estadio.Nombre)"></ValidationMessage>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Ciudad</label>
-                    <InputText class="form-control" @bind-Value="estadio.Ciudad" />
-                    <ValidationMessage For="@(() => estadio.Ciudad)"></ValidationMessage>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Direccion</label>
-                    <InputText class="form-control" @bind-Value="estadio.Direccion" />
-                    <ValidationMessage For="@(() => estadio.Direccion)"></ValidationMessage>
-                </div>
+                @CamposEstadio(estadio)
             </CuerpoForm>
-
         </GenericModalForm>
     }
 
     @* Modal de creación de un estadio nuevo. *@
     @if (this.ShowModalCreacion && NuevoEstadio is not null)
     {
-        <GenericModalForm TOjb="EstadioRequest" Obj="NuevoEstadio" Titulo="Crear Estadio" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoEstadio">
-
+        <GenericModalForm TOjb="EstadioRequest" Obj="NuevoEstadio" Titulo="Crear Estadio" Error="@MensajeError" OnCerrar="CerrarModalCreacion" Onsubmit="EnviarNuevoEstadio">
             <CuerpoForm Context="estadio">
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <InputText class="form-control" @bind-Value="estadio!.Nombre" />
-                    <ValidationMessage For="@(() => estadio.Nombre)"></ValidationMessage>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Ciudad</label>
-                    <InputText class="form-control" @bind-Value="estadio.Ciudad" />
-                    <ValidationMessage For="@(() => estadio.Ciudad)"></ValidationMessage>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Direccion</label>
-                    <InputText class="form-control" @bind-Value="estadio.Direccion" />
-                    <ValidationMessage For="@(() => estadio.Direccion)"></ValidationMessage>
-                </div>
+                @CamposEstadio(estadio)
             </CuerpoForm>
-
         </GenericModalForm>
     }
 
     @* Muestra el error, si hay. *@
-    @if (!string.IsNullOrEmpty(MensajeError))
+    @if (!string.IsNullOrEmpty(MensajeError) && !ShowModalCreacion && !ShowModalEdicion)
     {
         <div class="alert alert-danger mt-3">
             @MensajeError
@@ -100,16 +102,44 @@
 </div>
 
 @code {
-    // Títulos de las columnas de la tabla.
-    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Ciudad", "Dirección"];
+    // Campos del formulario, compartidos por el alta y la edición.
+    private RenderFragment CamposEstadio(EstadioRequest estadio) => __builder =>
+    {
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" @bind-Value="estadio.Nombre" />
+            <ValidationMessage For="@(() => estadio.Nombre)"></ValidationMessage>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Dirección</label>
+            <InputText class="form-control" @bind-Value="estadio.Direccion" />
+            <ValidationMessage For="@(() => estadio.Direccion)"></ValidationMessage>
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Ciudad</label>
+                <InputText class="form-control" @bind-Value="estadio.Ciudad" />
+                <ValidationMessage For="@(() => estadio.Ciudad)"></ValidationMessage>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Provincia</label>
+                <InputText class="form-control" @bind-Value="estadio.Provincia" />
+                <ValidationMessage For="@(() => estadio.Provincia)"></ValidationMessage>
+            </div>
+        </div>
+        <div class="form-text">La capacidad del estadio se calcula sumando sus sectores (se administran desde la app de escritorio).</div>
+    };
 
-    // Estadios cargados desde la API.
-    public IEnumerable<EstadioDto>? estadios { get; set; }
+    // Títulos de las columnas de la tabla.
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Dirección", "Ciudad", "Provincia", "Sectores", "Capacidad"];
+
+    // Filtros actuales y la página que devolvió la API.
+    private EstadioFiltro filtro = new() { OrdenarPor = "nombre" };
+    private PagedResult<EstadioDto>? resultado;
 
     // Flags de selección y de qué modal está abierto.
     public bool IsEstadioSelected { get; set; } = false;
     public bool ShowModalEdicion { get; set; } = false;
-    public bool ShowModalConfirmacion { get; set; } = false;
     public bool ShowModalCreacion { get; set; } = false;
 
     // Id del estadio seleccionado.
@@ -119,7 +149,7 @@
     public EstadioUpdateRequest? EstadioEditando { get; set; }
     public EstadioRequest? NuevoEstadio { get; set; }
 
-    // Al abrir la página: controla permisos (base) y carga los estadios.
+    // Al abrir la página: controla permisos (base) y carga la primera página.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -133,20 +163,46 @@
         this.IsEstadioSelected = true;
     }
 
-    // Pide todos los estadios a la API.
+    // Pide a la API la página actual con los filtros actuales.
     public async Task CargarEstadiosAsync()
     {
         await this.SecureExec(async () =>
         {
-            this.estadios = await estadioApi.GetAllAsync();
+            this.resultado = await estadioApi.GetPaginadoAsync(filtro);
+            filtro.Pagina = resultado.Pagina;
+            IsEstadioSelected = false;
         });
+    }
+
+    private async Task BuscarAsync()
+    {
+        filtro.Pagina = 1;
+        await CargarEstadiosAsync();
+    }
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        filtro = new EstadioFiltro { OrdenarPor = "nombre", TamanoPagina = filtro.TamanoPagina };
+        await CargarEstadiosAsync();
+    }
+
+    private async Task IrAPaginaAsync(int pagina)
+    {
+        filtro.Pagina = pagina;
+        await CargarEstadiosAsync();
+    }
+
+    private async Task CambiarTamanoAsync(int tamano)
+    {
+        filtro.TamanoPagina = tamano;
+        filtro.Pagina = 1;
+        await CargarEstadiosAsync();
     }
 
     // Copia los datos del estadio seleccionado a un EstadioUpdateRequest y abre el modal de edición.
     public void AbrirModalEdicion()
     {
-        if (estadios is null) return;
-        var estadioOriginal = estadios.FirstOrDefault(c => c.IdEstadio == this.IdEstadio);
+        var estadioOriginal = resultado?.Items.FirstOrDefault(c => c.IdEstadio == this.IdEstadio);
         if (estadioOriginal is null) return;
 
         EstadioEditando = new EstadioUpdateRequest
@@ -154,7 +210,8 @@
             IdEstadio = estadioOriginal.IdEstadio,
             Ciudad = estadioOriginal.Ciudad,
             Direccion = estadioOriginal.Direccion,
-            Nombre = estadioOriginal.Nombre
+            Nombre = estadioOriginal.Nombre,
+            Provincia = estadioOriginal.Provincia
         };
         this.ShowModalEdicion = true;
     }
@@ -163,11 +220,13 @@
     public void CerrarModalEdicion()
     {
         this.ShowModalEdicion = false;
+        MensajeError = null;
     }
     // Cierra el modal de creación.
     public void CerrarModalCreacion()
     {
         this.ShowModalCreacion = false;
+        MensajeError = null;
     }
 
     // Abre el modal de creación con un estadio vacío.
@@ -177,7 +236,7 @@
         this.ShowModalCreacion = true;
     }
 
-    // Envía el estadio nuevo a la API, cierra el modal y recarga la lista.
+    // Envía el estadio nuevo a la API; si salió bien cierra el modal y recarga la lista.
     public async Task EnviarNuevoEstadio()
     {
         if (NuevoEstadio is null) return;
@@ -186,11 +245,12 @@
             await this.estadioApi.CreateAsync(NuevoEstadio);
         });
 
+        if (MensajeError is not null) return;
         this.CerrarModalCreacion();
         await this.CargarEstadiosAsync();
     }
 
-    // Envía el estadio editado a la API, cierra el modal y recarga la lista.
+    // Envía el estadio editado a la API; si salió bien cierra el modal y recarga la lista.
     public async Task EnviarEditado()
     {
         if (EstadioEditando is null) return;
@@ -199,8 +259,8 @@
             await estadioApi.UpdateAsync(EstadioEditando);
         });
 
+        if (MensajeError is not null) return;
         CerrarModalEdicion();
-
         await this.CargarEstadiosAsync();
     }
 
@@ -208,6 +268,7 @@
     public async Task EliminarEstadio()
     {
         await this.SecureExec(async () => await estadioApi.DeleteAsync(this.IdEstadio));
+        if (MensajeError is not null) return;
         await this.CargarEstadiosAsync();
     }
 }

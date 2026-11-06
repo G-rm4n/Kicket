@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Kicket.Contracts.Clubes;
+using Kicket.Contracts.Common;
 
 namespace Data.Interfaces
 {
@@ -20,5 +22,7 @@ namespace Data.Interfaces
         Task<Club?> GetByIdAsync(int id);
         // Devuelve todos los clubes.
         Task<IEnumerable<Club>> GetAllAsync();
+        // Pagina de clubes filtrada y ordenada en la base (Skip/Take + Count).
+        Task<PagedResult<ClubDto>> ObtenerPaginadoAsync(ClubFiltro filtro, CancellationToken ct = default);
     }
 }

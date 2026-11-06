@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,13 @@ namespace Domain.Entities
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
         // Rol del usuario ("Usuario" o "Admin"); la BD pone "Usuario" por defecto.
         public string Rol { get; set; } = string.Empty;
+        // DNI normalizado (solo dígitos, como texto para no perder ceros). Único cuando está cargado;
+        // puede ser null en usuarios creados antes de la versión 2 (no se inventan DNI).
+        public string? Dni { get; set; }
+        // Teléfono de contacto (opcional).
+        public string? Telefono { get; set; }
+        // Fecha de nacimiento (opcional).
+        public DateTime? FechaNacimiento { get; set; }
 
     }
 }

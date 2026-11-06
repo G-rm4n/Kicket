@@ -1,20 +1,50 @@
-@* Pantalla de administración de usuarios (ruta /admin/usuarios): lista y borrado. Solo para Admin (PaginaProtegida). *@
+@* Pantalla de administración de usuarios (ruta /admin/usuarios): lista con filtros y paginación, edición y borrado.
+   Solo para Admin (PaginaProtegida en la pantalla y política "Solo admin" en la API). *@
 @page "/admin/usuarios"
 @using Kicket.Blazor.Core.Auth
 @using Kicket.ApiClient.Abstracciones
+@using Kicket.Contracts.Common
 @using Kicket.Contracts.Usuarios
 @layout AdminLayout
 @inherits PaginaProtegida
 @inject IUsuarioApiClient usuarioApi
 
-@* Click fuera de la tabla deselecciona el usuario. *@
-<div class="d-flex flex-column mb-3 h-100" @onclick="() => { IsUsuarioSelected = false; this.IdUsuario = 0; }">
-    <h1>
-        Gestionar Usuarios
-    </h1>
-    <div @onclick:stopPropagation="true" class="p-3">
-        @* Tabla con los usuarios; click en una fila la selecciona. *@
-        <GenericTable TItem="UsuarioDto" DatosTabla="Usuarios ?? Enumerable.Empty<UsuarioDto>()"
+<div class="d-flex flex-column mb-3">
+    <h1>Gestionar Usuarios</h1>
+
+    <PanelFiltros Cargando="Procesando" OnBuscar="BuscarAsync" OnLimpiar="LimpiarFiltrosAsync">
+        <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Buscar</label>
+            <input class="form-control form-control-sm" placeholder="Nombre, apellido, email o DNI" @bind="filtro.Busqueda" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1">DNI</label>
+            <input class="form-control form-control-sm" inputmode="numeric" @bind="filtro.Dni" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1">Rol</label>
+            <select class="form-select form-select-sm" @bind="filtro.Rol">
+                <option value="">Todos</option>
+                @foreach (var rol in Roles.Todos)
+                {
+                    <option value="@rol">@rol</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-2">
+            <label class="form-label small mb-1">Ordenar por</label>
+            <select class="form-select form-select-sm" @bind="filtro.OrdenarPor">
+                <option value="apellido">Apellido</option>
+                <option value="email">Email</option>
+                <option value="dni">DNI</option>
+                <option value="registro">Fecha de alta</option>
+            </select>
+        </div>
+    </PanelFiltros>
+
+    <div class="p-1">
+        @* Tabla con los usuarios; click en una fila la selecciona. La contraseña nunca llega al navegador. *@
+        <GenericTable TItem="UsuarioDto" DatosTabla="resultado?.Items ?? new List<UsuarioDto>()"
                       OnClick="SelectFila"
                       FilaSeleccionada="@(u=>u.IdUsuario==this.IdUsuario)">
             <Cabeceras>
@@ -25,22 +55,99 @@
             </Cabeceras>
             <fila Context="Usuario">
                 <td>@Usuario.IdUsuario</td>
-                <td>@Usuario.Nombre</td>
-                <td>@Usuario.Apellido</td>
+                <td>@Usuario.Apellido, @Usuario.Nombre</td>
                 <td>@Usuario.Email</td>
+                <td>
+                    @if (string.IsNullOrEmpty(Usuario.Dni))
+                    {
+                        <span class="badge bg-warning-subtle text-warning-emphasis">Sin cargar</span>
+                    }
+                    else
+                    {
+                        @FormatearDni(Usuario.Dni)
+                    }
+                </td>
+                <td>@Usuario.Telefono</td>
                 <td>@Usuario.Rol</td>
+                <td>@Usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
             </fila>
         </GenericTable>
+
+        @if (resultado is not null)
+        {
+            <Paginador Pagina="resultado.Pagina" TotalPaginas="resultado.TotalPaginas" TotalRegistros="resultado.TotalRegistros"
+                       TamanoPagina="resultado.TamanoPagina" Cargando="Procesando"
+                       OnCambioPagina="IrAPaginaAsync" OnCambioTamano="CambiarTamanoAsync" />
+        }
     </div>
 
-    @* Botones de borrar (habilitado solo con un usuario seleccionado) y refrescar. *@
-    <div class="d-flex justify-content-end flex-row gap-4 w-100">
+    @* Botones de editar y borrar (habilitados solo con un usuario seleccionado) y refrescar. *@
+    <div class="d-flex justify-content-end flex-row flex-wrap gap-3 w-100">
         <button class="btn btn-danger text-white" disabled="@(!IsUsuarioSelected)" @onclick="EliminarUsuario">Borrar Usuario</button>
+        <button class="btn bg-primary text-white" disabled="@(!IsUsuarioSelected)" @onclick="AbrirModalEdicion">Editar Usuario</button>
         <button class="btn bg-secondary text-white" @onclick="CargarUsuariosAsync">Refrescar</button>
     </div>
 
+    @* Modal de edición: el DNI es opcional para no obligar a inventarlo en usuarios viejos; si se deja vacío se conserva el actual. *@
+    @if (ShowModalEdicion && usuarioEditando is not null)
+    {
+        <GenericModalForm TOjb="UsuarioUpdateRequest" Obj="usuarioEditando" Titulo="Editar usuario" Error="@MensajeError" OnCerrar="CerrarModalEdicion" Onsubmit="EnviarEditado">
+            <CuerpoForm Context="u">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Nombre</label>
+                        <InputText class="form-control" @bind-Value="u.Nombre" />
+                        <ValidationMessage For="@(() => u.Nombre)" />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Apellido</label>
+                        <InputText class="form-control" @bind-Value="u.Apellido" />
+                        <ValidationMessage For="@(() => u.Apellido)" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <InputText class="form-control" @bind-Value="u.Email" />
+                    <ValidationMessage For="@(() => u.Email)" />
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">DNI</label>
+                        <InputText class="form-control" inputmode="numeric" placeholder="30.123.456" @bind-Value="u.Dni" />
+                        <ValidationMessage For="@(() => u.Dni)" />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Teléfono</label>
+                        <InputText class="form-control" @bind-Value="u.Telefono" />
+                        <ValidationMessage For="@(() => u.Telefono)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Fecha de nacimiento</label>
+                        <InputDate class="form-control" @bind-Value="u.FechaNacimiento" />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Rol</label>
+                        <InputSelect class="form-select" @bind-Value="u.Rol">
+                            @foreach (var rol in Roles.Todos)
+                            {
+                                <option value="@rol">@rol</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label">Nueva contraseña (opcional)</label>
+                    <InputText type="password" class="form-control" placeholder="Dejar vacío para no cambiarla" @bind-Value="u.Pass" />
+                    <ValidationMessage For="@(() => u.Pass)" />
+                </div>
+            </CuerpoForm>
+        </GenericModalForm>
+    }
+
     @* Muestra el error, si hay. *@
-    @if (!string.IsNullOrEmpty(MensajeError))
+    @if (!string.IsNullOrEmpty(MensajeError) && !ShowModalEdicion)
     {
         <div class="alert alert-danger mt-3">
             @MensajeError
@@ -50,18 +157,21 @@
 
 @code {
     // Títulos de las columnas de la tabla.
-    public IEnumerable<string> Cab { get; set; } = ["ID", "Nombre", "Apellido", "Email", "Rol"];
+    public IEnumerable<string> Cab { get; set; } = ["ID", "Apellido y nombre", "Email", "DNI", "Teléfono", "Rol", "Alta"];
 
-    // Usuarios cargados desde la API.
-    public IEnumerable<UsuarioDto>? Usuarios { get; set; }
+    // Filtros actuales y la página que devolvió la API.
+    private UsuarioFiltro filtro = new() { OrdenarPor = "apellido" };
+    private PagedResult<UsuarioDto>? resultado;
 
-    // Indica si hay un usuario seleccionado.
+    // Indica si hay un usuario seleccionado y cuál.
     public bool IsUsuarioSelected { get; set; } = false;
-
-    // Id del usuario seleccionado.
     public int IdUsuario { get; set; }
 
-    // Al abrir la página: controla permisos (base) y carga los usuarios.
+    // Edición.
+    private bool ShowModalEdicion;
+    private UsuarioUpdateRequest? usuarioEditando;
+
+    // Al abrir la página: controla permisos (base) y carga la primera página.
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -75,13 +185,80 @@
         this.IsUsuarioSelected = true;
     }
 
-    // Pide todos los usuarios a la API.
+    // Muestra el DNI con puntos de miles (30.123.456); en la base se guarda solo con dígitos.
+    private static string FormatearDni(string dni) =>
+        long.TryParse(dni, out var numero) ? numero.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) : dni;
+
+    // Pide a la API la página actual con los filtros actuales.
     public async Task CargarUsuariosAsync()
     {
         await this.SecureExec(async () =>
         {
-            this.Usuarios = await usuarioApi.GetAllAsync();
+            this.resultado = await usuarioApi.GetPaginadoAsync(filtro);
+            filtro.Pagina = resultado.Pagina;
+            IsUsuarioSelected = false;
         });
+    }
+
+    private async Task BuscarAsync()
+    {
+        filtro.Pagina = 1;
+        await CargarUsuariosAsync();
+    }
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        filtro = new UsuarioFiltro { OrdenarPor = "apellido", TamanoPagina = filtro.TamanoPagina };
+        await CargarUsuariosAsync();
+    }
+
+    private async Task IrAPaginaAsync(int pagina)
+    {
+        filtro.Pagina = pagina;
+        await CargarUsuariosAsync();
+    }
+
+    private async Task CambiarTamanoAsync(int tamano)
+    {
+        filtro.TamanoPagina = tamano;
+        filtro.Pagina = 1;
+        await CargarUsuariosAsync();
+    }
+
+    // Copia los datos del usuario seleccionado al formulario de edición.
+    private void AbrirModalEdicion()
+    {
+        var u = resultado?.Items.FirstOrDefault(x => x.IdUsuario == IdUsuario);
+        if (u is null) return;
+        usuarioEditando = new UsuarioUpdateRequest
+        {
+            IdUsuario = u.IdUsuario,
+            Nombre = u.Nombre,
+            Apellido = u.Apellido,
+            Email = u.Email,
+            Dni = u.Dni,
+            Telefono = u.Telefono,
+            FechaNacimiento = u.FechaNacimiento,
+            Rol = u.Rol
+        };
+        ShowModalEdicion = true;
+    }
+
+    private void CerrarModalEdicion()
+    {
+        ShowModalEdicion = false;
+        MensajeError = null;
+    }
+
+    // Envía los cambios; si la API los rechaza (DNI o email repetido) el modal queda abierto con el error.
+    private async Task EnviarEditado()
+    {
+        if (usuarioEditando is null) return;
+        if (string.IsNullOrWhiteSpace(usuarioEditando.Pass)) usuarioEditando.Pass = null;
+        await SecureExec(async () => await usuarioApi.UpdateAsync(usuarioEditando));
+        if (MensajeError is not null) return;
+        CerrarModalEdicion();
+        await CargarUsuariosAsync();
     }
 
     // Borra el usuario seleccionado y recarga la lista.
@@ -91,6 +268,7 @@
         {
             await usuarioApi.DeleteAsync(this.IdUsuario);
         });
+        if (MensajeError is not null) return;
         await CargarUsuariosAsync();
     }
 }

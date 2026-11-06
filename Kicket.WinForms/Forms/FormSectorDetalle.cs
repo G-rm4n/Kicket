@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Sectores;
+using Kicket.WinForms.Controles;
 
 namespace Kicket.WinForms.Forms
 {
@@ -14,11 +16,28 @@ namespace Kicket.WinForms.Forms
         private int _estadioId;
         private int? _sectorIdSeleccionado;
 
-        // Constructor: recibe el cliente de sectores por inyección.
+        // Filtros y paginador (versión 2).
+        private readonly BarraFiltros _filtros = new();
+        private readonly TextBox _filtroNombre;
+        private readonly ComboBox _filtroTipo;
+        private readonly ControlPaginacion _paginador = new();
+        private PagedResult<SectorDto>? _pagina;
+
+        // Constructor: recibe el cliente de sectores por inyección y arma filtros y paginador.
         public FormSectorDetalle(ISectorApiClient sectorApiClient)
         {
             InitializeComponent();
             _sectorApiClient = sectorApiClient;
+
+            // Tipo: no es una columna; la API lo deduce del nombre ("Platea" = numerado).
+            dataGridViewSectores.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColumnTipo", DataPropertyName = "Tipo", HeaderText = "Tipo" });
+
+            _filtroNombre = _filtros.AgregarTexto("Nombre:", 110);
+            _filtroTipo = _filtros.AgregarCombo("Tipo:", 90, "Todos", SectorFiltro.TipoPlatea, SectorFiltro.TipoPopular);
+            _filtros.Buscar += async (_, _) => { _paginador.Reiniciar(); await CargarSectores(); };
+            _filtros.Limpiar += async (_, _) => { _paginador.Reiniciar(); await CargarSectores(); };
+            _paginador.PaginaCambiada += async (_, _) => await CargarSectores();
+            LayoutListado.Envolver(this, dataGridViewSectores, _filtros, _paginador);
         }
 
         /// <summary>
@@ -40,13 +59,22 @@ namespace Kicket.WinForms.Forms
             await CargarSectores();
         }
 
-        // Pide a la API los sectores del estadio y los muestra en la grilla.
+        // Pide a la API una página de sectores de este estadio (con los filtros) y la muestra en la grilla.
         private async Task CargarSectores()
         {
             try
             {
-                var sectores = await _sectorApiClient.GetByEstadioIdAsync(_estadioId);
-                dataGridViewSectores.DataSource = sectores;
+                _pagina = await _sectorApiClient.GetPaginadoAsync(new SectorFiltro
+                {
+                    EstadioId = _estadioId,
+                    Pagina = _paginador.Pagina,
+                    TamanoPagina = _paginador.TamanoPagina,
+                    Busqueda = _filtroNombre.Text,
+                    Tipo = _filtroTipo.SelectedIndex > 0 ? _filtroTipo.SelectedItem?.ToString() : null,
+                    OrdenarPor = "nombre"
+                });
+                dataGridViewSectores.DataSource = _pagina.Items;
+                _paginador.Actualizar(_pagina);
                 LimpiarFormulario();
             }
             catch (Exception ex)

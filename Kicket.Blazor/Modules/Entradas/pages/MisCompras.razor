@@ -1,163 +1,220 @@
-@* Página "Mis Compras" (ruta /mis-compras): historial de compras del usuario logueado y acceso al QR de cada entrada. *@
+@* Página "Mis Entradas" (rutas /mis-entradas y /mis-compras): las entradas del usuario agrupadas POR PARTIDO.
+   Cada partido aparece una sola vez aunque venga de varias compras; el detalle se abre con "Ver entradas".
+   La agrupación, los filtros, el orden y la paginación (por partido) los resuelve la API.
+   A pedido del profesor NO se muestran fila ni asiento: la API ni siquiera los manda en este listado. *@
+@page "/mis-entradas"
 @page "/mis-compras"
 @using Kicket.ApiClient.Abstracciones
 @using Kicket.Blazor.Core.HTTP
 @using Kicket.Blazor.Core.state
+@using Kicket.Contracts.Common
 @using Kicket.Contracts.Compras
-@using Kicket.Contracts.Entradas
-@using Kicket.Contracts.Estadios
-@using Kicket.Contracts.Eventos
-@using Kicket.Contracts.Sectores
 @inherits PaginaApi
 @inject ICompraApiClient compraApi
-@inject IEventoApiClient eventoApi
-@inject ISectorApiClient sectorApi
-@inject IEstadioApiClient estadioApi
 @inject ISesionUsuario sesion
 @inject KicketAuthStateProvider authStateProvider
 @inject NavigationManager Nav
 
-<div class="container py-5" style="min-height: 80vh;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container py-4 py-md-5" style="min-height: 80vh;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h1 class="fw-bold text-dark mb-1">Mis Compras y Entradas</h1>
-            <p class="text-secondary mb-0">Consultá el historial de tus compras y accedé a tus códigos QR de ingreso.</p>
+            <h1 class="fw-bold text-dark mb-1">Mis Entradas</h1>
+            <p class="text-secondary mb-0">Tus partidos, del más próximo al más lejano. Abrí cada uno para ver sus entradas y códigos QR.</p>
         </div>
-        <a href="/eventos" class="btn btn-success fw-semibold rounded-pill px-4">
-            Comprar Nuevas Entradas
-        </a>
+        <a href="/eventos" class="btn btn-success fw-semibold rounded-pill px-4">Comprar nuevas entradas</a>
     </div>
+
+    <PanelFiltros Cargando="Procesando" OnBuscar="BuscarAsync" OnLimpiar="LimpiarFiltrosAsync">
+        <div class="col-12 col-lg-3">
+            <label class="form-label small mb-1" for="f-buscar">Buscar partido</label>
+            <input id="f-buscar" class="form-control form-control-sm" placeholder="Club, partido o estadio" @bind="filtro.Busqueda" />
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label small mb-1" for="f-desde">Partido desde</label>
+            <input id="f-desde" type="date" class="form-control form-control-sm" @bind="filtro.Desde" />
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label small mb-1" for="f-hasta">Partido hasta</label>
+            <input id="f-hasta" type="date" class="form-control form-control-sm" @bind="filtro.Hasta" />
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label small mb-1" for="f-estado">Estado</label>
+            <select id="f-estado" class="form-select form-select-sm" @bind="filtro.Estado">
+                <option value="@MisEntradasFiltro.EstadoTodos">Todos</option>
+                <option value="@MisEntradasFiltro.EstadoProximos">Próximos</option>
+                <option value="@MisEntradasFiltro.EstadoPasados">Finalizados</option>
+                <option value="@MisEntradasFiltro.EstadoCancelados">Cancelados</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label small mb-1" for="f-orden">Ordenar por</label>
+            <select id="f-orden" class="form-select form-select-sm" @bind="filtro.OrdenarPor">
+                <option value="@MisEntradasFiltro.OrdenPartidoProximo">Partido más próximo</option>
+                <option value="@MisEntradasFiltro.OrdenPartidoLejano">Partido más lejano</option>
+                <option value="@MisEntradasFiltro.OrdenCompraReciente">Compra más reciente</option>
+                <option value="@MisEntradasFiltro.OrdenCompraAntigua">Compra más antigua</option>
+            </select>
+        </div>
+    </PanelFiltros>
 
     @* Muestra el error, si hay. *@
     @if (!string.IsNullOrEmpty(MensajeError))
     {
-        <div class="alert alert-danger shadow-sm">
-            @MensajeError
-        </div>
+        <div class="alert alert-danger shadow-sm">@MensajeError</div>
     }
 
-    @* Mientras carga muestra un spinner; si no hay compras, un aviso; si hay, una tarjeta por compra. *@
-    @if (Procesando)
+    @if (Procesando && resultado is null)
     {
         <div class="text-center py-5">
             <div class="spinner-border text-success" role="status"></div>
             <p class="mt-2 text-secondary">Cargando tus entradas...</p>
         </div>
     }
-    else if (_misCompras.Count == 0)
+    else if (resultado is not null && resultado.TotalRegistros == 0)
     {
         <div class="card border-0 shadow-sm text-center p-5 bg-light">
-            <h4 class="fw-bold text-secondary mb-2">Todavía no tenés compras registradas</h4>
-            <p class="text-muted mb-4">Explorá la cartelera de eventos próximos y adquirí tus entradas online.</p>
-            <div>
-                <a href="/eventos" class="btn btn-success rounded-pill px-4 py-2 fw-bold">
-                    Ver Eventos Disponibles
-                </a>
-            </div>
+            @if (HayFiltros)
+            {
+                <h4 class="fw-bold text-secondary mb-2">No hay partidos que coincidan con los filtros</h4>
+                <p class="text-muted mb-3">Probá con otras fechas o limpiá los filtros.</p>
+                <div><button class="btn btn-outline-secondary rounded-pill px-4" @onclick="LimpiarFiltrosAsync">Limpiar filtros</button></div>
+            }
+            else
+            {
+                <h4 class="fw-bold text-secondary mb-2">Todavía no tenés entradas</h4>
+                <p class="text-muted mb-4">Explorá la cartelera de próximos partidos y comprá tus entradas online.</p>
+                <div><a href="/eventos" class="btn btn-success rounded-pill px-4 py-2 fw-bold">Ver eventos disponibles</a></div>
+            }
         </div>
     }
-    else
+    else if (resultado is not null)
     {
-        <div class="d-flex flex-column gap-4">
-            @* Tarjeta de cada compra: encabezado con datos del pago y tabla con sus entradas. *@
-            @foreach (var compra in _misCompras)
+        <div class="d-flex flex-column gap-3 @(Procesando ? "opacity-50" : "")">
+            @foreach (var partido in resultado.Items)
             {
+                bool abierto = _abiertos.Contains(partido.EventoId);
+                string idDetalle = $"detalle-{partido.EventoId}";
+
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="card-header bg-dark text-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center">
-                        <div class="d-flex align-items-center flex-wrap gap-2">
-                            <span class="fw-bold">Compra #@compra.CompraId</span>
-                            <span class="text-secondary">|</span>
-                            <span class="small text-light opacity-75">Fecha: @compra.FechaCompra.ToString("dd/MM/yyyy HH:mm")</span>
-                            @if (!string.IsNullOrWhiteSpace(compra.MetodoPago))
-                            {
-                                <span class="badge bg-info text-dark">💳 @compra.MetodoPago</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(compra.PaymentId))
-                            {
-                                <span class="small text-light opacity-75">(Ref: @compra.PaymentId)</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(compra.EstadoPago))
-                            {
-                                <span class="badge bg-success">@compra.EstadoPago</span>
-                            }
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                            @* Fecha en bloque compacto *@
+                            <div class="text-center rounded-3 px-3 py-2 flex-shrink-0 @ClaseFecha(partido)" style="min-width: 86px;">
+                                <div class="fw-bold fs-4 lh-1">@partido.Fecha.ToString("dd")</div>
+                                <div class="small text-uppercase">@partido.Fecha.ToString("MMM yyyy", _ar)</div>
+                                <div class="small fw-semibold">@partido.Fecha.ToString("HH:mm") hs</div>
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                    <h2 class="h5 fw-bold mb-0">@partido.ClubLocal <span class="text-secondary fw-normal">vs</span> @partido.ClubVisitante</h2>
+                                    <span class="badge rounded-pill @ClaseEstado(partido)">@partido.Estado</span>
+                                </div>
+                                <div class="small text-secondary">@partido.EventoNombre</div>
+                                <div class="small text-secondary">🏟️ @partido.EstadioNombre (@partido.EstadioCiudad)</div>
+                            </div>
+
+                            <div class="d-flex flex-row flex-md-column align-items-center align-items-md-end gap-2 flex-shrink-0">
+                                <span class="fw-semibold">@partido.CantidadEntradas @(partido.CantidadEntradas == 1 ? "entrada" : "entradas")</span>
+                                <button type="button" class="btn btn-sm btn-outline-success fw-semibold rounded-pill px-3"
+                                        aria-expanded="@(abierto ? "true" : "false")" aria-controls="@idDetalle"
+                                        @onclick="() => Alternar(partido.EventoId)">
+                                    @(abierto ? "Ocultar entradas ▲" : "Ver entradas ▼")
+                                </button>
+                            </div>
                         </div>
-                        <div class="fw-bold text-success fs-5">
-                            Total: $@compra.MontoTotal.ToString("N2") (@compra.Cantidad entrada@(compra.Cantidad > 1 ? "s" : ""))
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>N° Entrada</th>
-                                        <th>Evento</th>
-                                        <th>Fecha del Partido</th>
-                                        <th>Sector</th>
-                                        <th>Ubicación Asignada</th>
-                                        <th class="text-center">Pase de Acceso</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @* Una fila por entrada, con botón para ver su QR. *@
-                                    @foreach (var ent in compra.Entradas)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold">#@ent.EntradaId</td>
-                                            <td>@ObtenerNombreEvento(ent.EventoId)</td>
-                                            <td>@ObtenerFechaEvento(ent.EventoId)</td>
-                                            <td>@ObtenerNombreSector(ent.SectorId)</td>
-                                            <td>
-                                                @* Ubicación: asiento numerado (platea) o "sin numeración" (popular). *@
-                                                @if (!string.IsNullOrWhiteSpace(ent.FilaAsiento))
-                                                {
-                                                    <span class="badge bg-info text-dark px-3 py-2">@ent.FilaAsiento</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary px-3 py-2">Sin numeración (Popular)</span>
-                                                }
-                                            </td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3"
-                                                        @onclick="() => AbrirQrModal(ent)">
-                                                    <span>📱</span> Ver Ticket QR
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+
+                        @if (abierto)
+                        {
+                            <div id="@idDetalle" class="mt-3 pt-3 border-top">
+                                @if (!string.IsNullOrWhiteSpace(partido.Descripcion))
+                                {
+                                    <div class="alert alert-light border small py-2">ℹ️ @partido.Descripcion</div>
+                                }
+                                <div class="d-flex flex-wrap gap-3 small text-secondary mb-2">
+                                    <span>@partido.CantidadCompras @(partido.CantidadCompras == 1 ? "compra" : "compras")</span>
+                                    <span>Total pagado: <strong class="text-dark">$@partido.TotalPagado.ToString("N2", _ar)</strong></span>
+                                    <span>Última compra: @partido.UltimaCompra.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Entrada</th>
+                                                <th>Sector</th>
+                                                <th class="d-none d-md-table-cell">Compra</th>
+                                                <th class="d-none d-md-table-cell">Fecha de compra</th>
+                                                <th>Estado</th>
+                                                <th class="text-center">QR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var entrada in partido.Entradas)
+                                            {
+                                                <tr>
+                                                    <td class="fw-semibold">#@entrada.EntradaId</td>
+                                                    <td>@entrada.SectorNombre</td>
+                                                    <td class="d-none d-md-table-cell">#@entrada.CompraId</td>
+                                                    <td class="d-none d-md-table-cell">@entrada.FechaCompra.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td><span class="badge bg-success-subtle text-success-emphasis">@(entrada.EstadoPago ?? "Aprobado")</span></td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-outline-dark px-3" @onclick="() => AbrirQr(partido, entrada)">
+                                                            Ver QR
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             }
         </div>
+
+        <Paginador Pagina="resultado.Pagina" TotalPaginas="resultado.TotalPaginas" TotalRegistros="resultado.TotalRegistros"
+                   TamanoPagina="resultado.TamanoPagina" Cargando="Procesando"
+                   OnCambioPagina="IrAPaginaAsync" OnCambioTamano="CambiarTamanoAsync" />
     }
 </div>
 
-<!-- Modal para ver el Ticket con Código QR -->
+@* Modal del ticket con QR. MostrarUbicacion=false: en esta pantalla no se muestran fila ni asiento. *@
 <TicketQrModal @bind-Visible="_modalQrVisible"
-               EntradaId="_entradaModalSeleccionada?.EntradaId ?? 0"
-               EventoNombre="@ObtenerNombreEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
-               FechaTexto="@ObtenerFechaEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
-               EstadioNombre="@ObtenerNombreEstadioDeEvento(_entradaModalSeleccionada?.EventoId ?? 0)"
-               SectorNombre="@ObtenerNombreSector(_entradaModalSeleccionada?.SectorId ?? 0)"
-               FilaAsiento="@_entradaModalSeleccionada?.FilaAsiento"
-               CodigoQr="@(_entradaModalSeleccionada?.CodigoQr ?? string.Empty)" />
+               EntradaId="_entradaQr?.EntradaId ?? 0"
+               EventoNombre="@(_partidoQr is null ? string.Empty : $"{_partidoQr.ClubLocal} vs {_partidoQr.ClubVisitante}")"
+               FechaTexto="@(_partidoQr?.Fecha.ToString("dd/MM/yyyy HH:mm") ?? string.Empty)"
+               EstadioNombre="@(_partidoQr is null ? string.Empty : $"{_partidoQr.EstadioNombre} ({_partidoQr.EstadioCiudad})")"
+               SectorNombre="@(_entradaQr?.SectorNombre ?? string.Empty)"
+               MostrarUbicacion="false"
+               CodigoQr="@(_entradaQr?.CodigoQr ?? string.Empty)" />
 
 @code {
-    // Compras del usuario y diccionarios (por id) de eventos, sectores y estadios para mostrar nombres.
-    private List<CompraDto> _misCompras = new();
-    private Dictionary<int, EventoDto> _eventosMap = new();
-    private Dictionary<int, SectorDto> _sectoresMap = new();
-    private Dictionary<int, EstadioDto> _estadiosMap = new();
+    private static readonly System.Globalization.CultureInfo _ar = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
 
-    // Estado del Modal QR
-    private bool _modalQrVisible = false;
-    private EntradaDto? _entradaModalSeleccionada = null;
+    // Filtros (por defecto: todos los partidos, el más próximo primero) y la página que devolvió la API.
+    private MisEntradasFiltro filtro = NuevoFiltro();
+    private PagedResult<PartidoConEntradasDto>? resultado;
+    // Partidos con el detalle desplegado.
+    private readonly HashSet<int> _abiertos = new();
 
-    // Al abrir la página: si no hay sesión manda al login; si hay, carga las compras.
+    // Estado del modal QR.
+    private bool _modalQrVisible;
+    private PartidoConEntradasDto? _partidoQr;
+    private MiEntradaDto? _entradaQr;
+
+    private static MisEntradasFiltro NuevoFiltro() => new()
+    {
+        Estado = MisEntradasFiltro.EstadoTodos,
+        OrdenarPor = MisEntradasFiltro.OrdenPartidoProximo,
+        TamanoPagina = 10
+    };
+
+    private bool HayFiltros => !string.IsNullOrWhiteSpace(filtro.Busqueda) || filtro.Desde.HasValue || filtro.Hasta.HasValue
+                               || filtro.Estado != MisEntradasFiltro.EstadoTodos;
+
+    // Al abrir la página: si no hay sesión manda al login; si hay, carga la primera página.
     protected override async Task OnInitializedAsync()
     {
         var authState = await authStateProvider.GetAuthenticationStateAsync();
@@ -167,54 +224,65 @@
             return;
         }
 
-        await CargarComprasAsync();
+        await CargarAsync();
     }
 
-    // Trae las compras del usuario y los catálogos de eventos, sectores y estadios; ordena las compras de la más nueva a la más vieja.
-    private async Task CargarComprasAsync()
+    // Pide a la API los partidos del usuario (el usuario sale del token, no se manda).
+    private async Task CargarAsync()
     {
-        if (sesion.Usuario is null) return;
-
         await SecureExec(async () =>
         {
-            var compras = await compraApi.GetByUsuarioIdAsync(sesion.Usuario.IdUsuario);
-            var eventos = await eventoApi.GetAllAsync();
-            var sectores = await sectorApi.GetAllAsync();
-            var estadios = await estadioApi.GetAllAsync();
-
-            _eventosMap = eventos.ToDictionary(e => e.IdEvento);
-            _sectoresMap = sectores.ToDictionary(s => s.SectorId);
-            _estadiosMap = estadios.ToDictionary(e => e.IdEstadio);
-            _misCompras = compras.OrderByDescending(c => c.FechaCompra).ToList();
+            resultado = await compraApi.GetMisEntradasAsync(filtro);
+            filtro.Pagina = resultado.Pagina;
+            // Si hay un solo partido en la página, se abre directamente.
+            if (resultado.Items.Count == 1) _abiertos.Add(resultado.Items[0].EventoId);
         });
     }
 
-    // Abre el modal del QR con la entrada elegida.
-    private void AbrirQrModal(EntradaDto entrada)
+    private async Task BuscarAsync()
     {
-        _entradaModalSeleccionada = entrada;
+        filtro.Pagina = 1;
+        await CargarAsync();
+    }
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        filtro = NuevoFiltro();
+        await CargarAsync();
+    }
+
+    private async Task IrAPaginaAsync(int pagina)
+    {
+        filtro.Pagina = pagina;
+        await CargarAsync();
+    }
+
+    private async Task CambiarTamanoAsync(int tamano)
+    {
+        filtro.TamanoPagina = tamano;
+        filtro.Pagina = 1;
+        await CargarAsync();
+    }
+
+    // Abre o cierra el detalle de un partido.
+    private void Alternar(int eventoId)
+    {
+        if (!_abiertos.Remove(eventoId)) _abiertos.Add(eventoId);
+    }
+
+    private void AbrirQr(PartidoConEntradasDto partido, MiEntradaDto entrada)
+    {
+        _partidoQr = partido;
+        _entradaQr = entrada;
         _modalQrVisible = true;
     }
 
-    // Nombre del evento por id.
-    private string ObtenerNombreEvento(int eventoId) =>
-        _eventosMap.TryGetValue(eventoId, out var ev) ? ev.Nombre : $"Evento #{eventoId}";
+    // Colores según el estado derivado del partido.
+    private static string ClaseEstado(PartidoConEntradasDto p) =>
+        p.EstaCancelado ? "bg-danger" : p.EsPasado ? "bg-secondary" : "bg-success";
 
-    // Fecha del evento por id, con formato dd/MM/yyyy HH:mm.
-    private string ObtenerFechaEvento(int eventoId) =>
-        _eventosMap.TryGetValue(eventoId, out var ev) ? ev.Fecha.ToString("dd/MM/yyyy HH:mm") : "-";
-
-    // Nombre y ciudad del estadio donde se juega el evento.
-    private string ObtenerNombreEstadioDeEvento(int eventoId)
-    {
-        if (_eventosMap.TryGetValue(eventoId, out var ev) && _estadiosMap.TryGetValue(ev.IdEstadio, out var est))
-        {
-            return $"{est.Nombre} ({est.Ciudad})";
-        }
-        return string.Empty;
-    }
-
-    // Nombre del sector por id.
-    private string ObtenerNombreSector(int sectorId) =>
-        _sectoresMap.TryGetValue(sectorId, out var sec) ? sec.Nombre : $"Sector #{sectorId}";
+    private static string ClaseFecha(PartidoConEntradasDto p) =>
+        p.EstaCancelado ? "bg-danger-subtle text-danger-emphasis"
+        : p.EsPasado ? "bg-light text-secondary"
+        : "bg-success-subtle text-success-emphasis";
 }

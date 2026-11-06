@@ -7,10 +7,6 @@
         "Action": "Start"
       },
       {
-        "Path": "Kicket.ApiClient\\Kicket.ApiClient.csproj",
-        "Action": "Start"
-      },
-      {
         "Path": "Kicket.Blazor\\Kicket.Blazor.csproj",
         "Action": "Start"
       }

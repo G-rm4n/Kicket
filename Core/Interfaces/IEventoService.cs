@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Eventos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ namespace Core.Interfaces
         Task<Evento?> ObtenerPorIdAsync(int id);
         // Devuelve todos los eventos.
         Task<IEnumerable<Evento>> ObtenerTodosAsync();
+        // Pagina de eventos con filtros (club, estadio, fechas, estado).
+        Task<PagedResult<EventoDto>> ObtenerPaginadoAsync(EventoFiltro filtro, CancellationToken ct = default);
         // Calcula, por cada sector del estadio, cuántas entradas se vendieron y cuántas quedan (null si el evento no existe).
         Task<IReadOnlyList<SectorDisponibilidadDto>?> ObtenerDisponibilidadAsync(int eventoId);
         // Valida y actualiza un evento; false si no existe.

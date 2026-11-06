@@ -46,6 +46,45 @@ namespace Kicket.ApiClient.Http
         protected Task DeleteAsync(string ruta, CancellationToken ct = default) =>
             SinCuerpoAsync(() => new HttpRequestMessage(HttpMethod.Delete, ruta), ct);
 
+        /// <summary>GET que devuelve un archivo (PDF, XLSX) como bytes.</summary>
+        protected async Task<byte[]> GetBytesAsync(string ruta, CancellationToken ct = default)
+        {
+            using var respuesta = await EjecutarAsync(() => new HttpRequestMessage(HttpMethod.Get, ruta), ct);
+            await GarantizarExitoAsync(respuesta, ct);
+            return await respuesta.Content.ReadAsByteArrayAsync(ct);
+        }
+
+        /// <summary>
+        /// Agrega a la ruta los filtros como query string (?pagina=2&amp;busqueda=...).
+        /// Toma las propiedades publicas con setter que tengan valor; los textos van escapados
+        /// y las fechas en formato ISO, asi la API las entiende sin importar la cultura de la PC.
+        /// </summary>
+        protected static string ConQuery(string ruta, object? filtro)
+        {
+            if (filtro is null) return ruta;
+
+            var partes = new List<string>();
+            foreach (var propiedad in filtro.GetType().GetProperties())
+            {
+                if (!propiedad.CanWrite || propiedad.GetIndexParameters().Length > 0) continue;
+                var valor = propiedad.GetValue(filtro);
+                string? texto = valor switch
+                {
+                    null => null,
+                    string s when string.IsNullOrWhiteSpace(s) => null,
+                    string s => s.Trim(),
+                    DateTime d => d.ToString("yyyy-MM-ddTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture),
+                    bool b => b ? "true" : "false",
+                    IFormattable f => f.ToString(null, System.Globalization.CultureInfo.InvariantCulture),
+                    _ => valor.ToString()
+                };
+                if (texto is null) continue;
+                string nombre = char.ToLowerInvariant(propiedad.Name[0]) + propiedad.Name[1..];
+                partes.Add($"{nombre}={Uri.EscapeDataString(texto)}");
+            }
+            return partes.Count == 0 ? ruta : $"{ruta}?{string.Join("&", partes)}";
+        }
+
         // Arma una request con el objeto serializado a JSON como cuerpo.
         private static HttpRequestMessage Crear(HttpMethod metodo, string ruta, object cuerpo) =>
             new(metodo, ruta) { Content = JsonContent.Create(cuerpo, options: JsonOpciones) };

@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Eventos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +24,7 @@ namespace Data.Interfaces
         // Actualiza un evento; false si no existe.
         Task<bool> UpdateAsync(Evento evento);
 
-        // Devuelve una página de eventos, con filtro y orden opcionales.
-        Task<IEnumerable<Evento>> AyncGetPaginated(int pagina,int cantidadPorPagina,bool esFiltrado,Expression<Func<Evento, bool>>? filtro = null,bool esOrdenado = false,Func<IQueryable<Evento>, IOrderedQueryable<Evento>>? ordenamiento = null);
+        // Pagina de eventos con los nombres de clubes y estadio ya resueltos.
+        Task<PagedResult<EventoDto>> ObtenerPaginadoAsync(EventoFiltro filtro, CancellationToken ct = default);
     }
 }

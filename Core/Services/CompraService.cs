@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Domain.Entities;
 using Core.Interfaces;
 using Data.Interfaces;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Compras;
 
 namespace Core.Services
 {
@@ -145,6 +147,26 @@ namespace Core.Services
         public async Task<IEnumerable<Compra>> ObtenerTodosAsync()
         {
             return await _compraRepository.GetAllAsync();
+        }
+
+        // Devuelve las compras de un usuario.
+        public async Task<IEnumerable<Compra>> ObtenerPorUsuarioAsync(int usuarioId)
+        {
+            return await _compraRepository.ObtenerPorUsuarioAsync(usuarioId);
+        }
+
+        // Valida los filtros y pide la pagina de compras (administracion).
+        public async Task<PagedResult<CompraDto>> ObtenerPaginadoAsync(CompraFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _compraRepository.ObtenerPaginadoAsync(filtro, ct);
+        }
+
+        // Valida los filtros y pide los partidos (con sus entradas) del usuario.
+        public async Task<PagedResult<PartidoConEntradasDto>> ObtenerMisEntradasAsync(int usuarioId, MisEntradasFiltro filtro, CancellationToken ct = default)
+        {
+            Validaciones.ValidarFiltro(filtro);
+            return await _compraRepository.ObtenerMisEntradasAsync(usuarioId, filtro, ct);
         }
 
         // Elimina una compra (y sus entradas).

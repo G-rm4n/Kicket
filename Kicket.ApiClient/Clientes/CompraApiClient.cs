@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Compras;
@@ -25,6 +26,12 @@ namespace Kicket.ApiClient.Clientes
         public async Task<IReadOnlyList<CompraDto>> GetByUsuarioIdAsync(int usuarioId, CancellationToken ct = default) =>
             await GetAsync<List<CompraDto>>($"{Ruta}/usuario/{usuarioId}", ct);
 
+        // Pide una pagina filtrada (los filtros viajan en la query string).
+        public Task<PagedResult<CompraDto>> GetPaginadoAsync(CompraFiltro filtro, CancellationToken ct = default) =>
+            GetAsync<PagedResult<CompraDto>>(ConQuery($"{Ruta}/paginado", filtro), ct);
+        // Pide los partidos del usuario logueado con sus entradas.
+        public Task<PagedResult<PartidoConEntradasDto>> GetMisEntradasAsync(MisEntradasFiltro filtro, CancellationToken ct = default) =>
+            GetAsync<PagedResult<PartidoConEntradasDto>>(ConQuery($"{Ruta}/mis-entradas", filtro), ct);
         // Trae una compra por id.
         public Task<CompraDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<CompraDto>($"{Ruta}/{id}", ct);

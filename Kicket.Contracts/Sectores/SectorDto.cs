@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,5 +19,10 @@ namespace Kicket.Contracts.Sectores
         public int CapacidadMaxima { get; set; }
         // Precio base de la entrada.
         public decimal PrecioBase { get; set; }
+        // Nombre del estadio (lo completa el listado paginado).
+        public string? NombreEstadio { get; set; }
+        // Tipo deducido del nombre, igual que en CompraService: "Platea" es numerado, el resto es "Popular".
+        public bool EsPlatea => Nombre.Contains("Platea", StringComparison.OrdinalIgnoreCase);
+        public string Tipo => EsPlatea ? "Platea" : "Popular";
     }
 }

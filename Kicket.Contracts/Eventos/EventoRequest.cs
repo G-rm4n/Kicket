@@ -26,5 +26,9 @@ namespace Kicket.Contracts.Eventos
         // Club visitante (tiene que ser distinto del local).
         [Required(ErrorMessage = "El club visitante es obligatorio.")]
         public int ClubVisitanteId { get; set; }
+
+        // Informacion para el comprador: opcional, hasta 500 caracteres.
+        [StringLength(500, ErrorMessage = "La descripcion no puede superar los 500 caracteres.")]
+        public string? Descripcion { get; set; }
     }
 }

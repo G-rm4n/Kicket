@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Usuarios;
@@ -17,6 +18,9 @@ namespace Kicket.ApiClient.Clientes
         public async Task<IReadOnlyList<UsuarioDto>> GetAllAsync(CancellationToken ct = default) =>
             await GetAsync<List<UsuarioDto>>(Ruta, ct);
 
+        // Pide una pagina filtrada (los filtros viajan en la query string).
+        public Task<PagedResult<UsuarioDto>> GetPaginadoAsync(UsuarioFiltro filtro, CancellationToken ct = default) =>
+            GetAsync<PagedResult<UsuarioDto>>(ConQuery($"{Ruta}/paginado", filtro), ct);
         // Trae un usuario por id.
         public Task<UsuarioDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<UsuarioDto>($"{Ruta}/{id}", ct);

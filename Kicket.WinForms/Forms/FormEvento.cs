@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Kicket.ApiClient.Abstracciones;
 using Kicket.Contracts.Clubes;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
 using Kicket.Contracts.Eventos;
+using Kicket.WinForms.Controles;
 
 namespace Kicket.WinForms.Forms
 {
@@ -24,6 +26,25 @@ namespace Kicket.WinForms.Forms
         private IReadOnlyList<EstadioDto> _estadios = Array.Empty<EstadioDto>();
         private IReadOnlyList<EventoDto> _eventos = Array.Empty<EventoDto>();
         private int? _eventoIdSeleccionado = null;
+
+        // Controles agregados en la versión 2: descripción, filtros y paginador.
+        private readonly TextBox textBoxDescripcion = new() { MaxLength = 500 };
+        private readonly BarraFiltros _filtros = new();
+        private readonly TextBox _filtroTexto;
+        private readonly ComboBox _filtroEstado;
+        private readonly DateTimePicker _filtroDesde;
+        private readonly DateTimePicker _filtroHasta;
+        private readonly ControlPaginacion _paginador = new();
+        private PagedResult<EventoDto>? _pagina;
+
+        // Opciones del combo de estado (texto visible → valor que entiende la API).
+        private static readonly (string Texto, string Valor)[] Estados =
+        {
+            ("Todos", EventoFiltro.EstadoTodos),
+            ("Próximos", EventoFiltro.EstadoProximos),
+            ("Finalizados", EventoFiltro.EstadoPasados),
+            ("Cancelados", EventoFiltro.EstadoCancelados)
+        };
 
         // Fila "lista para mostrar" de la grilla (nombres en lugar de ids).
         private sealed class EventoFilaVista
@@ -47,6 +68,22 @@ namespace Kicket.WinForms.Forms
             _eventoApiClient = eventoApiClient;
             _clubApiClient = clubApiClient;
             _estadioApiClient = estadioApiClient;
+
+            // Descripción / información para el comprador, debajo de los clubes.
+            var referencia = comboBoxClubLocal.Bottom >= comboBoxClubVisitante.Bottom ? comboBoxClubLocal : comboBoxClubVisitante;
+            int y = LayoutListado.FilaDebajoDe(this, referencia);
+            LayoutListado.AgregarCampo(this, "Descripción:", textBoxDescripcion, labelNombre.Left, textBoxNombre.Left, y,
+                comboBoxClubVisitante.Right - textBoxNombre.Left);
+
+            // Filtros: texto (evento, club o estadio), estado y rango de fechas del partido.
+            _filtroTexto = _filtros.AgregarTexto("Buscar:", 170, "Evento, club o estadio");
+            _filtroEstado = _filtros.AgregarCombo("Estado:", 110, Estados.Select(e => (object)e.Texto).ToArray());
+            _filtroDesde = _filtros.AgregarFecha("Desde:");
+            _filtroHasta = _filtros.AgregarFecha("Hasta:");
+            _filtros.Buscar += async (_, _) => { _paginador.Reiniciar(); await CargarEventosAsync(); };
+            _filtros.Limpiar += async (_, _) => { _paginador.Reiniciar(); await CargarEventosAsync(); };
+            _paginador.PaginaCambiada += async (_, _) => await CargarEventosAsync();
+            LayoutListado.Envolver(this, dataGridViewEventos, _filtros, _paginador);
         }
 
         // Al cargar: configura la grilla, propone una fecha a 7 días y carga catálogos y eventos.
@@ -86,27 +123,35 @@ namespace Kicket.WinForms.Forms
             }
         }
 
-        // Trae los eventos, los convierte en filas con nombres y estado (Cancelado/Disponible/Finalizado) y los muestra.
+        // Pide a la API una página de eventos (filtrada y ordenada por fecha, la más nueva primero),
+        // la convierte en filas con nombres y estado (Cancelado/Disponible/Finalizado) y la muestra.
         private async Task CargarEventosAsync()
         {
             try
             {
-                _eventos = await _eventoApiClient.GetAllAsync();
+                _pagina = await _eventoApiClient.GetPaginadoAsync(new EventoFiltro
+                {
+                    Pagina = _paginador.Pagina,
+                    TamanoPagina = _paginador.TamanoPagina,
+                    Busqueda = _filtroTexto.Text,
+                    Estado = Estados[Math.Max(0, _filtroEstado.SelectedIndex)].Valor,
+                    Desde = BarraFiltros.Valor(_filtroDesde),
+                    Hasta = BarraFiltros.Valor(_filtroHasta),
+                    OrdenarPor = "fecha",
+                    Descendente = true
+                });
+                _eventos = _pagina.Items;
 
-                // Diccionarios id → texto para mostrar nombres en lugar de ids.
-                var estadiosMap = _estadios.ToDictionary(e => e.IdEstadio, e => $"{e.Nombre} ({e.Ciudad})");
-                var clubesMap = _clubes.ToDictionary(c => c.ClubId, c => $"{c.Nombre} ({c.Abreviatura})");
-
+                // La API ya manda los nombres de clubes y estadio resueltos.
                 var filas = _eventos
-                    .OrderByDescending(e => e.Fecha)
                     .Select(e => new EventoFilaVista
                     {
                         IdEvento = e.IdEvento,
                         Nombre = e.Nombre,
                         FechaTexto = e.Fecha.ToString("dd/MM/yyyy HH:mm"),
-                        EstadioNombre = estadiosMap.TryGetValue(e.IdEstadio, out var estNombre) ? estNombre : $"ID {e.IdEstadio}",
-                        ClubLocalNombre = clubesMap.TryGetValue(e.IdEquipoLocal, out var locNombre) ? locNombre : $"ID {e.IdEquipoLocal}",
-                        ClubVisitanteNombre = clubesMap.TryGetValue(e.IdEquipoVisitante, out var visNombre) ? visNombre : $"ID {e.IdEquipoVisitante}",
+                        EstadioNombre = e.NombreEstadio ?? $"ID {e.IdEstadio}",
+                        ClubLocalNombre = e.NombreEquipoLocal ?? $"ID {e.IdEquipoLocal}",
+                        ClubVisitanteNombre = e.NombreEquipoVisitante ?? $"ID {e.IdEquipoVisitante}",
                         EstadoTexto = e.EstaCancelado
                             ? "Cancelado"
                             : (e.Fecha > DateTime.Now ? "Disponible" : "Finalizado")
@@ -114,6 +159,7 @@ namespace Kicket.WinForms.Forms
                     .ToList();
 
                 dataGridViewEventos.DataSource = filas;
+                _paginador.Actualizar(_pagina);
                 LimpiarFormulario();
             }
             catch (Exception ex)
@@ -139,6 +185,7 @@ namespace Kicket.WinForms.Forms
             comboBoxClubLocal.SelectedValue = evento.IdEquipoLocal;
             comboBoxClubVisitante.SelectedValue = evento.IdEquipoVisitante;
             checkBoxCancelado.Checked = evento.EstaCancelado;
+            textBoxDescripcion.Text = evento.Descripcion;
         }
 
         // Botón limpiar.
@@ -152,6 +199,7 @@ namespace Kicket.WinForms.Forms
         {
             _eventoIdSeleccionado = null;
             textBoxNombre.Clear();
+            textBoxDescripcion.Clear();
             dateTimePickerFecha.Value = DateTime.Now.AddDays(7);
             checkBoxCancelado.Checked = false;
             if (comboBoxEstadio.Items.Count > 0) comboBoxEstadio.SelectedIndex = 0;
@@ -224,7 +272,8 @@ namespace Kicket.WinForms.Forms
                 Fecha = dateTimePickerFecha.Value,
                 EstadioId = estadioId,
                 ClubLocalId = clubLocalId,
-                ClubVisitanteId = clubVisitanteId
+                ClubVisitanteId = clubVisitanteId,
+                Descripcion = textBoxDescripcion.Text.Trim()
             };
 
             // POST /eventos, avisa y recarga la grilla.
@@ -263,7 +312,8 @@ namespace Kicket.WinForms.Forms
                 EstadioId = estadioId,
                 ClubLocalId = clubLocalId,
                 ClubVisitanteId = clubVisitanteId,
-                EstaCancelado = checkBoxCancelado.Checked
+                EstaCancelado = checkBoxCancelado.Checked,
+                Descripcion = textBoxDescripcion.Text.Trim()
             };
 
             // PUT /eventos, avisa y recarga la grilla.

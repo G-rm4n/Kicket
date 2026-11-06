@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -84,6 +84,13 @@ namespace Core.Services
 
             if (EmailDupp) throw new ArgumentException("El correo provisto Ya se encuentra en uso");
             if (string.IsNullOrWhiteSpace(usuario.Password)) throw new ArgumentException("La contraseña es obligatoria.");
+            if (string.IsNullOrWhiteSpace(usuario.Nombre) || string.IsNullOrWhiteSpace(usuario.Apellido))
+                throw new ArgumentException("Nombre y apellido son obligatorios.");
+
+            // DNI obligatorio, valido y sin repetir.
+            Validaciones.ValidarDatosPersonales(usuario, dniObligatorio: true);
+            if (await this._usuarios.ExistsDni(usuario.Dni!))
+                throw new ArgumentException("El DNI provisto ya se encuentra registrado.");
 
             usuario.Password = Contrasenas.Hashear(usuario.Password);
             usuario.Rol = "Cliente";

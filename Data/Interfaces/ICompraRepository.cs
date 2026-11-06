@@ -1,4 +1,6 @@
 using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Compras;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +24,13 @@ namespace Data.Interfaces
         Task<bool> DeleteAsync(int id);
         // Devuelve todas las compras.
         Task<IEnumerable<Compra>> GetAllAsync();
+        // Compras de un usuario (filtradas en la base, no en memoria).
+        Task<IEnumerable<Compra>> ObtenerPorUsuarioAsync(int usuarioId);
 
-        // Devuelve una página de compras, con filtro y orden opcionales.
-        Task<IEnumerable<Compra>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Compra, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Compra>, IOrderedQueryable<Compra>>? ordenamiento = null);
+        // Pagina de compras para administracion, con nombres de usuario, evento y sector.
+        Task<PagedResult<CompraDto>> ObtenerPaginadoAsync(CompraFiltro filtro, CancellationToken ct = default);
+
+        // "Mis Entradas": pagina de PARTIDOS del usuario, cada uno con todas sus entradas.
+        Task<PagedResult<PartidoConEntradasDto>> ObtenerMisEntradasAsync(int usuarioId, MisEntradasFiltro filtro, CancellationToken ct = default);
     }
 }

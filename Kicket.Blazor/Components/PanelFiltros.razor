@@ -1,0 +1,33 @@
+@* Contenedor de filtros: dibuja los campos que le pasa la página y los botones Buscar / Limpiar.
+   Enter dentro de un campo también busca (el contenido va dentro de un form). *@
+
+<form class="card border-0 shadow-sm mb-3" @onsubmit="Buscar" @onsubmit:preventDefault="true">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            @ChildContent
+            <div class="col-12 col-md-auto d-flex gap-2 ms-md-auto">
+                <button type="submit" class="btn btn-primary btn-sm px-3" disabled="@Cargando">
+                    @if (Cargando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    Buscar
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" disabled="@Cargando" @onclick="Limpiar">
+                    Limpiar filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    // Campos de filtro propios de cada pantalla.
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool Cargando { get; set; }
+    [Parameter] public EventCallback OnBuscar { get; set; }
+    [Parameter] public EventCallback OnLimpiar { get; set; }
+
+    private Task Buscar() => OnBuscar.InvokeAsync();
+    private Task Limpiar() => OnLimpiar.InvokeAsync();
+}

@@ -30,6 +30,24 @@
             <ValidationMessage For="@(() => RegistroData.Apellido)" class="text-danger small mt-1 d-block" />
         </div>
 
+        <!-- DNI (obligatorio) y teléfono (opcional) -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <InputText id="Dni" class="form-control kicket-input" inputmode="numeric" placeholder="DNI (ej. 30.123.456)" @bind-Value="RegistroData.Dni" />
+                <ValidationMessage For="@(() => RegistroData.Dni)" class="text-danger small mt-1 d-block" />
+            </div>
+            <div class="col-6">
+                <InputText id="Telefono" class="form-control kicket-input" inputmode="tel" placeholder="Teléfono (opcional)" @bind-Value="RegistroData.Telefono" />
+                <ValidationMessage For="@(() => RegistroData.Telefono)" class="text-danger small mt-1 d-block" />
+            </div>
+        </div>
+
+        <!-- Fecha de nacimiento (opcional) -->
+        <div class="mb-3">
+            <label for="FechaNacimiento" class="form-label small text-secondary mb-1">Fecha de nacimiento (opcional)</label>
+            <InputDate id="FechaNacimiento" class="form-control kicket-input" @bind-Value="RegistroData.FechaNacimiento" />
+        </div>
+
         <!-- Email -->
         <div class="mb-3">
             <div class="input-icon-wrapper">

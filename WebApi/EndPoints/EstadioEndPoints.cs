@@ -1,5 +1,6 @@
 using Core.Interfaces;
 using Domain.Entities;
+using Kicket.Contracts.Common;
 using Kicket.Contracts.Estadios;
 
 namespace WebApi.EndPoints
@@ -13,23 +14,23 @@ namespace WebApi.EndPoints
             // Agrupa las rutas bajo /estadios.
             var estadiosGroup = app.MapGroup("/estadios");
 
-            // GET /estadios: lista todos los estadios como DTO.
+            // GET /estadios: lista todos los estadios como DTO (lo usan los combos).
             estadiosGroup.MapGet("/", async (IEstadioService estadioService) =>
             {
                 var estadios = await estadioService.ObtenerTodosAsync();
-
-                IEnumerable<EstadioDto> dtos = estadios.Select(e => new EstadioDto()
-                {
-                    IdEstadio = e.EstadioId,
-                    Direccion = e.Direccion,
-                    Ciudad = e.Ciudad,
-                    Nombre = e.Nombre,
-                }).ToList();
+                IEnumerable<EstadioDto> dtos = estadios.Select(e => e.ADto()).ToList();
 
                 return Results.Ok(dtos);
             })
             .WithName("GetAllEstadios")
             .Produces<IEnumerable<EstadioDto>>(StatusCodes.Status200OK);
+
+            // GET /estadios/paginado: página de estadios con filtros (busqueda, ciudad, provincia) y la capacidad total.
+            estadiosGroup.MapGet("/paginado", async ([AsParameters] EstadioFiltro filtro, IEstadioService estadioService, CancellationToken ct) =>
+                Results.Ok(await estadioService.ObtenerPaginadoAsync(filtro, ct)))
+            .WithName("GetEstadiosPaginado")
+            .Produces<PagedResult<EstadioDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
 
             // GET /estadios/{id}: devuelve un estadio o 404.
             estadiosGroup.MapGet("/{id}", async (int id, IEstadioService estadioService) =>
@@ -41,15 +42,7 @@ namespace WebApi.EndPoints
                     return Results.NotFound();
                 }
 
-                EstadioDto estadioDto = new()
-                {
-                    Ciudad = estadio.Ciudad,
-                    Direccion = estadio.Direccion,
-                    Nombre = estadio.Nombre,
-                    IdEstadio = estadio.EstadioId
-                };
-
-                return Results.Ok(estadioDto);
+                return Results.Ok(estadio.ADto());
             })
             .WithName("GetEstadio")
             .Produces<EstadioDto>(StatusCodes.Status200OK)
@@ -62,18 +55,12 @@ namespace WebApi.EndPoints
                 {
                     Ciudad = estadioReq.Ciudad,
                     Direccion = estadioReq.Direccion,
-                    Nombre = estadioReq.Nombre
+                    Nombre = estadioReq.Nombre,
+                    Provincia = estadioReq.Provincia
                 };
 
                 Estadio estadioNew = await estadioService.CrearEstadioAsync(estadio);
-
-                EstadioDto estadioDto = new()
-                {
-                    Ciudad = estadioNew.Ciudad,
-                    Nombre = estadioNew.Nombre,
-                    Direccion = estadioNew.Direccion,
-                    IdEstadio = estadioNew.EstadioId
-                };
+                EstadioDto estadioDto = estadioNew.ADto();
 
                 return Results.Created($"/estadios/{estadioDto.IdEstadio}", estadioDto);
             })
@@ -90,6 +77,7 @@ namespace WebApi.EndPoints
                     Ciudad = estadioReq.Ciudad,
                     Direccion = estadioReq.Direccion,
                     Nombre = estadioReq.Nombre,
+                    Provincia = estadioReq.Provincia,
                     EstadioId = estadioReq.IdEstadio
                 };
 
@@ -108,7 +96,7 @@ namespace WebApi.EndPoints
             .Produces(StatusCodes.Status400BadRequest)
             .RequireAuthorization("Solo admin");
 
-            // DELETE /estadios/{id}: borra un estadio (solo Admin). 204 o 404.
+            // DELETE /estadios/{id}: borra un estadio (solo Admin). 204 o 404 (409 si tiene sectores).
             estadiosGroup.MapDelete("/{id}", async (int id, IEstadioService estadioService) =>
             {
                 var deleted = await estadioService.EliminarEstadioAsync(id);

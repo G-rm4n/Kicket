@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+using Domain.Entities;
+using Kicket.Contracts.Common;
+using Kicket.Contracts.Usuarios;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +27,12 @@ namespace Data.Interfaces
         Task<bool> ExistsEmail(string email);
         // Busca un usuario por email (se usa en el login).
         Task<Usuario?> GetByEmailAsync(string email);
+        // Indica si otro usuario (distinto de excluirId) ya usa ese email.
+        Task<bool> ExistsEmailDeOtro(string email, int excluirId);
+        // Indica si ya hay un usuario con ese DNI (ya normalizado); excluirId sirve para la edicion.
+        Task<bool> ExistsDni(string dni, int? excluirId = null);
 
-        // Devuelve una página de usuarios, con filtro y orden opcionales.
-        Task<IEnumerable<Usuario>> AyncGetPaginated(int pagina, int cantidadPorPagina, bool esFiltrado, Expression<Func<Usuario, bool>>? filtro = null, bool esOrdenado = false, Func<IQueryable<Usuario>, IOrderedQueryable<Usuario>>? ordenamiento = null);
+        // Pagina de usuarios (sin contraseña) filtrada y ordenada en la base.
+        Task<PagedResult<UsuarioDto>> ObtenerPaginadoAsync(UsuarioFiltro filtro, CancellationToken ct = default);
     }
 }

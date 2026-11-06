@@ -110,3 +110,9 @@ h1:focus {
     --bs-nav-pills-link-active-bg: var(--bs-primary);
     --bs-nav-pills-link-active-color: #ffffff;
 }
+
+/* Graficos SVG de reportes: se adaptan al ancho de la tarjeta. */
+.grafico-svg svg {
+    width: 100%;
+    height: auto;
+}

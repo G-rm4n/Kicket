@@ -1,4 +1,4 @@
-﻿@* Layout del panel de administración: menú lateral (Clubs, Estadios, Usuarios), barra superior y contenido. *@
+@* Layout del panel de administración: menú lateral (Clubs, Estadios, Usuarios, Reportes), barra superior y contenido. *@
 @inherits LayoutComponentBase
 @using Kicket.Blazor.Core.session
 @using Kicket.Blazor.Core.state
@@ -32,6 +32,11 @@
             <li>
                 <NavLink href="admin/usuarios" class="nav-link text-dark">
                     Usuarios
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="admin/reportes" class="nav-link text-dark">
+                    Reportes
                 </NavLink>
             </li>
         </ul>

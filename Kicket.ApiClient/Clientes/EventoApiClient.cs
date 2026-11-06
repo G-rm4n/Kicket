@@ -1,3 +1,4 @@
+using Kicket.Contracts.Common;
 using Kicket.ApiClient.Abstracciones;
 using Kicket.ApiClient.Http;
 using Kicket.Contracts.Eventos;
@@ -21,6 +22,9 @@ namespace Kicket.ApiClient.Clientes
         public async Task<IReadOnlyList<EventoDto>> GetAllAsync(CancellationToken ct = default) =>
             await GetAsync<List<EventoDto>>(Ruta, ct);
 
+        // Pide una pagina filtrada (los filtros viajan en la query string).
+        public Task<PagedResult<EventoDto>> GetPaginadoAsync(EventoFiltro filtro, CancellationToken ct = default) =>
+            GetAsync<PagedResult<EventoDto>>(ConQuery($"{Ruta}/paginado", filtro), ct);
         // Trae un evento por id.
         public Task<EventoDto> GetOneAsync(int id, CancellationToken ct = default) =>
             GetAsync<EventoDto>($"{Ruta}/{id}", ct);
