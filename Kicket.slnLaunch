@@ -7,7 +7,7 @@
         "Action": "Start"
       },
       {
-        "Path": "Kicket.Blazor\\Kicket.Blazor.csproj",
+        "Path": "Kicket.WinForms\\Kicket.WinForms.csproj",
         "Action": "Start"
       }
     ]

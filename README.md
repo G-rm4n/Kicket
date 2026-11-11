@@ -28,6 +28,8 @@ Los cambios de la versión 2 (paginación, filtros, DNI, Mis Entradas, menú de 
 
 La API usa SQL Server y **crea sola la base `kicket`** (con tablas y datos de prueba) la primera vez que se ejecuta. No hace falta crear nada a mano.
 
+La inicialización se ejecuta explícitamente en `WebApi/Program.cs`, al arrancar la API: primero `EnsureCreated()` y después `ActualizadorEsquema.Aplicar(context)`. El constructor de `TPIContext` solo recibe las opciones de conexión; instanciarlo no crea ni actualiza la base.
+
 Por defecto se conecta a **LocalDB** (`(localdb)\MSSQLLocalDB`), que se instala junto con Visual Studio. Si se prefiere usar **SQL Server Express**, hay que cambiar la cadena de conexión en `WebApi/appsettings.json`, clave `ConnectionStrings:Local`:
 
 ```
@@ -68,9 +70,18 @@ El flujo de los reportes es **Pantalla de reportes → `Kicket.ApiClient` → We
    dotnet run --project Kicket.WinForms   # escritorio
    ```
 
-En Visual Studio también se puede abrir `Kicket.sln` y usar el perfil de inicio múltiple **Interfaz+servicios**.
+En Visual Studio también se puede abrir `Kicket.sln` y usar el perfil de inicio múltiple **Interfaz+servicios**, que inicia la API y WinForms. Para probar la web, iniciar también `Kicket.Blazor`.
 
 Si la API corre en otro puerto, hay que cambiar `BaseUrl` en `Kicket.WinForms/Program.cs` y en `Kicket.Blazor/Program.cs`.
+
+## Generar reportes
+
+Iniciar sesión con una cuenta `Admin` (por ejemplo, `EmailRaro@gmail.com`, contraseña `Has`).
+
+- **Web Blazor:** abrir la opción **Reportes** del panel administrativo o ir a `http://localhost:5139/admin/reportes`.
+- **WinForms:** abrir **Administración → Reportes de ventas**.
+
+En ambas interfaces se puede filtrar por fechas de compra y partido, consultar indicadores y tablas, y exportar a **PDF** o **Excel**. Los datos del reporte se consultan mediante ADO.NET en la API; ambos clientes usan los mismos endpoints. La API debe estar iniciada y conectada a SQL Server.
 
 ## Datos de prueba
 
@@ -115,9 +126,11 @@ dotnet test Kicket.Tests
 
 Prueban las reglas del DNI, la validación de filtros, la paginación y el agrupamiento de "Mis Entradas" con los datos semilla, la exportación a PDF y Excel, y que los formularios de escritorio se armen sin superponer controles.
 
+Las pruebas de servicios y repositorios crean explícitamente sus bases en memoria con `EnsureCreated()`, que también carga los datos semilla. Cada contexto de prueba usa un nombre de base único y no requiere SQL Server ni modifica la base `kicket`. Para ejecutar el proyecto de pruebas se necesita Windows, porque también incluye pruebas de Windows Forms.
+
 ## Problemas frecuentes
 
-- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas, o falla al crear usuarios.** La base se crea una sola vez (`EnsureCreated`) y no se actualiza sola. Hay que detener la API, borrar la base y volver a levantar la API:
+- **No puedo iniciar sesión con usuarios creados antes del hash de contraseñas.** `EnsureCreated()` no modifica una base existente y el actualizador de la versión 2 agrega columnas e índices, pero no convierte contraseñas antiguas a BCrypt. Esas cuentas necesitan un restablecimiento de contraseña. Si la base contiene únicamente datos de prueba que se pueden descartar, se puede detener la API, borrar la base y volver a levantarla para recrearla con los usuarios semilla:
 
   ```sql
   DROP DATABASE kicket;

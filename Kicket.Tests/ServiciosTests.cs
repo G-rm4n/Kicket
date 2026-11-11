@@ -15,8 +15,14 @@ namespace Kicket.Tests
     // Reglas de negocio de Core: DNI y datos de usuario, validación de filtros y generación de reportes.
     public class ServiciosTests
     {
-        private static TPIContext NuevoContexto() => new(new DbContextOptionsBuilder<TPIContext>()
-            .UseInMemoryDatabase($"kicket-{Guid.NewGuid()}").Options);
+        private static TPIContext NuevoContexto()
+        {
+            var opciones = new DbContextOptionsBuilder<TPIContext>()
+                .UseInMemoryDatabase($"kicket-{Guid.NewGuid()}").Options;
+            var contexto = new TPIContext(opciones);
+            contexto.Database.EnsureCreated(); // Crea la base en memoria y carga los datos semilla.
+            return contexto;
+        }
 
         private static Usuario UsuarioNuevo(string email, string? dni) => new()
         {

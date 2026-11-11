@@ -16,11 +16,10 @@ namespace Data
         public DbSet<Sector> Sectores { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
-        // Constructor: recibe las opciones (cadena de conexión) por inyección de dependencias
-        // y crea la base de datos si no existe (EnsureCreated, sin migraciones).
+        // Constructor: recibe las opciones por inyección de dependencias.
+        // La base de datos se inicializa explícitamente al arrancar la API o en las pruebas.
         public TPIContext(DbContextOptions<TPIContext> options) : base(options)
         {
-            this.Database.EnsureCreated();
         }
 
         // Configura el modelo: claves, relaciones, tamaños, valores por defecto y datos iniciales (seed).

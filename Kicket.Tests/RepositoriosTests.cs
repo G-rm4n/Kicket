@@ -23,7 +23,9 @@ namespace Kicket.Tests
             var opciones = new DbContextOptionsBuilder<TPIContext>()
                 .UseInMemoryDatabase($"kicket-{Guid.NewGuid()}")
                 .Options;
-            return new TPIContext(opciones); // EnsureCreated carga el seed
+            var contexto = new TPIContext(opciones);
+            contexto.Database.EnsureCreated(); // Crea la base en memoria y carga los datos semilla.
+            return contexto;
         }
 
         [Fact]

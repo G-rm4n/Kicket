@@ -240,6 +240,8 @@ DTOs nuevos: `PagedRequest`, `PagedResult<T>`, los 7 filtros, `PartidoConEntrada
 
 **Estrategia:** el proyecto usa `EnsureCreated`, que **no** agrega columnas a una base que ya existe. Por eso, al arrancar, la API ejecuta `ActualizadorEsquema`: sentencias `IF COL_LENGTH(...) IS NULL ALTER TABLE ... ADD ...` que solo agregan lo que falta. Se pueden ejecutar todas las veces que haga falta, no borran nada y no modifican datos. El mismo script está en `docs/sql/kicket_v2_actualizacion.sql`.
 
+La inicialización está centralizada en `WebApi/Program.cs`: ejecuta `EnsureCreated()` y después `ActualizadorEsquema.Aplicar(context)`. El constructor de `TPIContext` solo recibe las opciones y no accede a la base. Las pruebas de servicios y repositorios ejecutan explícitamente `EnsureCreated()` sobre sus bases en memoria para cargar los datos semilla.
+
 **DNI de usuarios viejos:** quedan en `NULL`. No se inventan DNI. El índice filtrado permite muchos `NULL` y prohíbe repetidos entre los que sí lo tienen. Al editar un usuario viejo, el DNI es opcional: si se deja vacío, se conserva el que tenía. En las altas nuevas es obligatorio.
 
 **Regla del DNI:** 7 u 8 dígitos, con o sin puntos de miles. Se guarda normalizado como texto (solo dígitos) para no perder ceros a la izquierda.
